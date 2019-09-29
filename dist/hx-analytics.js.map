@@ -1,0 +1,1 @@
+{"version":3,"file":"hx-analytics.js","sources":["../src/index.js"],"sourcesContent":["// import { identity, map } from 'ramda'\n// console.log(map(identity, [1, 2, 3]));\n// console.log(map(identity, [1, 2, 3]));\n\nalert('我终于集成进来了，累死我了');\n// console.log('111111')\n"],"names":["alert"],"mappings":";;;;;CAAA;CACA;CACA;CAEAA,KAAK,CAAC,eAAD,CAAL;;;;"}
