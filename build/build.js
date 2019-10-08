@@ -12,8 +12,11 @@ const rollup = require('rollup');
 const { relative } = require('path');
 const { resolveFile, deleteall, blue, getSize } = require('./utils');
 
-fs.existsSync(resolveFile('dist')) && deleteall(resolveFile('dist'))
-fs.mkdirSync(resolveFile('dist'));
+const distPath = resolveFile('dist');
+if (fs.existsSync(distPath)) {
+    deleteall(distPath);
+}
+fs.mkdirSync(distPath);
 
 const banner =
     '/*!\n' +
@@ -68,18 +71,15 @@ async function buildEntry(config) {
     }
 }
 
-function write(file, code, isProd) {
+function write(dest, code, zip) {
     return new Promise((resolve, reject) => {
         function report(extra) {
-            isProd
-                ? spinner.succeed(blue('🍺 ' + relative(process.cwd(), file)) + ' ' + getSize(code) + (extra || ''))
-                : spinner.succeed('🍺 ' + 'You sdk is deploy in http://localhost:3001/hx-analytics.js');
-            
+            spinner.succeed(blue('🍺 ' + relative(process.cwd(), dest)) + ' ' + getSize(code) + (extra || ''));
             resolve();
         }
-        fs.writeFile(file, code, err => {
+        fs.writeFile(dest, code, err => {
             if (err) return reject(err);
-            if (isProd) {
+            if (zip) {
                 zlib.gzip(code, (err, zipped) => {
                     if (err) return reject(err);
                     report(' (gzipped: ' + getSize(zipped) + ')');

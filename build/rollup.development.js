@@ -4,7 +4,7 @@ const config = require('./rollup.config');
 const { dev } = require('../config/base');
 const { resolveFile } = require('./utils');
 
-module.exports = [{
+module.exports = {
     ...config,
     output: {
         path: resolveFile('dist/'),
@@ -23,4 +23,4 @@ module.exports = [{
             livereload(resolveFile('dist'))
         ]
     ]
-}];
+};

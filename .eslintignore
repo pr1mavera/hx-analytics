@@ -1,4 +1,6 @@
 /node_modules/*
 /build/*
 /dist/*
+/packages/*
 rollup.config.js
+gulpfile.js

@@ -8,7 +8,7 @@ const { eslint } = require('rollup-plugin-eslint');
 const { resolveFile } = require('./utils');
 
 module.exports = {
-    input: resolveFile('src/index.js'),
+    input: resolveFile('packages/index.js'),
     plugins: [
         resolve({
             jsnext: true, // 该属性是指定将Node包转换为ES2015模块
@@ -41,8 +41,8 @@ module.exports = {
             exclude: [ 'node_modules/**' ],
         }),
         alias({
-            resolve: [ '.jsx', '.js' ],
-            '@': resolveFile('src')
+            resolve: [ '.jsx', '.js', '.ts' ],
+            '@': resolveFile('packages')
         })
     ],
 };
