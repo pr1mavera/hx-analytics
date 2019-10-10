@@ -4,12 +4,14 @@ const config = require('./rollup.config');
 const { dev } = require('../config/base');
 const { resolveFile } = require('./utils');
 
+const TARGET = process.env.TARGET;
+console.log('TARGET: ', TARGET)
+
 module.exports = {
     ...config,
     output: {
-        path: resolveFile('dist/'),
-        file: resolveFile('dist/hx-analytics.js'),
-        format: 'iife',
+        file: resolveFile(`dist/${TARGET}/hx-analytics-${TARGET}.js`),
+        format: 'umd',
         name: 'ha',
         sourcemap: true
     },

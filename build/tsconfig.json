@@ -7,7 +7,7 @@
     "noImplicitAny": true
   },
   "compileOnSave": false,
-  "files": [
-    "../src/tstest.ts"
+  "exclude": [
+    "../src/**/*.ts"
   ]
 }

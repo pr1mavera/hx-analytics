@@ -5,7 +5,7 @@ exports.resolveFile = path => {
     return join(__dirname, '..', path);
 };
 
-exports.deleteall = path => {
+const deleteall = exports.deleteall = path => {
     var files = [];
     if (fs.existsSync(path)) {
         files = fs.readdirSync(path);

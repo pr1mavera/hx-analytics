@@ -1,10 +1,11 @@
 const gulp = require('gulp');
 const clean = require('gulp-clean');
-const rollup = require('gulp-better-rollup');
+// const rollup = require('gulp-better-rollup');
 const watch = require('gulp-watch');
 const ts = require('gulp-typescript');
 const tsProject = ts.createProject('tsconfig.json');
 
+const entry = '../src/**/*';
 const jsEntry = '../src/**/*.js';
 const tsEntry = '../src/**/*.ts';
 const buildEntry = '../packages/**';
@@ -15,14 +16,14 @@ function cleanTask() {
 }
 
 function copyJs() {
-    return watch(jsEntry, { ignoreInitial: false }, function () {
+    return watch(entry, { ignoreInitial: false }, function () {
         gulp.src(jsEntry)
             .pipe(gulp.dest('../packages'));
     });
 }
 
 function tsc() {
-    return watch(tsEntry, { ignoreInitial: false }, function () {
+    return watch(entry, { ignoreInitial: false }, function () {
         gulp.src(tsEntry)
             .pipe(tsProject())
             .js.pipe(gulp.dest('../packages'));

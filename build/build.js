@@ -12,7 +12,10 @@ const rollup = require('rollup');
 const { relative } = require('path');
 const { resolveFile, deleteall, blue, getSize } = require('./utils');
 
-const distPath = resolveFile('dist');
+const TARGET = process.env.TARGET;
+console.log('file: ', resolveFile(`dist/${TARGET}/hx-analytics-${TARGET}.min.js`))
+
+const distPath = resolveFile(`dist/${process.env.TARGET}`);
 if (fs.existsSync(distPath)) {
     deleteall(distPath);
 }
@@ -56,18 +59,19 @@ async function buildEntry(config) {
     const { output: chunks } = await bundle.generate(output);
 
     for (const chunk of chunks) {
-        let { code, fileName } = chunk;
+        let { code } = chunk;
         if (isProd) {
-            code = (banner ? banner + '\n' : '') + terser.minify(code, {
-                output: {
-                    ascii_only: true
-                },
-                compress: {
-                    pure_funcs: ['makeMap']
-                }
-            }).code;
+        code = (banner ? banner + '\n' : '') + terser.minify(code, {
+            output: {
+                ascii_only: true
+            },
+            compress: {
+                pure_funcs: ['makeMap']
+            }
+        }).code;
         }
-        await write(output.path + fileName, code, isProd);
+        await write(output.file, code, true);
+        // await write(output.path + fileName, code, isProd);
     }
 }
 
