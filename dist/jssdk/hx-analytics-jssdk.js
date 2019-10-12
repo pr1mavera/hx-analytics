@@ -78,6 +78,7 @@
     // 初始化 init | public
     // 行为事件主动上报 push | public
     // 上报统一入口 _report | private
+    // 模式切换 _changeMode | private
 
     console.log(sayHello('1234'));
 
