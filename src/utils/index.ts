@@ -1,7 +1,21 @@
-const _ = <_>function() {}
+const _ = <Utils>function() {}
 
+/**
+ * 判断应用是否在 iframe 内
+ */
 _.inIframe = () => window && window.self === window.top;
 
+/**
+ * 判断是否是某类型
+ * @param {String} _type 类型(字符串)
+ * @param {Any} _staff 待判断的内容
+ */
+_.isType = (type, staff) => Object.prototype.toString.call(staff) === `[object ${type}]`;
+
+/**
+ * 生成访问记录唯一标识
+ * @param {String} appId 应用id
+ */
 _.createVisitId = function(appId) {
     return ''
         // 应用id
@@ -12,6 +26,11 @@ _.createVisitId = function(appId) {
         + this.randomInRange(100000, 999999);
 };
 
+/**
+ * 日期格式化
+ * @param {String} format 期望日期格式
+ * @param {Date} date 时间对象，可选，若不传则默认为当前时间
+ */
 _.formatDate = (format, date = new Date()) => {
     const map: {
         [key: string]: number | string;
@@ -42,6 +61,11 @@ _.formatDate = (format, date = new Date()) => {
     return format;
 };
 
+/**
+ * 生成一定范围内的随机数
+ * @param {Number} min 最小值
+ * @param {Number} max 最大值
+ */
 _.randomInRange = (min, max) => Math.floor(Math.random() * (max - min) + min);
 
 export default _;

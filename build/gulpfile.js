@@ -7,6 +7,8 @@ const entry = '../src/**/*';
 const jsEntry = '../src/**/*.js';
 const tsEntry = '../src/**/*.ts';
 const buildEntry = '../packages/**';
+// const types = [ '../node_modules/@types/**/index.d.ts', '!../node_modules/@types/**/node_modules/**/*.d.ts' ];
+const types = [];
 
 const tsconfig = {
     target: "es5",
@@ -30,7 +32,7 @@ function copyJs() {
 
 function tsc() {
     return watch(entry, { ignoreInitial: false }, function () {
-        gulp.src(tsEntry)
+        gulp.src([ tsEntry, ...types ])
             .pipe(ts(tsconfig))
             .pipe(gulp.dest('../packages'));
     });

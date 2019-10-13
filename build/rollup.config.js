@@ -9,6 +9,14 @@ const { resolveFile } = require('./utils');
 
 module.exports = {
     input: resolveFile(`packages/${process.env.TARGET}/entry.js`),
+    onwarn: function (message) {
+        // Suppress this error message... there are hundreds of them. Angular team says to ignore it.
+        // https://github.com/rollup/rollup/wiki/Troubleshooting#this-is-undefined
+        if (/The 'this' keyword is equivalent to 'undefined' at the top level of an ES module, and has been rewritten./.test(message)) {
+            return;
+        }
+        // console.error(message);
+    },
     plugins: [
         resolve({
             jsnext: true, // 该属性是指定将Node包转换为ES2015模块
