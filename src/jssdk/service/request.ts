@@ -14,7 +14,7 @@ const splitUrl: (host: string, path: string) => string
     = (host, path) => (conf as any)[host] + path;
 
 export default (() => {
-    // 请求头暂存
+    // 全局请求头暂存
     let _header = {};
 
     /**
@@ -24,9 +24,15 @@ export default (() => {
      * @param {Object} data 请求体，将转为 json 之后作为 fetch 的 body 传入
      * @param {Object} options 额外参数（注意：options 中设置的 body 将被忽略，请传入 data 参数代替）
      */
-    const _request: SafeRequestEntry = (method, url, data, options = {}) => {
+    const _request: (
+        method: RequestMethods,
+        url: string,
+        data: object | null,
+        options?: RequestOptions
+    ) => Promise<any>
+    = (method, url, data, options = {}) => {
         let { headers, body, ...rest } = options;
-
+        // 存在 body ，则警告并忽略
         body && console.warn('options 中设置的 body 将被忽略，请传入 data 参数代替');
 
         const safeOptions = {
@@ -35,6 +41,8 @@ export default (() => {
             headers: { ..._header, ...headers },
             ...rest
         }
+
+        // 当前是 POST | PUT ，则合并请求体
         method === 'POST' || method === 'PUT' && Object.assign(safeOptions, {
             body: JSON.stringify(data),
         });
@@ -54,6 +62,7 @@ export default (() => {
          */
         setHeader: newHeader => {
             _header = { ..._header, ...newHeader };
+            return _header;
         },
 
         get: (host, url, options) => _request('GET', splitUrl(host, url), null, options),

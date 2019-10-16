@@ -1,14 +1,14 @@
-var _ = function () { };
+const _ = function () { };
 /**
  * 判断应用是否在 iframe 内
  */
-_.inIframe = function () { return window && window.self === window.top; };
+_.inIframe = () => window && window.self !== window.top;
 /**
  * 判断是否是某类型
  * @param {String} _type 类型(字符串)
  * @param {Any} _staff 待判断的内容
  */
-_.isType = function (type, staff) { return Object.prototype.toString.call(staff) === "[object " + type + "]"; };
+_.isType = (type, staff) => Object.prototype.toString.call(staff) === `[object ${type}]`;
 /**
  * 生成访问记录唯一标识
  * @param {String} appId 应用id
@@ -27,9 +27,8 @@ _.createVisitId = function (appId) {
  * @param {String} format 期望日期格式
  * @param {Date} date 时间对象，可选，若不传则默认为当前时间
  */
-_.formatDate = function (format, date) {
-    if (date === void 0) { date = new Date(); }
-    var map = {
+_.formatDate = (format, date = new Date()) => {
+    const map = {
         'M': date.getMonth() + 1,
         'd': date.getDate(),
         'h': date.getHours(),
@@ -50,7 +49,7 @@ _.formatDate = function (format, date) {
             return (date.getFullYear() + '').substr(4 - all.length);
         }
         else if (t === 'S') {
-            var ms = "00" + date.getMilliseconds();
+            const ms = `00${date.getMilliseconds()}`;
             return ms.substr(ms.length - 3);
         }
         return all;
@@ -62,5 +61,14 @@ _.formatDate = function (format, date) {
  * @param {Number} min 最小值
  * @param {Number} max 最大值
  */
-_.randomInRange = function (min, max) { return Math.floor(Math.random() * (max - min) + min); };
+_.randomInRange = (min, max) => Math.floor(Math.random() * (max - min) + min);
+/**
+ * 装饰器 | 混合属性
+ * @param {Array} ...list 待混合属性的数组
+ */
+_.mixins = function (...list) {
+    return function (constructor) {
+        Object.assign(constructor.prototype, ...list);
+    };
+};
 export default _;

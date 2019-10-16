@@ -9,13 +9,14 @@ const { resolveFile } = require('./utils');
 
 module.exports = {
     input: resolveFile(`packages/${process.env.TARGET}/entry.js`),
-    onwarn: function (message) {
-        // Suppress this error message... there are hundreds of them. Angular team says to ignore it.
-        // https://github.com/rollup/rollup/wiki/Troubleshooting#this-is-undefined
-        if (/The 'this' keyword is equivalent to 'undefined' at the top level of an ES module, and has been rewritten./.test(message)) {
-            return;
-        }
-        // console.error(message);
+    onwarn: function(warning) {
+        // Skip certain warnings
+    
+        // should intercept ... but doesn't in some rollup versions
+        if ( warning.code === 'THIS_IS_UNDEFINED' ) { return; }
+    
+        // console.warn everything else
+        console.warn( warning.message );
     },
     plugins: [
         resolve({

@@ -3,7 +3,7 @@ const _ = <Utils>function() {}
 /**
  * 判断应用是否在 iframe 内
  */
-_.inIframe = () => window && window.self === window.top;
+_.inIframe = () => window && window.self !== window.top;
 
 /**
  * 判断是否是某类型
@@ -67,5 +67,15 @@ _.formatDate = (format, date = new Date()) => {
  * @param {Number} max 最大值
  */
 _.randomInRange = (min, max) => Math.floor(Math.random() * (max - min) + min);
+
+/**
+ * 装饰器 | 混合属性
+ * @param {Array} ...list 待混合属性的数组
+ */
+_.mixins = function(...list) {
+    return function (constructor) {
+        Object.assign(constructor.prototype, ...list);
+    }
+}
 
 export default _;
