@@ -37,8 +37,24 @@ var ha = (function () {
     return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
   }
 
+  function _toConsumableArray(arr) {
+    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+  }
+
+  function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr)) {
+      for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+      return arr2;
+    }
+  }
+
   function _arrayWithHoles(arr) {
     if (Array.isArray(arr)) return arr;
+  }
+
+  function _iterableToArray(iter) {
+    if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
   }
 
   function _iterableToArrayLimit(arr, i) {
@@ -71,34 +87,87 @@ var ha = (function () {
     return _arr;
   }
 
+  function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance");
+  }
+
   function _nonIterableRest() {
     throw new TypeError("Invalid attempt to destructure non-iterable instance");
   }
 
   var _ = function _() {};
-  /**
-   * 判断应用是否在 iframe 内
-   */
 
+  _.unboundMethod = function (methodName) {
+    var argCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
+    return this.curry(function () {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      var obj = args.pop();
+      return obj[methodName].apply(obj, args);
+    }, argCount);
+  };
+
+  _.curry = function (fn) {
+    var arity = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : fn.length;
+
+    // 1. 构造一个这样的函数：
+    //    即：接收前一部分参数，返回一个 接收后一部分参数 的函数，返回的那个函数需在内部判断是否执行原函数
+    var nextCurried = function nextCurried() {
+      for (var _len2 = arguments.length, prev = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        prev[_key2] = arguments[_key2];
+      }
+
+      return function () {
+        for (var _len3 = arguments.length, next = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+          next[_key3] = arguments[_key3];
+        }
+
+        var args = [].concat(prev, next);
+        return args.length >= arity ? fn.apply(void 0, _toConsumableArray(args)) : nextCurried.apply(void 0, _toConsumableArray(args));
+      };
+    }; // 2. 将构造的这个函数执行并返回，初始入参为空
+
+
+    return nextCurried();
+  };
+
+  _.map = _.unboundMethod('map', 2);
+  var _window = window,
+      sessionStorage = _window.sessionStorage,
+      localStorage = _window.localStorage;
+
+  var _$map = _.map(function (storage) {
+    return {
+      get: function get(key) {
+        return JSON.parse(storage.getItem(key));
+      },
+      set: function set(key, val) {
+        return storage.setItem(key, JSON.stringify(val));
+      },
+      remove: function remove(key) {
+        return storage.removeItem(key);
+      },
+      clear: function clear() {
+        return storage.clear();
+      }
+    };
+  })([sessionStorage, localStorage]),
+      _$map2 = _slicedToArray(_$map, 2),
+      SessStorage = _$map2[0],
+      LocStorage = _$map2[1];
+
+  _.SessStorage = SessStorage;
+  _.LocStorage = LocStorage;
 
   _.inIframe = function () {
     return window && window.self !== window.top;
   };
-  /**
-   * 判断是否是某类型
-   * @param {String} _type 类型(字符串)
-   * @param {Any} _staff 待判断的内容
-   */
-
 
   _.isType = function (type, staff) {
     return Object.prototype.toString.call(staff) === "[object ".concat(type, "]");
   };
-  /**
-   * 生成访问记录唯一标识
-   * @param {String} appId 应用id
-   */
-
 
   _.createVisitId = function (appId) {
     return '' // 应用id
@@ -106,12 +175,6 @@ var ha = (function () {
     + this.formatDate('yyyy-MM-dd-hh-mm-ss').split(/-/g).join('') // 6位随机数
     + this.randomInRange(100000, 999999);
   };
-  /**
-   * 日期格式化
-   * @param {String} format 期望日期格式
-   * @param {Date} date 时间对象，可选，若不传则默认为当前时间
-   */
-
 
   _.formatDate = function (format) {
     var date = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new Date();
@@ -145,25 +208,14 @@ var ha = (function () {
     });
     return format;
   };
-  /**
-   * 生成一定范围内的随机数
-   * @param {Number} min 最小值
-   * @param {Number} max 最大值
-   */
-
 
   _.randomInRange = function (min, max) {
     return Math.floor(Math.random() * (max - min) + min);
   };
-  /**
-   * 装饰器 | 混合属性
-   * @param {Array} ...list 待混合属性的数组
-   */
-
 
   _.mixins = function () {
-    for (var _len = arguments.length, list = new Array(_len), _key = 0; _key < _len; _key++) {
-      list[_key] = arguments[_key];
+    for (var _len4 = arguments.length, list = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      list[_key4] = arguments[_key4];
     }
 
     return function (constructor) {
@@ -200,6 +252,75 @@ var ha = (function () {
     return Setting;
   }();
 
+  var __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
+    var c = arguments.length,
+        r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+        d;
+    if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
+      if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    }
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+  };
+
+  var EventListener = {
+    'r-click': [{
+      capture: false
+    }, function (config) {
+      var _this = this;
+
+      return this.events.click(config).subscribe(function (e) {
+        // 包装事件数据，触发事件消费 onTrigger
+        _this.onTrigger(e);
+      });
+    }]
+  };
+
+  var Report =
+  /*#__PURE__*/
+  function () {
+    function Report(events) {
+      this.modeType = 'report';
+      this.events = events;
+      this.subs = [];
+    }
+
+    var _proto = Report.prototype;
+
+    _proto.onEnter = function onEnter() {
+      // 注册事件监听
+      console.log(this); // 将自身所有 r- 开头的事件监听器方法全部注册，并记录至 subs
+
+      for (var key in this) {
+        if (/r-.+/g.test(key)) {
+          var _this$key = _slicedToArray(this[key], 2),
+              config = _this$key[0],
+              cb = _this$key[1];
+
+          this.subs.push(cb.call(this, config));
+        }
+      }
+    };
+
+    _proto.onExit = function onExit() {
+      // 注销事件监听
+      this.subs.length && this.subs.forEach(function (unsub) {
+        return unsub.unsubscribe();
+      });
+      this.subs = [];
+    };
+
+    _proto.onTrigger = function onTrigger(data) {
+      // 根据当前事件消费者消费数据
+      console.log('ReportLifeCycle onTrigger: ', data);
+    };
+
+    _proto.formatDatagram = function formatDatagram() {};
+
+    return Report;
+  }();
+
+  Report = __decorate([_.mixins(EventListener)], Report);
+
   /*! *****************************************************************************
   Copyright (c) Microsoft Corporation. All rights reserved.
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -233,6 +354,7 @@ var ha = (function () {
   function isFunction(x) {
       return typeof x === 'function';
   }
+  //# sourceMappingURL=isFunction.js.map
 
   /** PURE_IMPORTS_START  PURE_IMPORTS_END */
   var _enable_super_gross_mode_that_will_cause_bad_things = false;
@@ -249,11 +371,13 @@ var ha = (function () {
           return _enable_super_gross_mode_that_will_cause_bad_things;
       },
   };
+  //# sourceMappingURL=config.js.map
 
   /** PURE_IMPORTS_START  PURE_IMPORTS_END */
   function hostReportError(err) {
       setTimeout(function () { throw err; }, 0);
   }
+  //# sourceMappingURL=hostReportError.js.map
 
   /** PURE_IMPORTS_START _config,_util_hostReportError PURE_IMPORTS_END */
   var empty = {
@@ -269,14 +393,17 @@ var ha = (function () {
       },
       complete: function () { }
   };
+  //# sourceMappingURL=Observer.js.map
 
   /** PURE_IMPORTS_START  PURE_IMPORTS_END */
   var isArray = /*@__PURE__*/ (function () { return Array.isArray || (function (x) { return x && typeof x.length === 'number'; }); })();
+  //# sourceMappingURL=isArray.js.map
 
   /** PURE_IMPORTS_START  PURE_IMPORTS_END */
   function isObject(x) {
       return x !== null && typeof x === 'object';
   }
+  //# sourceMappingURL=isObject.js.map
 
   /** PURE_IMPORTS_START  PURE_IMPORTS_END */
   var UnsubscriptionErrorImpl = /*@__PURE__*/ (function () {
@@ -292,6 +419,7 @@ var ha = (function () {
       return UnsubscriptionErrorImpl;
   })();
   var UnsubscriptionError = UnsubscriptionErrorImpl;
+  //# sourceMappingURL=UnsubscriptionError.js.map
 
   /** PURE_IMPORTS_START _util_isArray,_util_isObject,_util_isFunction,_util_UnsubscriptionError PURE_IMPORTS_END */
   var Subscription = /*@__PURE__*/ (function () {
@@ -423,6 +551,7 @@ var ha = (function () {
   function flattenUnsubscriptionErrors(errors) {
       return errors.reduce(function (errs, err) { return errs.concat((err instanceof UnsubscriptionError) ? err.errors : err); }, []);
   }
+  //# sourceMappingURL=Subscription.js.map
 
   /** PURE_IMPORTS_START  PURE_IMPORTS_END */
   var rxSubscriber = /*@__PURE__*/ (function () {
@@ -430,6 +559,7 @@ var ha = (function () {
           ? /*@__PURE__*/ Symbol('rxSubscriber')
           : '@@rxSubscriber_' + /*@__PURE__*/ Math.random();
   })();
+  //# sourceMappingURL=rxSubscriber.js.map
 
   /** PURE_IMPORTS_START tslib,_util_isFunction,_Observer,_Subscription,_internal_symbol_rxSubscriber,_config,_util_hostReportError PURE_IMPORTS_END */
   var Subscriber = /*@__PURE__*/ (function (_super) {
@@ -654,6 +784,7 @@ var ha = (function () {
       };
       return SafeSubscriber;
   }(Subscriber));
+  //# sourceMappingURL=Subscriber.js.map
 
   /** PURE_IMPORTS_START _Subscriber PURE_IMPORTS_END */
   function canReportError(observer) {
@@ -671,6 +802,7 @@ var ha = (function () {
       }
       return true;
   }
+  //# sourceMappingURL=canReportError.js.map
 
   /** PURE_IMPORTS_START _Subscriber,_symbol_rxSubscriber,_Observer PURE_IMPORTS_END */
   function toSubscriber(nextOrObserver, error, complete) {
@@ -687,12 +819,15 @@ var ha = (function () {
       }
       return new Subscriber(nextOrObserver, error, complete);
   }
+  //# sourceMappingURL=toSubscriber.js.map
 
   /** PURE_IMPORTS_START  PURE_IMPORTS_END */
   var observable = /*@__PURE__*/ (function () { return typeof Symbol === 'function' && Symbol.observable || '@@observable'; })();
+  //# sourceMappingURL=observable.js.map
 
   /** PURE_IMPORTS_START  PURE_IMPORTS_END */
   function noop() { }
+  //# sourceMappingURL=noop.js.map
 
   /** PURE_IMPORTS_START _noop PURE_IMPORTS_END */
   function pipeFromArray(fns) {
@@ -706,6 +841,7 @@ var ha = (function () {
           return fns.reduce(function (prev, fn) { return fn(prev); }, input);
       };
   }
+  //# sourceMappingURL=pipe.js.map
 
   /** PURE_IMPORTS_START _util_canReportError,_util_toSubscriber,_symbol_observable,_util_pipe,_config PURE_IMPORTS_END */
   var Observable = /*@__PURE__*/ (function () {
@@ -816,6 +952,7 @@ var ha = (function () {
       }
       return promiseCtor;
   }
+  //# sourceMappingURL=Observable.js.map
 
   /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
   function map(project, thisArg) {
@@ -858,6 +995,7 @@ var ha = (function () {
       };
       return MapSubscriber;
   }(Subscriber));
+  //# sourceMappingURL=map.js.map
 
   /** PURE_IMPORTS_START _Observable,_util_isArray,_util_isFunction,_operators_map PURE_IMPORTS_END */
   function fromEvent(target, eventName, options, resultSelector) {
@@ -916,85 +1054,7 @@ var ha = (function () {
   function isEventTarget(sourceObj) {
       return sourceObj && typeof sourceObj.addEventListener === 'function' && typeof sourceObj.removeEventListener === 'function';
   }
-
-  var __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
-    var c = arguments.length,
-        r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
-        d;
-    if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-      if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    }
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-  };
-  var config$1 = {
-    'e-click': [{
-      capture: false
-    }, function (config) {
-      debugger;
-      return this.events.click(config).subscribe(function (e) {
-        console.log('上报模式的点击：', e);
-      });
-    }]
-  };
-  var eventBinding = {
-    subs: [Subscription],
-    subscribe: function subscribe(obj) {
-      console.log(obj);
-
-      for (var key in obj) {
-        if (/e-.+/g.test(key)) {
-          var _obj$key = _slicedToArray(obj[key], 2),
-              _config = _obj$key[0],
-              cb = _obj$key[1];
-
-          this.subs.push(cb.call(this, _config));
-        }
-      } // Object.keys(obj).forEach(key => {
-      //     if (/e-.+/g.test(key)) {
-      //         const [ config, cb ] = obj[key];
-      //         this.subs.push(cb.call(this, config));
-      //     }
-      // })
-
-    },
-    unSubscribe: function unSubscribe() {
-      this.subs.length && this.subs.forEach(function (unsub) {
-        return unsub.unsubscribe();
-      });
-      this.subs = [];
-    }
-  };
-
-  var Report =
-  /*#__PURE__*/
-  function () {
-    function Report(events) {
-      this.modeType = 'report'; // super();
-
-      this.events = events;
-    }
-
-    var _proto = Report.prototype;
-
-    _proto.onEnter = function onEnter() {
-      // 切换当前事件消费者为report
-      this.subscribe(this);
-    };
-
-    _proto.onExit = function onExit() {
-      this.unSubscribe();
-    };
-
-    _proto.onTrigger = function onTrigger() {
-      console.log('ReportLifeCycle onTrigger');
-    };
-
-    _proto.formatDatagram = function formatDatagram() {};
-
-    return Report;
-  }();
-
-  Report = __decorate([_.mixins(eventBinding, config$1)], Report);
+  //# sourceMappingURL=fromEvent.js.map
 
   // 页面生命周期事件
   // onload
@@ -1061,7 +1121,7 @@ var ha = (function () {
   // const getUserInfoByOpenID = (openID: string) => http.get('user', `/video/user?openId=${openID}`);
   // window.addEventListener('beforeunload', () => {
   //     localStorage.setItem('isUserMessageSendSuccT', JSON.stringify(Date.now()));
-  //     getUserInfoByOpenID('oKXX7wKQhDf0sixuV0z-gEB8Y8is').then((res: object) => {
+  //     getUserInfoByOpenID('oKXX7wKQhDf0sixuV0z-gEB8Y8is').then((res: Obj) => {
   //         console.log('用户信息: ', res);
   //         localStorage.setItem('isUserMessageSendSucc', JSON.stringify(res));
   //     })
@@ -1083,9 +1143,6 @@ var ha = (function () {
   // 行为事件主动上报 push | public
   // 上报统一入口 _report | private
   // 模式切换 _changeMode | private
-  // container
-  // event
-  // mode
 
   var HXAnalytics =
   /*#__PURE__*/
@@ -1099,8 +1156,8 @@ var ha = (function () {
     var _proto = HXAnalytics.prototype;
 
     // 提供应用开发人员主动埋点能力
-    _proto.push = function push() {
-      this._mode.onTrigger();
+    _proto.push = function push(data) {
+      this._mode.onTrigger(data);
     };
 
     _proto.init = function init() {

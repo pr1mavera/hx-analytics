@@ -1,6 +1,9 @@
+import { Subscription } from 'rxjs';
+
 export class Setting implements ModeLifeCycle<Setting> {
     readonly modeType: string = 'setting';
-    events: object;
+    subs: [Subscription?];
+    events: Obj;
     constructor(events: Obj) {
         this.events = events;
     }

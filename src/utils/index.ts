@@ -1,21 +1,50 @@
 const _ = <Utils>function() {}
 
-/**
- * 判断应用是否在 iframe 内
- */
+_.unboundMethod = function(methodName: string, argCount: number = 2) {
+    return this.curry(
+        (...args: any[]) => {
+            const obj = args.pop();
+            return obj[methodName]( ...args );
+        },
+        argCount
+    );
+}
+
+_.curry = (fn: Fn, arity: number = fn.length) => {
+	// 1. 构造一个这样的函数：
+	//    即：接收前一部分参数，返回一个 接收后一部分参数 的函数，返回的那个函数需在内部判断是否执行原函数
+	const nextCurried = (...prev: any[]) =>
+							(...next: any[]) => {
+								const args = [ ...prev, ...next ];
+
+								return args.length >= arity
+										? fn(...args)
+										: nextCurried(...args)
+							};
+
+	// 2. 将构造的这个函数执行并返回，初始入参为空
+	return nextCurried();
+};
+
+_.map = _.unboundMethod('map', 2);
+
+const { sessionStorage, localStorage } = <Window>window;
+const [ SessStorage, LocStorage ] = _.map(
+    (storage: Storage) => ({
+        get: key => JSON.parse(storage.getItem(key)),
+        set: (key, val) => storage.setItem(key, JSON.stringify(val)),
+        remove: key => storage.removeItem(key),
+        clear: () => storage.clear()
+    } as CstmStorage)
+)
+( [ sessionStorage, localStorage ] );
+_.SessStorage = SessStorage;
+_.LocStorage = LocStorage;
+
 _.inIframe = () => window && window.self !== window.top;
 
-/**
- * 判断是否是某类型
- * @param {String} _type 类型(字符串)
- * @param {Any} _staff 待判断的内容
- */
 _.isType = (type, staff) => Object.prototype.toString.call(staff) === `[object ${type}]`;
 
-/**
- * 生成访问记录唯一标识
- * @param {String} appId 应用id
- */
 _.createVisitId = function(appId) {
     return ''
         // 应用id
@@ -26,11 +55,6 @@ _.createVisitId = function(appId) {
         + this.randomInRange(100000, 999999);
 };
 
-/**
- * 日期格式化
- * @param {String} format 期望日期格式
- * @param {Date} date 时间对象，可选，若不传则默认为当前时间
- */
 _.formatDate = (format, date = new Date()) => {
     const map: {
         [key: string]: number | string;
@@ -61,17 +85,8 @@ _.formatDate = (format, date = new Date()) => {
     return format;
 };
 
-/**
- * 生成一定范围内的随机数
- * @param {Number} min 最小值
- * @param {Number} max 最大值
- */
 _.randomInRange = (min, max) => Math.floor(Math.random() * (max - min) + min);
 
-/**
- * 装饰器 | 混合属性
- * @param {Array} ...list 待混合属性的数组
- */
 _.mixins = function(...list) {
     return function (constructor) {
         Object.assign(constructor.prototype, ...list);

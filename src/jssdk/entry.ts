@@ -6,7 +6,7 @@ import * as events from './events/native';
 // const getUserInfoByOpenID = (openID: string) => http.get('user', `/video/user?openId=${openID}`);
 // window.addEventListener('beforeunload', () => {
 //     localStorage.setItem('isUserMessageSendSuccT', JSON.stringify(Date.now()));
-//     getUserInfoByOpenID('oKXX7wKQhDf0sixuV0z-gEB8Y8is').then((res: object) => {
+//     getUserInfoByOpenID('oKXX7wKQhDf0sixuV0z-gEB8Y8is').then((res: Obj) => {
 //         console.log('用户信息: ', res);
 //         localStorage.setItem('isUserMessageSendSucc', JSON.stringify(res));
 //     })
@@ -32,10 +32,6 @@ import * as events from './events/native';
 // 上报统一入口 _report | private
 // 模式切换 _changeMode | private
 
-// container
-// event
-// mode
-
 class HXAnalytics {
 
     _mode: ModeLifeCycle<any>;
@@ -59,8 +55,8 @@ class HXAnalytics {
         // 绑定
     }
     // 提供应用开发人员主动埋点能力
-    push() {
-        this._mode.onTrigger();
+    push(data: Obj) {
+        this._mode.onTrigger(data);
     }
     init() {
         return this;

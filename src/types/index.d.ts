@@ -1,38 +1,118 @@
 type Obj = { [ x: string ]: any };
+type Fn = (...args: any[]) => any;
+// type Cast<X, Y> = X extends Y ? X : Y;
+// type Length<T extends any[]> = T['length'];
+// type Drop<N extends number, T extends any[], I extends any[] = []> = {
+//     0: Drop<N, Tail<T>, Prepend<any, I>>
+//     1: T
+//   }[Length<I> extends N ? 1 : 0];
+// type Currying<F extends ((...arg: any) => R), R> = <T extends any[]>(...args: T) => ;
+// type Curry<P extends any[], R> = (fn: ((...args) => R), arity?: number) => <T extends any[]>(...args: T) => ;
 
 // 工具类
 interface Utils {
+
     (): Utils;
+
+    [x: string]: any;
+
+    /**
+     * map 原生对象方法柯里化
+     * @param {Function} mapper 映射过程
+     * @param {Array} obj 原生对象
+     */
+    map: (...arg: any[]) => any;
+
+    /**
+     * 原生对象方法柯里化，将原生对象后置传递
+     * @param {String} methodName 方法名
+     * @param {Number} argCount 柯里化函数传递的参数个数，默认为2
+     */
+    // unboundMethod: <T>(methodName: string, argCount?: number) => Curry<T>;
+    unboundMethod: (...arg: any[]) => any;
+
+    /**
+     * 柯里化
+     * @param {Function} fn 待柯里化的函数
+     * @param {Number} arity 柯里化函数传递的参数个数，默认为形参个数
+     */
+    // curry: Curry;
+    curry: (...arg: any[]) => any;
+
+    /**
+     * 本地缓存封装
+     */
+    SessStorage: CstmStorage;
+    LocStorage: CstmStorage;
+
+    /**
+     * 判断应用是否在 iframe 内
+     */
     inIframe: () => boolean;
-    isType: (type: string, staff: any) => boolean
+
+    /**
+     * 判断是否是某类型
+     * @param {String} _type 类型(字符串)
+     * @param {Any} _staff 待判断的内容
+     */
+    isType: (type: string, staff: any) => boolean;
+
+    /**
+     * 生成访问记录唯一标识
+     * @param {String} appId 应用id
+     */
     createVisitId: (this: Utils, appId: string) => string;
+
+    /**
+     * 日期格式化
+     * @param {String} format 期望日期格式
+     * @param {Date} date 时间对象，可选，若不传则默认为当前时间
+     */
     formatDate: (format: string, date?: Date) => string;
+
+    /**
+     * 生成一定范围内的随机数
+     * @param {Number} min 最小值
+     * @param {Number} max 最大值
+     */
     randomInRange: (min: number, max: number) => number;
-    mixins: (...list: object[]) => (...x: any[]) => void;
+
+    /**
+     * 装饰器 | 混合属性
+     * @param {Array} ...list 待混合属性的数组
+     */
+    mixins: (...list: Obj[]) => (...x: any[]) => void;
+}
+interface CstmStorage {
+    get: (key: string) => any;
+    set: (key: string, val: any) => void,
+    remove: (key: string) => void,
+    clear: () => void;
 }
 
-// 单个模式的生命周期
+// 模式生命周期
 interface ModeLifeCycle<T> {
     readonly modeType: string;
-    events?: object;
-    onEnter: (this: T) => void;
-    onExit: (this: T) => void;
-    onTrigger: (this: T) => void;
+    subs: any[];
+    events?: Obj;
+    onEnter(): void;
+    onExit(): void;
+    onTrigger(data: Obj): void;
 }
 
 // 请求方式
 type RequestMethods = 'DELETE' | 'GET' | 'HEAD' | 'POST' | 'PUT';
 // 请求额外选项
 interface RequestOptions {
-    headers?: object;
+    headers?: Obj;
     [propName: string]: any;
 }
 // 请求
 type SafeRequest = {
-    setHeader: (newHeader: object) => object;
+    setHeader: (newHeader: Obj) => Obj;
     get: (host: string, url: string, options?: RequestOptions) => Promise<any>;
-    post: (host: string, url: string, data: object | null, options?: RequestOptions) => Promise<any>;
-    put: (host: string, url: string, data: object | null, options?: RequestOptions) => Promise<any>;
+    post: (host: string, url: string, data: Obj | null, options?: RequestOptions) => Promise<any>;
+    put: (host: string, url: string, data: Obj | null, options?: RequestOptions) => Promise<any>;
     delete: (host: string, url: string, options?: RequestOptions) => Promise<any>;
     url: (host: string, url: string) => string;
 }

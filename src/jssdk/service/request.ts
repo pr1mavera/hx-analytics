@@ -27,7 +27,7 @@ export default (() => {
     const _request: (
         method: RequestMethods,
         url: string,
-        data: object | null,
+        data: Obj | null,
         options?: RequestOptions
     ) => Promise<any>
     = (method, url, data, options = {}) => {

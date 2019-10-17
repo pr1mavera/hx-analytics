@@ -2,50 +2,49 @@ import _ from '../utils';
 import { Subscription } from 'rxjs';
 import { DOMEventTarget } from 'rx';
 
-const config = {
-    'e-click': [ { capture: false }, function(config: Obj): Subscription {
-        debugger;
-        return this.events.click(config).subscribe((e: DOMEventTarget) => {
-            console.log('上报模式的点击：', e);
-        })
-    } ],
+// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
+const EventListener = {
+    'r-click': [
+        { capture: false },
+        function(config: Obj): Subscription {
+            return this.events.click(config).subscribe((e: DOMEventTarget) => {
+                // 包装事件数据，触发事件消费 onTrigger
+                this.onTrigger(e);
+            });
+        }
+    ],
 };
 
-const eventBinding = {
-    subs: [Subscription],
-    subscribe(obj: Obj): void {
-        console.log(obj)
-        for (const key in obj) {
-            if (/e-.+/g.test(key)) {
-                const [ config, cb ] = obj[key];
-                this.subs.push(cb.call(this, config));
-            }
-        }
-    },
-    unSubscribe(): void {
-        this.subs.length && this.subs.forEach((unsub: Subscription) => unsub.unsubscribe());
-        this.subs = [];
-    }
-}
-
-@_.mixins(eventBinding, config)
+@_.mixins(EventListener)
 export class Report implements ModeLifeCycle<Report> {
     [x: string]: any;
     readonly modeType: string = 'report';
-    events: object;
+    subs: [Subscription?];
+    events: Obj;
     constructor(events: Obj) {
-        // super();
         this.events = events;
+        this.subs = [];
     }
-    onEnter(this: Report) {
-        // 切换当前事件消费者为report
-        this.subscribe(this);
+    onEnter() {
+        // 注册事件监听
+        console.log(this);
+        // 将自身所有 r- 开头的事件监听器方法全部注册，并记录至 subs
+        for (const key in this) {
+            if (/r-.+/g.test(key)) {
+                const [ config, cb ] = <[ Obj, (config: Obj) => Subscription ]>this[key];
+                this.subs.push(cb.call(this, config));
+            }
+        }
     }
     onExit() {
-        this.unSubscribe();
+        // 注销事件监听
+        this.subs.length && this.subs.forEach((unsub: Subscription) => unsub.unsubscribe());
+        this.subs = [];
     }
-    onTrigger() {
-        console.log('ReportLifeCycle onTrigger');
+
+    onTrigger(data: Obj) {
+        // 根据当前事件消费者消费数据
+        console.log('ReportLifeCycle onTrigger: ', data);
     }
     formatDatagram() {
 
