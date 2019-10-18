@@ -26,4 +26,4 @@ export const popstate = () => fromEvent(document, 'popstate');
 export const visibilitychange = () => fromEvent(document, 'visibilitychange');
 export const online = () => fromEvent(document, 'online');
 export const offline = () => fromEvent(document, 'offline');
-export const message = () => fromEvent(document, 'message');
+export const message = () => fromEvent(window, 'message');

@@ -33,6 +33,104 @@ var ha = (function () {
     return Constructor;
   }
 
+  function _inheritsLoose(subClass, superClass) {
+    subClass.prototype = Object.create(superClass.prototype);
+    subClass.prototype.constructor = subClass;
+    subClass.__proto__ = superClass;
+  }
+
+  function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+      return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+  }
+
+  function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+      o.__proto__ = p;
+      return o;
+    };
+
+    return _setPrototypeOf(o, p);
+  }
+
+  function isNativeReflectConstruct() {
+    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+    if (Reflect.construct.sham) return false;
+    if (typeof Proxy === "function") return true;
+
+    try {
+      Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function _construct(Parent, args, Class) {
+    if (isNativeReflectConstruct()) {
+      _construct = Reflect.construct;
+    } else {
+      _construct = function _construct(Parent, args, Class) {
+        var a = [null];
+        a.push.apply(a, args);
+        var Constructor = Function.bind.apply(Parent, a);
+        var instance = new Constructor();
+        if (Class) _setPrototypeOf(instance, Class.prototype);
+        return instance;
+      };
+    }
+
+    return _construct.apply(null, arguments);
+  }
+
+  function _isNativeFunction(fn) {
+    return Function.toString.call(fn).indexOf("[native code]") !== -1;
+  }
+
+  function _wrapNativeSuper(Class) {
+    var _cache = typeof Map === "function" ? new Map() : undefined;
+
+    _wrapNativeSuper = function _wrapNativeSuper(Class) {
+      if (Class === null || !_isNativeFunction(Class)) return Class;
+
+      if (typeof Class !== "function") {
+        throw new TypeError("Super expression must either be null or a function");
+      }
+
+      if (typeof _cache !== "undefined") {
+        if (_cache.has(Class)) return _cache.get(Class);
+
+        _cache.set(Class, Wrapper);
+      }
+
+      function Wrapper() {
+        return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+      }
+
+      Wrapper.prototype = Object.create(Class.prototype, {
+        constructor: {
+          value: Wrapper,
+          enumerable: false,
+          writable: true,
+          configurable: true
+        }
+      });
+      return _setPrototypeOf(Wrapper, Class);
+    };
+
+    return _wrapNativeSuper(Class);
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
   function _slicedToArray(arr, i) {
     return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
   }
@@ -94,6 +192,219 @@ var ha = (function () {
   function _nonIterableRest() {
     throw new TypeError("Invalid attempt to destructure non-iterable instance");
   }
+
+  function getCoords(elem) {
+      var box = elem.getBoundingClientRect();
+      var body = document.body;
+      var docEl = document.documentElement;
+      var scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop;
+      var scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft;
+      var clientTop = docEl.clientTop || body.clientTop || 0;
+      var clientLeft = docEl.clientLeft || body.clientLeft || 0;
+      var top  = box.top +  scrollTop - clientTop;
+      var left = box.left + scrollLeft - clientLeft;
+      return { top: Math.round(top), left: Math.round(left) };
+  }
+
+  function initFunction(){
+      var init =  function (argument) {
+          this.options = Object.assign({},{
+              draw:true,
+              /**尽可能短的wid*/
+              simpleId:true
+          },argument);
+          this.lastClick = document.body;
+          var that = this;
+          /**点击其他地方时，清除*/
+          document.addEventListener('mousedown', function(event){
+              that.lastClick = event.target;
+              if(that.focusedElement!==that.lastClick){
+                init.prototype.clean();
+              }
+          });
+      };
+      return init;
+  }
+
+  /**
+   * Created by rowthan on 2017/12/9. TODO show size
+   * 包含核心 api 获取id,获取元素，不含UI
+   */
+  var document$1 = window.document,noop = function(){},
+  whatsElementPure = initFunction(),
+  prototype = whatsElementPure.prototype;
+  prototype.getUniqueId = function (element,parent) {
+      element = element ? element : this.lastClick;
+      if(!(element instanceof HTMLElement)){
+          console.error("input is not a HTML element");
+          return {};
+      }
+      var result = {
+          wid:"",
+          type:"",
+          top:getCoords(element).top,
+          left:getCoords(element).left,
+          viewLeft:element.getBoundingClientRect().left,
+          viewTop: element.getBoundingClientRect().top,
+          text: element.innerText
+      },
+      //construct data info of the element
+        id = element.id,
+        name = element.name,
+        tag = element.tagName.toLowerCase(),
+        type = element.type?element.type.toLowerCase():"",
+        className = "",
+        classList = element.classList || [];
+        classList.forEach(function (item) {
+          className += "."+item;
+        });
+      if(tag==="body" || tag=== "html"){
+          result.wid = tag;
+          result.type= tag;
+      }
+      //location by id
+      if(id && document$1.getElementById(id) === element){
+          var regExp= new RegExp("^[a-zA-Z]+") ;
+          /**当不为parent定位，且设置为简单结果时，直接返回id 否则使用完整路径标识符。注：两个if顺序不能更换，递归调用时 simpleId为undefined*/
+          if(!parent && this.options.simpleId){
+              result.wid = id;
+          }
+          /*如果为parent定位，或者设置为完整结果时候，返回tag#id*/
+          else if(regExp.test(id)){
+              result.wid = tag+"#"+id;
+          }
+          result.type = "document.getElementById()";
+      }
+      //location by name
+      if(!result.wid && name && document$1.getElementsByName(name)[0] === element){
+          result.wid = name;
+          result.type = "document.getElementsByName()";
+      }
+      //location by class
+      if(!result.wid && className && document$1.querySelector(tag+className)===element){
+          result.wid = tag+className;
+          result.type = "document.querySelector()";
+          var classLength = classList.length;
+          if(classLength>2){
+            var n = 1,
+            /**使用class查询的个数，如2，4，8：使用2，4，8个className做查询*/
+            queryCount = [];
+            while (Math.pow(2,n)<classLength){
+                queryCount.push(Math.pow(2,n));
+                n++;
+            }
+            queryCount.push(classLength);
+
+            for(var k=0; k<queryCount.length;k++){
+                /**使用class个数去查询*/
+                var countNum = queryCount[k];
+                  //TODO 性能优化
+            }
+          }
+      }
+      //for radio
+      if(type === "radio"){
+          var value = element.value,queryString = tag+"[value='"+value+"']";
+          if(name){
+              queryString += "[name='"+name+"']";
+          }
+          if(document$1.querySelector(queryString)===element){
+              result.wid = queryString;
+              result.type = "document.querySelector()";
+          }
+      }
+      //location by mixed,order
+      if(!result.wid){
+          queryString = tag;
+          queryString = className ? queryString +className: queryString;
+          queryString = name? queryString + "[name='"+name+"']": queryString;
+          if(prototype.getTarget(queryString)===element){
+              result.wid = queryString;
+              result.type = "document.querySelector()";
+          }
+      }
+      //location by order
+      if(!result.wid){
+          queryString = tag;
+          queryString = className ? queryString +className: queryString;
+
+          var elements = document$1.querySelectorAll(queryString);
+          if(elements && elements.length>0){
+              var index = null;
+              for(var i=0; i<elements.length; i++){
+                  if(element===elements[i]){
+                      index = i+1;
+                      break;
+                  }
+              }
+              if(index){
+                  queryString = queryString + ":nth-child("+index+")";
+                  if(document$1.querySelector(queryString) === element){
+                      result.wid = queryString;
+                      result.type = "document.querySelector()";
+                  }
+              }
+          }
+      }
+      //location by parent
+      if(!result.wid){
+          if(!element.parentNode){
+              return
+          }
+          var parentQueryResult = whatsElementPure.prototype.getUniqueId(element.parentNode,true),
+            parentQueryString = parentQueryResult?parentQueryResult.wid:"";
+          if(!parentQueryString){
+              return {
+                  wid:"",
+                  type:"NO_LOCATION"
+              };
+          }
+          var targetQuery = tag;
+          if(className){
+              targetQuery += className;
+          }
+            queryString = parentQueryString+">"+targetQuery;
+            var queryElements = document$1.querySelectorAll(queryString);
+          if(queryElements.length>1){
+              queryString = null;
+              var index = null;
+              for(var j=0; j<element.parentNode.children.length; j++){
+                  if(element.parentNode.children[j]===element){
+                      index = j+1;
+                      break;
+                  }
+              }
+              if(index>=1){
+                  queryString = parentQueryString+">"+ targetQuery + ":nth-child("+index+")";
+                  var queryTarget = document$1.querySelector(queryString);
+                  if(queryTarget!=element){
+                      queryString = null;
+                  }
+              }
+          }
+          result.wid = queryString;
+          result.type = "document.querySelector()";
+      }
+
+      this.focusedElement = prototype.getTarget(result.wid);
+      if(!parent && this.options.draw ){
+          this.__proto__.draw(result);
+      }
+      return result
+  };
+  prototype.getTarget = function (queryString) {
+      return document$1.getElementById(queryString) || document$1.getElementsByName(queryString)[0] || document$1.querySelector(queryString);
+  };
+
+  prototype.clean = noop;
+  prototype.draw = noop;
+  window.whatsElement = whatsElementPure;
+
+  /**
+   * Created by rowthan on 2017/11/19.
+   */
+
+  var pure = whatsElementPure.default;
 
   var _ = function _() {};
 
@@ -213,6 +524,22 @@ var ha = (function () {
     return Math.floor(Math.random() * (max - min) + min);
   };
 
+  _.getElemId = function (sysId, pageId, e) {
+    try {
+      var _getUniqueId = new pure().getUniqueId(e),
+          type = _getUniqueId.type,
+          wid = _getUniqueId.wid;
+
+      return "".concat(wid, "!").concat(type, "!").concat(sysId, "!").concat(pageId);
+    } catch (_a) {
+      return null;
+    }
+  };
+
+  _.getElem = function (pid) {
+    return document.getElementById(pid) || document.getElementsByName(pid)[0] || document.querySelector(pid);
+  };
+
   _.mixins = function () {
     for (var _len4 = arguments.length, list = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
       list[_key4] = arguments[_key4];
@@ -223,33 +550,39 @@ var ha = (function () {
     };
   };
 
-  var Setting =
+  _.reloadConstructor = function (constructor) {
+    return (
+      /*#__PURE__*/
+      function (_constructor) {
+        _inheritsLoose(ReloadConstructor, _constructor);
+
+        function ReloadConstructor() {
+          return _constructor.apply(this, arguments) || this;
+        }
+
+        return ReloadConstructor;
+      }(constructor)
+    );
+  };
+
+  var Browse =
   /*#__PURE__*/
   function () {
-    function Setting(events) {
-      this.modeType = 'setting';
-      this.events = events;
+    function Browse(events) {
+      this.modeType = 'browse';
     }
 
-    var _proto = Setting.prototype;
+    var _proto = Browse.prototype;
 
-    _proto.reset = function reset() {// 重置选中状态
-    };
-
-    _proto.onEnter = function onEnter() {// 切换当前事件消费者为Setting
-      // 订阅该模式下的事件消费信息
-    };
-
-    _proto.onCatch = function onCatch() {// 选中元素，注销当前事件订阅
-    };
+    _proto.onEnter = function onEnter() {};
 
     _proto.onExit = function onExit() {};
 
     _proto.onTrigger = function onTrigger() {
-      console.log('SettingLifeCycle onTrigger');
+      console.log('点吧~老弟嗷~我浏览模式啥也不会干的~');
     };
 
-    return Setting;
+    return Browse;
   }();
 
   var __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
@@ -262,8 +595,216 @@ var ha = (function () {
     return c > 3 && r && Object.defineProperty(target, key, r), r;
   };
 
+  var __metadata = undefined && undefined.__metadata || function (k, v) {
+    if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+  };
+
   var EventListener = {
-    'r-click': [{
+    'setting-click': [{
+      capture: false
+    }, function (config) {
+      var _this = this;
+
+      return this.events.click(config).subscribe(function (e) {
+        // 包装事件数据，触发事件消费 onTrigger
+        _this.onTrigger(e);
+      });
+    }],
+    'setting-reset': [{}, function () {
+      var _this2 = this;
+
+      return this.events.messageOf('reset').subscribe(function () {
+        _this2.domMasker.reset();
+      });
+    }],
+    'setting-preset': [{}, function () {
+      var _this3 = this;
+
+      return this.events.messageOf('preset').subscribe(function (msg) {
+        _this3.domMasker.preset(msg.data.presetPoints);
+      });
+    }]
+  };
+
+  var Setting =
+  /*#__PURE__*/
+  function () {
+    function Setting(events) {
+      this.modeType = 'setting';
+      this.events = events;
+      this.subs = []; // 注册通讯
+    }
+
+    var _proto = Setting.prototype;
+
+    _proto.onEnter = function onEnter() {
+      // 切换当前事件消费者为Setting
+      // 订阅该模式下的事件消费信息
+      // 注册事件监听
+      // 将自身所有 模式 + '-' 开头的事件监听器方法全部注册，并记录至 subs
+      for (var key in this) {
+        if (key.startsWith(this.modeType)) {
+          var _this$key = _slicedToArray(this[key], 2),
+              config = _this$key[0],
+              cb = _this$key[1];
+
+          this.subs.push(cb.call(this, config));
+        }
+      } // 初始化埋点交互遮罩
+
+
+      this.DomMasker = new DomMasker(); // todo: 阻止文档滚动
+    };
+
+    _proto.onExit = function onExit() {
+      // 注销事件监听
+      this.subs.length && this.subs.forEach(function (unsub) {
+        return unsub.unsubscribe();
+      });
+      this.subs = [];
+      this.DomMasker.clear();
+    };
+
+    _proto.onTrigger = function onTrigger(data) {
+      console.log('SettingLifeCycle onTrigger');
+      window.parent.postMessage(data, '*');
+    };
+
+    return Setting;
+  }();
+
+  Setting = __decorate([_.mixins(EventListener), __metadata("design:paramtypes", [Object])], Setting);
+
+  var DomMasker =
+  /*#__PURE__*/
+  function () {
+    function DomMasker() {
+      var points = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+      if (!DomMasker.instance) {
+        // 初始化 主绘制canvas / 缓存canvas
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        this.canvas = new CustomCanvas(w, h);
+        this.tempCanvas = new CustomCanvas(w, h); // 插入页面根节点
+
+        document.body.appendChild(this.canvas);
+        DomMasker.instance = this;
+      } // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
+
+
+      this.preset(points); // 将缓存信息当做背景绘制到 主绘制canvas
+
+      var ctx = this.canvas.getContext('2d');
+      ctx.drawImage(this.tempCanvas, 0, 0); // 返回单例
+
+      return DomMasker.instance;
+    } // 将预设埋点信息标准化，并将信息对应的绘制到 缓存canvas 上
+    // 幂等操作
+
+
+    var _proto2 = DomMasker.prototype;
+
+    _proto2.preset = function preset(points) {
+      var _this4 = this;
+
+      this.tempCanvas.clear();
+      this.points = points.map(function (p) {
+        return new Point(p.pid);
+      });
+      var ctx = this.tempCanvas.getContext('2d'); // 绘制预设埋点蒙版，保存在内存中
+
+      this.points.forEach(function (point) {
+        _this4.render(ctx, point.getRect());
+      });
+    };
+
+    _proto2.clear = function clear() {
+      this.canvas.clear();
+    };
+
+    _proto2.reset = function reset() {};
+
+    _proto2.onCatch = function onCatch() {};
+
+    _proto2.render = function render(ctx, rect) {};
+
+    return DomMasker;
+  }();
+
+  var Point =
+  /*#__PURE__*/
+  function () {
+    function Point(pid) {
+      this.pid = pid;
+    }
+
+    var _proto3 = Point.prototype;
+
+    _proto3.getRect = function getRect() {
+      var wid = this.pid.split('!')[0];
+
+      var _$getElem = _.getElem(wid),
+          clientWidth = _$getElem.clientWidth,
+          clientHeight = _$getElem.clientHeight,
+          scrollHeight = _$getElem.scrollHeight,
+          scrollWidth = _$getElem.scrollWidth,
+          offsetTop = _$getElem.offsetTop,
+          offsetLeft = _$getElem.offsetLeft; // [ x, y, w, h ]
+
+
+      return [offsetLeft - scrollWidth, offsetTop - scrollHeight, clientWidth, clientHeight];
+    };
+
+    _proto3.draw = function draw(ctx) {};
+
+    return Point;
+  }();
+
+  var CustomCanvas =
+  /*#__PURE__*/
+  function (_HTMLCanvasElement) {
+    _inheritsLoose(CustomCanvas, _HTMLCanvasElement);
+
+    function CustomCanvas(w, h) {
+      var _this5;
+
+      _this5 = _HTMLCanvasElement.call(this) || this;
+      _this5.width = _this5.w = w;
+      _this5.height = _this5.h = h;
+      _this5.style.position = 'absolute';
+      _this5.style.top = '0';
+      _this5.style.left = '0';
+      _this5.style.zIndex = '9999';
+      _this5.style.pointerEvents = 'none';
+      return _assertThisInitialized(_this5) || _assertThisInitialized(_this5);
+    }
+
+    var _proto4 = CustomCanvas.prototype;
+
+    _proto4.clear = function clear() {
+      this.getContext('2d').clearRect(0, 0, this.w, this.h);
+    };
+
+    return CustomCanvas;
+  }(_wrapNativeSuper(HTMLCanvasElement));
+
+  var __decorate$1 = undefined && undefined.__decorate || function (decorators, target, key, desc) {
+    var c = arguments.length,
+        r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+        d;
+    if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
+      if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    }
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+  };
+
+  var __metadata$1 = undefined && undefined.__metadata || function (k, v) {
+    if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+  };
+
+  var EventListener$1 = {
+    'report-click': [{
       capture: false
     }, function (config) {
       var _this = this;
@@ -288,10 +829,10 @@ var ha = (function () {
 
     _proto.onEnter = function onEnter() {
       // 注册事件监听
-      console.log(this); // 将自身所有 r- 开头的事件监听器方法全部注册，并记录至 subs
+      console.log(this); // 将自身所有 模式 + '-' 开头的事件监听器方法全部注册，并记录至 subs
 
       for (var key in this) {
-        if (/r-.+/g.test(key)) {
+        if (key.startsWith(this.modeType)) {
           var _this$key = _slicedToArray(this[key], 2),
               config = _this$key[0],
               cb = _this$key[1];
@@ -319,7 +860,7 @@ var ha = (function () {
     return Report;
   }();
 
-  Report = __decorate([_.mixins(EventListener)], Report);
+  Report = __decorate$1([_.mixins(EventListener$1), __metadata$1("design:paramtypes", [Object])], Report);
 
   /*! *****************************************************************************
   Copyright (c) Microsoft Corporation. All rights reserved.
@@ -826,13 +1367,13 @@ var ha = (function () {
   //# sourceMappingURL=observable.js.map
 
   /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-  function noop() { }
+  function noop$1() { }
   //# sourceMappingURL=noop.js.map
 
   /** PURE_IMPORTS_START _noop PURE_IMPORTS_END */
   function pipeFromArray(fns) {
       if (!fns) {
-          return noop;
+          return noop$1;
       }
       if (fns.length === 1) {
           return fns[0];
@@ -1056,6 +1597,48 @@ var ha = (function () {
   }
   //# sourceMappingURL=fromEvent.js.map
 
+  /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
+  function filter(predicate, thisArg) {
+      return function filterOperatorFunction(source) {
+          return source.lift(new FilterOperator(predicate, thisArg));
+      };
+  }
+  var FilterOperator = /*@__PURE__*/ (function () {
+      function FilterOperator(predicate, thisArg) {
+          this.predicate = predicate;
+          this.thisArg = thisArg;
+      }
+      FilterOperator.prototype.call = function (subscriber, source) {
+          return source.subscribe(new FilterSubscriber(subscriber, this.predicate, this.thisArg));
+      };
+      return FilterOperator;
+  }());
+  var FilterSubscriber = /*@__PURE__*/ (function (_super) {
+      __extends(FilterSubscriber, _super);
+      function FilterSubscriber(destination, predicate, thisArg) {
+          var _this = _super.call(this, destination) || this;
+          _this.predicate = predicate;
+          _this.thisArg = thisArg;
+          _this.count = 0;
+          return _this;
+      }
+      FilterSubscriber.prototype._next = function (value) {
+          var result;
+          try {
+              result = this.predicate.call(this.thisArg, value, this.count++);
+          }
+          catch (err) {
+              this.destination.error(err);
+              return;
+          }
+          if (result) {
+              this.destination.next(value);
+          }
+      };
+      return FilterSubscriber;
+  }(Subscriber));
+  //# sourceMappingURL=filter.js.map
+
   // 页面生命周期事件
   // onload
   // onbeforeunload
@@ -1102,8 +1685,41 @@ var ha = (function () {
     return fromEvent(document, 'offline');
   };
   var message = function message() {
-    return fromEvent(document, 'message');
+    return fromEvent(window, 'message');
   };
+
+  // export const performance: () => Observable<Event> =
+  //     () => {
+  //     }
+  // // 自定义事件 | 上报页面停留时长数据
+  // export const tp: () => Observable<Event> =
+  //     () => {
+  //     }
+  // 切换模式相关 切换至浏览模式 切换至埋点模式（附带preset）
+  // 埋点流程相关
+  // 自定义事件 | message分流
+  // 推送已埋埋点
+  // msg: {
+  //     data: {
+  //         tag: 'mode',
+  //         mode: 'setting',
+  //         points: PointBase[]
+  //     }
+  // }
+  // 重置（包括 鼠标移出区域、点击重置按钮）
+  // msg: {
+  //     data: {
+  //         tag: 'reset'
+  //     }
+  // }
+
+  var messageOf = function messageOf(tag) {
+    return message().pipe(filter(function (msg) {
+      return msg.data.tag === tag;
+    }));
+  };
+
+
 
   var events = /*#__PURE__*/Object.freeze({
     click: click,
@@ -1115,7 +1731,8 @@ var ha = (function () {
     visibilitychange: visibilitychange,
     online: online,
     offline: offline,
-    message: message
+    message: message,
+    messageOf: messageOf
   });
 
   // const getUserInfoByOpenID = (openID: string) => http.get('user', `/video/user?openId=${openID}`);
@@ -1148,9 +1765,20 @@ var ha = (function () {
   /*#__PURE__*/
   function () {
     function HXAnalytics(_ref) {
+      var _this = this;
+
       var mode = _ref.mode;
       this.modeContainer = mode;
-      this.mode = _.inIframe() ? 'setting' : 'report'; // 绑定
+      this.mode = _.inIframe() ? 'browse' : 'report'; // 调用 mode 的生命周期
+
+      this._mode.onEnter(); // 绑定模式切换事件
+
+
+      messageOf('mode').subscribe(function (msg) {
+        _this.mode = msg.data.mode; // 调用 mode 的生命周期
+
+        _this._mode.onEnter(msg.data.points);
+      });
     }
 
     var _proto = HXAnalytics.prototype;
@@ -1167,12 +1795,11 @@ var ha = (function () {
     _createClass(HXAnalytics, [{
       key: "mode",
       get: function get() {
-        return this._mode.modeType;
+        return this._mode ? this._mode.modeType : null;
       },
       set: function set(modeType) {
-        this._mode = this.modeContainer[modeType]; // 调用 mode 的生命周期
-
-        this._mode.onEnter();
+        if (this.mode === modeType) return;
+        this._mode = this.modeContainer[modeType];
       }
     }]);
 
@@ -1181,6 +1808,7 @@ var ha = (function () {
 
   var ha = new HXAnalytics({
     mode: {
+      browse: new Browse(),
       report: new Report(events),
       setting: new Setting(events)
     }

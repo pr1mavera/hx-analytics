@@ -1,6 +1,7 @@
+import { Subscription } from 'rxjs';
 import _ from '../utils';
-import { Setting, Report } from '../mode';
-import * as events from './events/native';
+import { Browse, Setting, Report } from '../mode';
+import * as events from './events';
 // import http from './service/request';
 
 // const getUserInfoByOpenID = (openID: string) => http.get('user', `/video/user?openId=${openID}`);
@@ -40,19 +41,25 @@ class HXAnalytics {
     };
 
     get mode(): string {
-        return this._mode.modeType;
+        return this._mode ? this._mode.modeType : null;
     }
     set mode(modeType: string) {
+        if (this.mode === modeType) return;
         this._mode = this.modeContainer[modeType];
-        // 调用 mode 的生命周期
-        this._mode.onEnter();
     }
 
     constructor({ mode }: Container) {
         this.modeContainer = mode;
-        this.mode = _.inIframe() ? 'setting' : 'report';
+        this.mode = _.inIframe() ? 'browse' : 'report';
+        // 调用 mode 的生命周期
+        this._mode.onEnter();
 
-        // 绑定
+        // 绑定模式切换事件
+        events.messageOf('mode').subscribe((msg: Obj) => {
+            this.mode = msg.data.mode;
+            // 调用 mode 的生命周期
+            this._mode.onEnter(msg.data.points);
+        });
     }
     // 提供应用开发人员主动埋点能力
     push(data: Obj) {
@@ -65,6 +72,7 @@ class HXAnalytics {
 
 const ha = new HXAnalytics({
     mode: {
+        browse: new Browse(),
         report: new Report(events),
         setting: new Setting(events)
     }

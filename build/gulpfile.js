@@ -21,12 +21,13 @@ for (const item of files) {
 // const types = [];
 
 const tsconfig = {
-    target: "es6",
+    target: 'es6',
     allowJs: true,
-    module: "ES6",
-    moduleResolution: "node",
+    module: 'ES6',
+    moduleResolution: 'node',
     noImplicitAny: true,
-    experimentalDecorators: true
+    experimentalDecorators: true,
+    emitDecoratorMetadata: true
     // noExternalResolve: true
 }
 

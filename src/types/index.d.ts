@@ -1,13 +1,15 @@
 type Obj = { [ x: string ]: any };
 type Fn = (...args: any[]) => any;
 // type Cast<X, Y> = X extends Y ? X : Y;
-// type Length<T extends any[]> = T['length'];
+type Length<T extends any[]> = T['length'];
 // type Drop<N extends number, T extends any[], I extends any[] = []> = {
 //     0: Drop<N, Tail<T>, Prepend<any, I>>
 //     1: T
 //   }[Length<I> extends N ? 1 : 0];
 // type Currying<F extends ((...arg: any) => R), R> = <T extends any[]>(...args: T) => ;
 // type Curry<P extends any[], R> = (fn: ((...args) => R), arity?: number) => <T extends any[]>(...args: T) => ;
+
+declare module 'whats-element/pure';
 
 // 工具类
 interface Utils {
@@ -42,8 +44,8 @@ interface Utils {
     /**
      * 本地缓存封装
      */
-    SessStorage: CstmStorage;
-    LocStorage: CstmStorage;
+    SessStorage: CustomStorage;
+    LocStorage: CustomStorage;
 
     /**
      * 判断应用是否在 iframe 内
@@ -78,16 +80,62 @@ interface Utils {
     randomInRange: (min: number, max: number) => number;
 
     /**
+     * 生成元素唯一标识
+     * @param {String} sysId 系统id
+     * @param {String} pageId 页面id
+     * @param {HTMLElement} e dom元素
+     */
+    getElemId: (sysId: string, pageId: string, e: HTMLElement) => string | null;
+
+    /**
+     * 根据元素唯一标识获取元素
+     * @param {String} pid 元素唯一标识
+     */
+    getElem: (pid: string) => HTMLElement;
+
+    /**
      * 装饰器 | 混合属性
      * @param {Array} ...list 待混合属性的数组
      */
     mixins: (...list: Obj[]) => (...x: any[]) => void;
+
+    // reloadConstructor: <T extends { new(...args:any[]): {} }>(constructor: T) => 
 }
-interface CstmStorage {
+interface CustomStorage {
     get: (key: string) => any;
     set: (key: string, val: any) => void,
     remove: (key: string) => void,
     clear: () => void;
+}
+
+type Rect = [ number, number, number, number ];
+interface PointBase {
+    pid: string;
+}
+interface Point extends PointBase {
+    getRect: () => number[];
+    draw: (ctx: CanvasRenderingContext2D) => void;
+}
+interface CustomCanvas {
+    w: number;
+    h: number;
+    clear(): void;
+}
+interface DomMasker {
+    // _active: boolean;
+    // 预设埋点
+    points: Point[];
+    // 当前圈选埋点
+    activePoint: Point;
+
+    // 主绘制canvas
+    canvas: CustomCanvas;
+    // 缓存canvas
+    tempCanvas: CustomCanvas;
+    clear(): void;
+    reset(): void;
+    onCatch(): void;
+    render(): void;
 }
 
 // 模式生命周期
@@ -95,10 +143,16 @@ interface ModeLifeCycle<T> {
     readonly modeType: string;
     subs: any[];
     events?: Obj;
-    onEnter(): void;
+    onEnter(options?: Obj): void;
     onExit(): void;
     onTrigger(data: Obj): void;
 }
+// declare class EventsSubscriber {
+//     subs: [Subscription];
+//     constructor();
+//     subscribe(): void;
+//     unsubscribe(): void;
+// }
 
 // 请求方式
 type RequestMethods = 'DELETE' | 'GET' | 'HEAD' | 'POST' | 'PUT';

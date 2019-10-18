@@ -4,7 +4,7 @@ import { DOMEventTarget } from 'rx';
 
 // report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 const EventListener = {
-    'r-click': [
+    'report-click': [
         { capture: false },
         function(config: Obj): Subscription {
             return this.events.click(config).subscribe((e: DOMEventTarget) => {
@@ -28,9 +28,9 @@ export class Report implements ModeLifeCycle<Report> {
     onEnter() {
         // 注册事件监听
         console.log(this);
-        // 将自身所有 r- 开头的事件监听器方法全部注册，并记录至 subs
+        // 将自身所有 模式 + '-' 开头的事件监听器方法全部注册，并记录至 subs
         for (const key in this) {
-            if (/r-.+/g.test(key)) {
+            if (key.startsWith(this.modeType)) {
                 const [ config, cb ] = <[ Obj, (config: Obj) => Subscription ]>this[key];
                 this.subs.push(cb.call(this, config));
             }

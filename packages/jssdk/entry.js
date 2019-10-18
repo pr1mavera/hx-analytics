@@ -1,6 +1,6 @@
 import _ from '../utils';
-import { Setting, Report } from '../mode';
-import * as events from './events/native';
+import { Browse, Setting, Report } from '../mode';
+import * as events from './events';
 // import http from './service/request';
 // const getUserInfoByOpenID = (openID: string) => http.get('user', `/video/user?openId=${openID}`);
 // window.addEventListener('beforeunload', () => {
@@ -30,16 +30,23 @@ import * as events from './events/native';
 class HXAnalytics {
     constructor({ mode }) {
         this.modeContainer = mode;
-        this.mode = _.inIframe() ? 'setting' : 'report';
-        // 绑定
-    }
-    get mode() {
-        return this._mode.modeType;
-    }
-    set mode(modeType) {
-        this._mode = this.modeContainer[modeType];
+        this.mode = _.inIframe() ? 'browse' : 'report';
         // 调用 mode 的生命周期
         this._mode.onEnter();
+        // 绑定模式切换事件
+        events.messageOf('mode').subscribe((msg) => {
+            this.mode = msg.data.mode;
+            // 调用 mode 的生命周期
+            this._mode.onEnter(msg.data.points);
+        });
+    }
+    get mode() {
+        return this._mode ? this._mode.modeType : null;
+    }
+    set mode(modeType) {
+        if (this.mode === modeType)
+            return;
+        this._mode = this.modeContainer[modeType];
     }
     // 提供应用开发人员主动埋点能力
     push(data) {
@@ -51,6 +58,7 @@ class HXAnalytics {
 }
 const ha = new HXAnalytics({
     mode: {
+        browse: new Browse(),
         report: new Report(events),
         setting: new Setting(events)
     }

@@ -51,4 +51,4 @@ export const offline: () => Observable<Event> =
     () => fromEvent(document, 'offline');
 
 export const message: () => Observable<Event> =
-    () => fromEvent(document, 'message');
+    () => fromEvent(window, 'message');

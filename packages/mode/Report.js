@@ -4,10 +4,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 import _ from '../utils';
 // report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 const EventListener = {
-    'r-click': [
+    'report-click': [
         { capture: false },
         function (config) {
             return this.events.click(config).subscribe((e) => {
@@ -26,9 +29,9 @@ let Report = class Report {
     onEnter() {
         // 注册事件监听
         console.log(this);
-        // 将自身所有 r- 开头的事件监听器方法全部注册，并记录至 subs
+        // 将自身所有 模式 + '-' 开头的事件监听器方法全部注册，并记录至 subs
         for (const key in this) {
-            if (/r-.+/g.test(key)) {
+            if (key.startsWith(this.modeType)) {
                 const [config, cb] = this[key];
                 this.subs.push(cb.call(this, config));
             }
@@ -47,7 +50,8 @@ let Report = class Report {
     }
 };
 Report = __decorate([
-    _.mixins(EventListener)
+    _.mixins(EventListener),
+    __metadata("design:paramtypes", [Object])
 ], Report);
 export { Report };
 ;

@@ -1,3 +1,4 @@
+import whatsElement from 'whats-element/pure';
 const _ = function () { };
 _.unboundMethod = function (methodName, argCount = 2) {
     return this.curry((...args) => {
@@ -68,9 +69,25 @@ _.formatDate = (format, date = new Date()) => {
     return format;
 };
 _.randomInRange = (min, max) => Math.floor(Math.random() * (max - min) + min);
+_.getElemId = function (sysId, pageId, e) {
+    try {
+        const { type, wid } = new whatsElement().getUniqueId(e);
+        return `${wid}!${type}!${sysId}!${pageId}`;
+    }
+    catch (_a) {
+        return null;
+    }
+};
+_.getElem = function (pid) {
+    return document.getElementById(pid) || document.getElementsByName(pid)[0] || document.querySelector(pid);
+};
 _.mixins = function (...list) {
     return function (constructor) {
         Object.assign(constructor.prototype, ...list);
+    };
+};
+_.reloadConstructor = function (constructor) {
+    return class ReloadConstructor extends constructor {
     };
 };
 export default _;

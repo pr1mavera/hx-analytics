@@ -1,3 +1,5 @@
+import whatsElement from 'whats-element/pure';
+
 const _ = <Utils>function() {}
 
 _.unboundMethod = function(methodName: string, argCount: number = 2) {
@@ -35,7 +37,7 @@ const [ SessStorage, LocStorage ] = _.map(
         set: (key, val) => storage.setItem(key, JSON.stringify(val)),
         remove: key => storage.removeItem(key),
         clear: () => storage.clear()
-    } as CstmStorage)
+    } as CustomStorage)
 )
 ( [ sessionStorage, localStorage ] );
 _.SessStorage = SessStorage;
@@ -87,9 +89,28 @@ _.formatDate = (format, date = new Date()) => {
 
 _.randomInRange = (min, max) => Math.floor(Math.random() * (max - min) + min);
 
+_.getElemId = function(sysId, pageId, e) {
+    try {
+        const { type, wid } = new whatsElement().getUniqueId(e);
+        return `${wid}!${type}!${sysId}!${pageId}`;
+    } catch {
+        return null;
+    }
+};
+
+_.getElem = function(pid) {
+    return document.getElementById(pid) || document.getElementsByName(pid)[0] || document.querySelector(pid);
+};
+
 _.mixins = function(...list) {
     return function (constructor) {
         Object.assign(constructor.prototype, ...list);
+    }
+}
+
+_.reloadConstructor = function<T extends { new(...args:any[]): {} }> (constructor: T) {
+    return class ReloadConstructor extends constructor {
+        // console.log('装饰重载');
     }
 }
 
