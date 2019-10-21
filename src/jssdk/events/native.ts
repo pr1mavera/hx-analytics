@@ -1,4 +1,5 @@
 import { fromEvent, Observable } from 'rxjs';
+import { sampleTime, filter } from 'rxjs/operators';
 
 // 单个事件模块实现
 
@@ -24,10 +25,13 @@ import { fromEvent, Observable } from 'rxjs';
 // 各模式模块只维护当前的事件及其回调的列表，在对应生命周期中订阅及取消订阅
 
 export const click: (config: { capture: boolean }) => Observable<Event> =
-    config => fromEvent(document, 'click', config);
+    config => fromEvent(document, 'click', { capture: config.capture });
 
-export const mousemove: (config: { capture: boolean }) => Observable<Event> =
-    config => fromEvent(document, 'mousemove', config);
+export const mousemove: (config: { capture: boolean, debounceTime: number }) => Observable<Event> =
+    config => fromEvent(document, 'mousemove', { capture: config.capture }).pipe(
+        sampleTime(config.debounceTime),
+        filter(e => (<HTMLElement>e.target).tagName !== 'HTML')
+    );
 
 export const load: () => Observable<Event> =
     () => fromEvent(document, 'load');

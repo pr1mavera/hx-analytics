@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import _ from '../utils';
 import { Browse, Setting, Report } from '../mode';
 import * as events from './events';
@@ -31,22 +32,24 @@ class HXAnalytics {
     constructor({ mode }) {
         this.modeContainer = mode;
         this.mode = _.inIframe() ? 'browse' : 'report';
-        // 调用 mode 的生命周期
-        this._mode.onEnter();
         // 绑定模式切换事件
         events.messageOf('mode').subscribe((msg) => {
+            Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
             this.mode = msg.data.mode;
-            // 调用 mode 的生命周期
-            this._mode.onEnter(msg.data.points);
         });
-    }
-    get mode() {
-        return this._mode ? this._mode.modeType : null;
     }
     set mode(modeType) {
         if (this.mode === modeType)
             return;
+        // last mode exit
+        this._mode && this._mode.onExit();
+        // 更新 mode
         this._mode = this.modeContainer[modeType];
+        // mode enter
+        this._mode.onEnter(Reflect.getMetadata('onMessageSetMode', this));
+    }
+    get mode() {
+        return this._mode ? this._mode.modeType : null;
     }
     // 提供应用开发人员主动埋点能力
     push(data) {
@@ -64,3 +67,41 @@ const ha = new HXAnalytics({
     }
 });
 export default ha;
+// interface PointBase {
+//     pid: 'span.corner.top!document.querySelector()!sysId!pageId'
+// }
+// interface Point extends PointBase {
+//     pid: string;
+//     tag: string;
+//     rect: number[];
+// }
+// 切换模式
+// {
+//     tag: 'mode',
+//     mode: 'setting' | 'browse',
+//     points: PointBase[]
+// }
+// 重置
+// {
+//     tag: 'reset',
+//     points?: PointBase[]
+// }
+// 预置埋点，不渲染
+// {
+//     tag: 'preset',
+//     points: PointBase[]
+// }
+// 捕捉到元素
+// {
+//     isRepeat: Boolean,
+//     point: Point,
+//     tag: 'selectPoint'
+// }
+// IoC 容器重构公共模块
+// 错误处理
+// 上报统一格式配置
+// 行为上报控制器切换 接口 / 本地缓存
+// 用户身份校验
+// 页面停留时长 页面切换机制
+// 单测
+// 文档

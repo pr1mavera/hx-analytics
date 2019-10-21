@@ -1,4 +1,4 @@
-import whatsElement from 'whats-element/pure';
+import whatsElement from 'whats-element/src/whatsElementPure';
 
 const _ = <Utils>function() {}
 
@@ -89,7 +89,7 @@ _.formatDate = (format, date = new Date()) => {
 
 _.randomInRange = (min, max) => Math.floor(Math.random() * (max - min) + min);
 
-_.getElemId = function(sysId, pageId, e) {
+_.getElemPid = function(sysId, pageId, e) {
     try {
         const { type, wid } = new whatsElement().getUniqueId(e);
         return `${wid}!${type}!${sysId}!${pageId}`;
@@ -98,9 +98,16 @@ _.getElemId = function(sysId, pageId, e) {
     }
 };
 
-_.getElem = function(pid) {
-    return document.getElementById(pid) || document.getElementsByName(pid)[0] || document.querySelector(pid);
+_.getElemByPid = pid => {
+    const id = pid.split('!')[0];
+    return document.getElementById(id) || document.getElementsByName(id)[0] || document.querySelector(id);
 };
+
+_.getElemClientRect = e => {
+    const { left, top, right, bottom } = e.getBoundingClientRect();
+    // [ x, y, w, h ]
+    return [ left, top, right - left, bottom - top ];
+}
 
 _.mixins = function(...list) {
     return function (constructor) {

@@ -1,34 +1,51 @@
 import _ from '../utils';
 import { Subscription } from 'rxjs';
-import { DOMEventTarget } from 'rx';
 
 // report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 const EventListener = {
     'setting-click': [
-        { capture: false },
+        { capture: true },
         function(config: Obj): Subscription {
-            return this.events.click(config).subscribe((e: DOMEventTarget) => {
-                // 包装事件数据，触发事件消费 onTrigger
-                this.onTrigger(e);
+            return this.events.click(config).subscribe((e: Event) => {
+                e.stopPropagation();
+                // 包装事件数据，触发事件消费 onTrigger;
+                this.onTrigger({
+                    tag: 'selectPoint',
+                    point: this.domMasker.activePoint,
+                    // 是否是重复设置的埋点
+                    isRepeat: this.domMasker.points.filter(
+                        (point: Point) => point.pid === this.domMasker.activePoint.pid
+                    ).length !== 0
+                } as Obj);
             });
         }
     ],
-    'setting-reset': [
-        {},
-        function(): Subscription {
-            return this.events.messageOf('reset').subscribe(() => {
-                this.domMasker.reset();
+    'setting-mousemove': [
+        { capture: false, debounceTime: 200 },
+        function(config: Obj): Subscription {
+            return this.events.mousemove(config).subscribe((e: MouseEvent) => {
+                // 包装事件数据，触发事件消费 onTrigger
+                const activePoint = new Point(e.target);
+                if (activePoint !== this.domMasker.activePoint) {
+                    // 获取的元素为新的捕捉元素
+                    this.domMasker.activePoint = activePoint;
+                    // 渲染遮罩层
+                    this.domMasker.reset();
+                    this.domMasker.render(this.domMasker.canvas.getContext('2d'), new Point(e.target));
+                }
             });
         }
     ],
     'setting-preset': [
         {},
         function(): Subscription {
-            return this.events.messageOf('preset').subscribe((msg: { data: Obj }) => {
-                this.domMasker.preset(<PointBase[]>msg.data.presetPoints);
-            });
+            return this.events.messageOf('preset').subscribe(
+                (msg: { data: { tag: string, points: PointBase[] } }) => {
+                    this.domMasker.preset(msg.data.points);
+                }
+            );
         }
-    ]
+    ],
 };
 
 @_.mixins(EventListener)
@@ -37,16 +54,24 @@ export class Setting implements ModeLifeCycle<Setting> {
     readonly modeType: string = 'setting';
     subs: [Subscription?];
     events: Obj;
-    DomMasker: DomMasker;
+    domMasker: DomMasker;
     constructor(events: Obj) {
         this.events = events;
         this.subs = [];
 
-        // 注册通讯
+        // 单独注册父页面的重置通讯
+        // 捕捉到元素之后 Setting 模式会将当前绑定的 setting- 监控事件都注销
+        // 因此在不改变模式的情况下需要依靠父窗口消息推送 reset 指令来重新开启捕捉元素
+        this.events.messageOf('reset').subscribe((msg: { data: { tag: string, points?: PointBase[] } }) => {
+            // 绑定监控事件
+            this.subscribe();
+            // 若此处将新的预设埋点传过来了，则更新，否则使用原来的
+            msg.data.points && this.domMasker.preset(msg.data.points);
+            // 重置埋点蒙板
+            this.domMasker.reset();
+        });
     }
-    onEnter() {
-        // 切换当前事件消费者为Setting
-        // 订阅该模式下的事件消费信息
+    subscribe() {
         // 注册事件监听
         // 将自身所有 模式 + '-' 开头的事件监听器方法全部注册，并记录至 subs
         for (const key in this) {
@@ -55,26 +80,61 @@ export class Setting implements ModeLifeCycle<Setting> {
                 this.subs.push(cb.call(this, config));
             }
         }
+    }
+    unsubscribe() {
+        // 注销事件监听
+        this.subs.length && this.subs.forEach((unsub: Subscription) => unsub.unsubscribe());
+        this.subs = [];
+    }
+    onEnter(points: PointBase[] = []) {
 
+        // 绑定监控事件
+        this.subscribe();
         // 初始化埋点交互遮罩
-        this.DomMasker = new DomMasker();
+        this.domMasker = new DomMasker(points);
 
         // todo: 阻止文档滚动
     }
     onExit() {
         // 注销事件监听
-        this.subs.length && this.subs.forEach((unsub: Subscription) => unsub.unsubscribe());
-        this.subs = [];
-        this.DomMasker.clear();
+        this.unsubscribe();
+        this.domMasker.clear();
     }
     onTrigger(data: Obj) {
-        console.log('SettingLifeCycle onTrigger');
-        window.parent.postMessage(data, '*');
+        console.log('SettingLifeCycle onTrigger：', data);
+        // console.log('当前的Points: ', this.domMasker.points);
+
+        // 当前已捕获到埋点，通过注销绑定的监听可保持埋点蒙板状态
+        // 注销绑定的监听
+        this.unsubscribe();
+        // 通知父层设置层埋点捕捉完毕
+        window.parent && window.parent.postMessage(data, '*');
     }
 };
 
+const customCanvas: (width: number, height: number, color?: string) => HTMLCanvasElement
+    = (width, height, color = 'rgba(77, 131, 202, 0.5)') => {
+        let canvas: HTMLCanvasElement = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '9999';
+        canvas.style.pointerEvents = 'none';
+
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = color;
+        ctx.font = '18px serif';
+        ctx.textBaseline = 'ideographic';
+
+        return canvas;
+    };
+
 class DomMasker implements DomMasker {
     static instance: DomMasker;
+    static w: number = window.innerWidth;
+    static h: number = window.innerHeight;
     // _active: boolean;
     // 预设埋点
     points: Point[];
@@ -82,18 +142,17 @@ class DomMasker implements DomMasker {
     activePoint: Point;
 
     // 主绘制canvas
-    canvas: CustomCanvas;
+    canvas: HTMLCanvasElement;
     // 缓存canvas
-    tempCanvas: CustomCanvas;
+    tempCanvas: HTMLCanvasElement;
 
     constructor(points: PointBase[] = []) {
-
+        // points: [{ pid:'span.corner.top!document.querySelector()!sysId!pageId' }]
         if (!DomMasker.instance) {
             // 初始化 主绘制canvas / 缓存canvas
-            const w = window.innerWidth;
-            const h = window.innerHeight
-            this.canvas = new CustomCanvas(w, h);
-            this.tempCanvas = new CustomCanvas(w, h);
+            this.canvas = customCanvas(DomMasker.w, DomMasker.h);
+            this.tempCanvas = customCanvas(DomMasker.w, DomMasker.h, 'rgba(200, 100, 50, 0.6)');
+
             // 插入页面根节点
             document.body.appendChild(this.canvas);
 
@@ -102,77 +161,71 @@ class DomMasker implements DomMasker {
 
         // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
         this.preset(points);
-        // 将缓存信息当做背景绘制到 主绘制canvas
-        const ctx = this.canvas.getContext('2d');
-        ctx.drawImage(this.tempCanvas, 0, 0);
+
+        // 手动重置 主绘制canvas
+        this.reset();
 
         // 返回单例
         return DomMasker.instance;
     }
     // 将预设埋点信息标准化，并将信息对应的绘制到 缓存canvas 上
+    // 注意：此API不会造成页面 主绘制canvas 的绘制
     // 幂等操作
     preset(points: PointBase[]) {
-        this.tempCanvas.clear();
-        this.points = points.map((p: PointBase) => new Point(p.pid));
+        this.tempCanvas.getContext('2d').clearRect(0, 0, DomMasker.w, DomMasker.h);
+        this.points = points.map((p: PointBase) => new Point(p));
 
         const ctx = this.tempCanvas.getContext('2d');
         // 绘制预设埋点蒙版，保存在内存中
         this.points.forEach((point: Point) => {
-            this.render(ctx, point.getRect());
+            this.render(ctx, point);
         });
     }
     clear() {
-        this.canvas.clear()
+        this.canvas.getContext('2d').clearRect(0, 0, DomMasker.w, DomMasker.h);
     };
     reset() {
-        
+        this.clear();
+        if (this.points.length) {
+            // 将缓存信息当做背景绘制到 主绘制canvas
+            const ctx = this.canvas.getContext('2d');
+            ctx.drawImage(this.tempCanvas, 0, 0);
+        }
     };
-    onCatch() {
-
-    };
-    render(ctx: CanvasRenderingContext2D, rect: Rect) {
-
+    render(ctx: CanvasRenderingContext2D, point: Point) {
+        const { tag, rect: [ x, y, width, height ] } = point;
+        ctx.fillRect(x, y, width, height);
+        ctx.fillText(tag, x, y);
+        // ctx.save();
+        // ctx.strokeStyle = '#fff';
+        // ctx.lineWidth = 1;
+        // ctx.strokeText(tag, x, y);
+        // ctx.restore();
     };
 }
 
 class Point implements Point {
     pid: string;
-    constructor(pid: string) {
-        this.pid = pid;
+    tag: string;
+    rect: number[];
+    constructor(origin: PointBase | EventTarget) {
+        if (origin instanceof EventTarget) {
+            this.createByEvent(origin);
+        } else {
+            this.createByPointBase(origin);
+        }
     }
-    getRect(): Rect {
-        const wid = this.pid.split('!')[0];
-        const {
-            clientWidth,    // 元素宽
-            clientHeight,   // 元素高
-            scrollHeight,   // 纵向滚动
-            scrollWidth,    // 横向滚动
-            offsetTop,      // 距离文档顶部高度
-            offsetLeft      // 距离文档左边高度
-        } = _.getElem(wid);
+    createByPointBase(origin: PointBase) {
+        this.pid = origin.pid;
+        const elem = _.getElemByPid(origin.pid);
+        this.tag = '<' + elem.tagName.toLowerCase() + '>';
         // [ x, y, w, h ]
-        return [ offsetLeft - scrollWidth, offsetTop - scrollHeight, clientWidth, clientHeight ];
+        this.rect = _.getElemClientRect(elem);
     }
-    draw(ctx: CanvasRenderingContext2D) {
-
-    }
-}
-
-class CustomCanvas extends HTMLCanvasElement implements CustomCanvas {
-    w: number;
-    h: number;
-    constructor(w: number, h: number) {
-        super();
-        this.width = this.w = w;
-        this.height = this.h = h;
-        this.style.position = 'absolute';
-        this.style.top = '0';
-        this.style.left = '0';
-        this.style.zIndex = '9999';
-        this.style.pointerEvents = 'none';
-        return this;
-    }
-    clear(): void {
-        this.getContext('2d').clearRect(0, 0, this.w, this.h);
+    createByEvent(origin: EventTarget) {
+        this.pid = _.getElemPid('sysId', 'pageId', <HTMLElement>origin);
+        this.tag = '<' + (<HTMLElement>origin).tagName.toLowerCase() + '>';
+        // [ x, y, w, h ]
+        this.rect = _.getElemClientRect(<Element>origin);
     }
 }

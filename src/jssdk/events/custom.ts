@@ -35,5 +35,5 @@ import { message } from './native';
     // }
 export const messageOf: (tag: string) => Observable<MessageEvent> =
     tag => message().pipe(
-        filter((msg: MessageEvent) => msg.data.tag === tag)
+        filter((msg: MessageEvent) => <'setting' | 'browse'>msg.data.tag === tag)
     );

@@ -1,3 +1,5 @@
+declare module 'whats-element/src/whatsElementPure';
+
 type Obj = { [ x: string ]: any };
 type Fn = (...args: any[]) => any;
 // type Cast<X, Y> = X extends Y ? X : Y;
@@ -85,13 +87,26 @@ interface Utils {
      * @param {String} pageId 页面id
      * @param {HTMLElement} e dom元素
      */
-    getElemId: (sysId: string, pageId: string, e: HTMLElement) => string | null;
+    getElemPid: (sysId: string, pageId: string, e: HTMLElement) => string | null;
 
     /**
      * 根据元素唯一标识获取元素
      * @param {String} pid 元素唯一标识
      */
-    getElem: (pid: string) => HTMLElement;
+    getElemByPid: (pid: string) => HTMLElement;
+
+    /**
+     * 根据元素相对视窗的位置信息
+     * @param {Element} e 元素
+     * @returns 
+     * [
+     *      left,   元素相对视窗的横轴距离
+     *      top,    元素相对视窗的纵轴距离
+     *      width,  元素宽
+     *      height  元素高
+     * ]
+     */
+    getElemClientRect: (e: Element) => [ number, number, number, number ];
 
     /**
      * 装饰器 | 混合属性
@@ -113,13 +128,9 @@ interface PointBase {
     pid: string;
 }
 interface Point extends PointBase {
-    getRect: () => number[];
-    draw: (ctx: CanvasRenderingContext2D) => void;
-}
-interface CustomCanvas {
-    w: number;
-    h: number;
-    clear(): void;
+    pid: string;
+    tag: string;
+    rect: number[];
 }
 interface DomMasker {
     // _active: boolean;
@@ -129,9 +140,10 @@ interface DomMasker {
     activePoint: Point;
 
     // 主绘制canvas
-    canvas: CustomCanvas;
+    canvas: HTMLCanvasElement;
     // 缓存canvas
-    tempCanvas: CustomCanvas;
+    tempCanvas: HTMLCanvasElement;
+    preset(): void;
     clear(): void;
     reset(): void;
     onCatch(): void;

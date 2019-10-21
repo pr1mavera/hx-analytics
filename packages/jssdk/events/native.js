@@ -1,4 +1,5 @@
 import { fromEvent } from 'rxjs';
+import { sampleTime, filter } from 'rxjs/operators';
 // 单个事件模块实现
 // 页面生命周期事件
 // onload
@@ -17,8 +18,8 @@ import { fromEvent } from 'rxjs';
 // tp 页面停留时长上报
 // 事件注册订阅调度机制
 // 各模式模块只维护当前的事件及其回调的列表，在对应生命周期中订阅及取消订阅
-export const click = config => fromEvent(document, 'click', config);
-export const mousemove = config => fromEvent(document, 'mousemove', config);
+export const click = config => fromEvent(document, 'click', { capture: config.capture });
+export const mousemove = config => fromEvent(document, 'mousemove', { capture: config.capture }).pipe(sampleTime(config.debounceTime), filter(e => e.target.tagName !== 'HTML'));
 export const load = () => fromEvent(document, 'load');
 export const beforeUnload = () => fromEvent(document, 'beforeunload');
 export const hashchange = () => fromEvent(document, 'hashchange');
