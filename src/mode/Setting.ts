@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 const EventListener = {
     'setting-click': [
         { capture: true },
-        function(config: Obj): Subscription {
+        function (config: Obj): Subscription {
             return this.events.click(config).subscribe((e: Event) => {
                 e.stopPropagation();
                 // 包装事件数据，触发事件消费 onTrigger;
@@ -22,7 +22,7 @@ const EventListener = {
     ],
     'setting-mousemove': [
         { capture: false, debounceTime: 200 },
-        function(config: Obj): Subscription {
+        function (config: Obj): Subscription {
             return this.events.mousemove(config).subscribe((e: MouseEvent) => {
                 // 包装事件数据，触发事件消费 onTrigger
                 const activePoint = new Point(e.target);
@@ -38,7 +38,7 @@ const EventListener = {
     ],
     'setting-preset': [
         {},
-        function(): Subscription {
+        function (): Subscription {
             return this.events.messageOf('preset').subscribe(
                 (msg: { data: { tag: string, points: PointBase[] } }) => {
                     this.domMasker.preset(msg.data.points);
@@ -49,13 +49,13 @@ const EventListener = {
 };
 
 @_.mixins(EventListener)
-export class Setting implements ModeLifeCycle<Setting> {
+export class Setting implements ModeLifeCycle {
     [x: string]: any;
     readonly modeType: string = 'setting';
     subs: [Subscription?];
     events: Obj;
     domMasker: DomMasker;
-    constructor(events: Obj) {
+    constructor(events: Obj, user: UserInfo) {
         this.events = events;
         this.subs = [];
 
@@ -75,8 +75,8 @@ export class Setting implements ModeLifeCycle<Setting> {
         // 注册事件监听
         // 将自身所有 模式 + '-' 开头的事件监听器方法全部注册，并记录至 subs
         for (const key in this) {
-            if (key.startsWith(this.modeType)) {
-                const [ config, cb ] = <[ Obj, (config: Obj) => Subscription ]>this[key];
+            if (key.startsWith(this.modeType + '-')) {
+                const [config, cb] = <[Obj, (config: Obj) => Subscription]>this[key];
                 this.subs.push(cb.call(this, config));
             }
         }
@@ -91,7 +91,12 @@ export class Setting implements ModeLifeCycle<Setting> {
         // 绑定监控事件
         this.subscribe();
         // 初始化埋点交互遮罩
-        this.domMasker = new DomMasker(points);
+        this.domMasker = DomMasker.getInstance.call(points);
+
+        // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
+        points && this.domMasker.preset(points);
+        // 手动重置 主绘制canvas
+        this.domMasker.reset();
 
         // todo: 阻止文档滚动
     }
@@ -100,7 +105,7 @@ export class Setting implements ModeLifeCycle<Setting> {
         this.unsubscribe();
         this.domMasker.clear();
     }
-    onTrigger(data: Obj) {
+    onTrigger(data: any) {
         console.log('SettingLifeCycle onTrigger：', data);
         // console.log('当前的Points: ', this.domMasker.points);
 
@@ -110,7 +115,7 @@ export class Setting implements ModeLifeCycle<Setting> {
         // 通知父层设置层埋点捕捉完毕
         window.parent && window.parent.postMessage(data, '*');
     }
-};
+}
 
 const customCanvas: (width: number, height: number, color?: string) => HTMLCanvasElement
     = (width, height, color = 'rgba(77, 131, 202, 0.5)') => {
@@ -132,7 +137,7 @@ const customCanvas: (width: number, height: number, color?: string) => HTMLCanva
     };
 
 class DomMasker implements DomMasker {
-    static instance: DomMasker;
+    private static instance: DomMasker;
     static w: number = window.innerWidth;
     static h: number = window.innerHeight;
     // _active: boolean;
@@ -146,32 +151,27 @@ class DomMasker implements DomMasker {
     // 缓存canvas
     tempCanvas: HTMLCanvasElement;
 
-    constructor(points: PointBase[] = []) {
-        // points: [{ pid:'span.corner.top!document.querySelector()!sysId!pageId' }]
+    public static getInstance(points: PointBase[] = []) {
         if (!DomMasker.instance) {
-            // 初始化 主绘制canvas / 缓存canvas
-            this.canvas = customCanvas(DomMasker.w, DomMasker.h);
-            this.tempCanvas = customCanvas(DomMasker.w, DomMasker.h, 'rgba(200, 100, 50, 0.6)');
-
-            // 插入页面根节点
-            document.body.appendChild(this.canvas);
-
-            DomMasker.instance = this;
+            DomMasker.instance = new DomMasker(points);
         }
-
-        // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
-        this.preset(points);
-
-        // 手动重置 主绘制canvas
-        this.reset();
-
-        // 返回单例
         return DomMasker.instance;
+    }
+    private constructor(points: PointBase[]) {
+        // points: [{ pid:'span.corner.top!document.querySelector()!sysId!pageId' }]
+
+        // 初始化 主绘制canvas / 缓存canvas
+        this.canvas = customCanvas(DomMasker.w, DomMasker.h);
+        this.tempCanvas = customCanvas(DomMasker.w, DomMasker.h, 'rgba(200, 100, 50, 0.6)');
+
+        // 插入页面根节点
+        document.body.appendChild(this.canvas);
     }
     // 将预设埋点信息标准化，并将信息对应的绘制到 缓存canvas 上
     // 注意：此API不会造成页面 主绘制canvas 的绘制
     // 幂等操作
     preset(points: PointBase[]) {
+        console.log('this.tempCanvas：', this);
         this.tempCanvas.getContext('2d').clearRect(0, 0, DomMasker.w, DomMasker.h);
         this.points = points.map((p: PointBase) => new Point(p));
 
@@ -183,7 +183,7 @@ class DomMasker implements DomMasker {
     }
     clear() {
         this.canvas.getContext('2d').clearRect(0, 0, DomMasker.w, DomMasker.h);
-    };
+    }
     reset() {
         this.clear();
         if (this.points.length) {
@@ -191,9 +191,9 @@ class DomMasker implements DomMasker {
             const ctx = this.canvas.getContext('2d');
             ctx.drawImage(this.tempCanvas, 0, 0);
         }
-    };
+    }
     render(ctx: CanvasRenderingContext2D, point: Point) {
-        const { tag, rect: [ x, y, width, height ] } = point;
+        const { tag, rect: [x, y, width, height] } = point;
         ctx.fillRect(x, y, width, height);
         ctx.fillText(tag, x, y);
         // ctx.save();
@@ -201,7 +201,7 @@ class DomMasker implements DomMasker {
         // ctx.lineWidth = 1;
         // ctx.strokeText(tag, x, y);
         // ctx.restore();
-    };
+    }
 }
 
 class Point implements Point {

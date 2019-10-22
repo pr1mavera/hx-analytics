@@ -1,3 +1,4 @@
+const ts = require('rollup-plugin-typescript2');
 const babel = require('rollup-plugin-babel');
 const json = require('rollup-plugin-json');
 const resolve = require('rollup-plugin-node-resolve');
@@ -7,8 +8,20 @@ const alias = require('rollup-plugin-alias');
 const { eslint } = require('rollup-plugin-eslint');
 const { resolveFile } = require('./utils');
 
+const tsconfig = {
+    compilerOptions: {
+        target: 'es6',
+        allowJs: true,
+        module: 'ES6',
+        moduleResolution: 'node',
+        noImplicitAny: true,
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true
+    }
+};
+
 module.exports = {
-    input: resolveFile(`packages/${process.env.TARGET}/entry.js`),
+    input: resolveFile(`src/${process.env.TARGET}/entry.ts`),
     onwarn: function(warning) {
         // Skip certain warnings
     
@@ -19,13 +32,18 @@ module.exports = {
         console.warn( warning.message );
     },
     plugins: [
+        ts({
+            tsconfigDefaults: tsconfig,
+            include: [ resolveFile('src/**/*') ],
+            // exclude: [ resolveFile('src/**/*.js') ]
+        }),
         resolve({
             jsnext: true, // 该属性是指定将Node包转换为ES2015模块
             // main 和 browser 属性将使插件决定将那些文件应用到bundle中
             main: true, // Default: true
             browser: true // Default: false
         }),
-        commonjs(),
+        commonjs({extensions: ['.js', '.ts']}),
         json(),
         babel({
             babelrc: false,

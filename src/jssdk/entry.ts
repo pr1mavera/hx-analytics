@@ -35,9 +35,9 @@ import * as events from './events';
 
 class HXAnalytics {
 
-    _mode: ModeLifeCycle<any>;
+    _mode: ModeLifeCycle;
     modeContainer: {
-        [ key: string ]: ModeLifeCycle<any>
+        [ key: string ]: ModeLifeCycle
     };
 
     set mode(modeType: string) {
@@ -53,7 +53,20 @@ class HXAnalytics {
         return this._mode ? this._mode.modeType : null;
     }
 
-    constructor({ mode }: Container) {
+    constructor() {
+        // this.modeContainer = mode;
+    }
+    // 提供应用开发人员主动埋点能力
+    push(data: Obj) {
+        this._mode.onTrigger(data);
+    }
+    init(user: UserInfo, { mode }: Container = {
+        mode: {
+            browse: new Browse(events, user),
+            report: new Report(events, user),
+            setting: new Setting(events, user)
+        }
+    }) {
         this.modeContainer = mode;
         this.mode = _.inIframe() ? 'browse' : 'report';
 
@@ -62,23 +75,11 @@ class HXAnalytics {
             Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
             this.mode = msg.data.mode;
         });
-    }
-    // 提供应用开发人员主动埋点能力
-    push(data: Obj) {
-        this._mode.onTrigger(data);
-    }
-    init() {
         return this;
     }
 }
 
-const ha = new HXAnalytics({
-    mode: {
-        browse: new Browse(),
-        report: new Report(events),
-        setting: new Setting(events)
-    }
-} as Container);
+const ha = new HXAnalytics();
 
 export default ha;
 
@@ -117,13 +118,15 @@ export default ha;
 //     tag: 'selectPoint'
 // }
 
+// todo:
+
 // IoC 容器重构公共模块
 // 错误处理
 // 上报统一格式配置
 // 行为上报控制器切换 接口 / 本地缓存
+// 文档
+
+// 客户端日志上报与可视化埋点模式分离
 // 用户身份校验
 // 页面停留时长 页面切换机制
 // 单测
-// 文档
-
-

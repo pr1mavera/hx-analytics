@@ -49,10 +49,10 @@ export const visibilitychange: () => Observable<Event> =
     () => fromEvent(document, 'visibilitychange');
 
 export const online: () => Observable<Event> =
-    () => fromEvent(document, 'online');
+    () => fromEvent(window, 'online');
 
 export const offline: () => Observable<Event> =
-    () => fromEvent(document, 'offline');
+    () => fromEvent(window, 'offline');
 
 export const message: () => Observable<Event> =
     () => fromEvent(window, 'message');

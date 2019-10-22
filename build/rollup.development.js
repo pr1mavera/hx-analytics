@@ -11,7 +11,7 @@ module.exports = {
     ...config,
     output: {
         file: resolveFile(`dist/${TARGET}/hx-analytics-${TARGET}.js`),
-        format: 'iife',
+        format: 'umd',
         name: 'ha',
         sourcemap: true
     },
@@ -19,6 +19,7 @@ module.exports = {
         ...config.plugins,
         ...[
             serve({
+                // host: dev.host,
                 port: dev.port,
                 contentBase: [ resolveFile('dist') ]
             }),

@@ -62,6 +62,12 @@ interface Utils {
     isType: (type: string, staff: any) => boolean;
 
     /**
+     * 字符串首字母大写
+     * @param {String} str 字符串
+     */
+    firstUpperCase: (str: string) => string;
+
+    /**
      * 生成访问记录唯一标识
      * @param {String} appId 应用id
      */
@@ -109,6 +115,11 @@ interface Utils {
     getElemClientRect: (e: Element) => [ number, number, number, number ];
 
     /**
+     * 获取设备信息
+     */
+    deviceInfo: () => { name: string, version: number, browser: string, connType: string };
+
+    /**
      * 装饰器 | 混合属性
      * @param {Array} ...list 待混合属性的数组
      */
@@ -146,18 +157,47 @@ interface DomMasker {
     preset(): void;
     clear(): void;
     reset(): void;
-    onCatch(): void;
     render(): void;
 }
 
+type UserInfo = {
+    appId: string;
+    sysId: string;
+    origin: string;
+    openId: string;
+}
+type ClientInfo = {
+    [x: string]: string;
+    batchId: string;
+    clientType: string;
+    sysVersion: string;
+    userNetWork: string;
+};
+
+interface ReportStrategy {
+    info: ClientInfo;
+    controller(data: Obj): void;
+    formatDatagram(data: Obj): Obj;
+    report2Storage(data: Obj): void;
+    report2Server(data: Obj): void;
+}
+
+interface Report2Local extends ReportStrategy {
+
+}
+
+interface Report2Server extends ReportStrategy {
+    onError(): void;
+}
+
 // 模式生命周期
-interface ModeLifeCycle<T> {
+interface ModeLifeCycle {
     readonly modeType: string;
     subs: any[];
     events?: Obj;
     onEnter(options?: Obj): void;
     onExit(): void;
-    onTrigger(data: Obj): void;
+    onTrigger(data: any): void;
 }
 // declare class EventsSubscriber {
 //     subs: [Subscription];
@@ -186,6 +226,6 @@ type SafeRequest = {
 // 全局容器
 interface Container {
     mode: {
-        [ key: string ]: ModeLifeCycle<any>;
+        [ key: string ]: ModeLifeCycle;
     };
 }

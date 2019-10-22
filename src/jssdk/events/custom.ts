@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
-import { filter } from 'rxjs/operators';
-import { message } from './native';
+import { Observable, merge } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+import { message, online, offline } from './native';
 
 // // 自定义事件 | 页面初始化后的性能数据上报
 // export const performance: () => Observable<Event> =
@@ -36,4 +36,9 @@ import { message } from './native';
 export const messageOf: (tag: string) => Observable<MessageEvent> =
     tag => message().pipe(
         filter((msg: MessageEvent) => <'setting' | 'browse'>msg.data.tag === tag)
+    );
+
+export const netStatusChange: () => Observable<string> =
+    () => merge(online(), offline()).pipe(
+        map((e: Event) => e.type)
     );
