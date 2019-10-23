@@ -94,6 +94,7 @@ _.randomInRange = (min, max) => Math.floor(Math.random() * (max - min) + min);
 _.getElemPid = function (sysId, pageId, e) {
     try {
         const { type, wid } = new whatsElement().getUniqueId(e);
+        // const { type, wid } = { type: 'type', wid: 'wid' };
         return `${wid}!${type}!${sysId}!${pageId}`;
     } catch {
         return null;

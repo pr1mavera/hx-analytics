@@ -10,18 +10,20 @@ const { resolveFile } = require('./utils');
 
 const tsconfig = {
     compilerOptions: {
-        target: 'es6',
+        target: 'es5',
         allowJs: true,
         module: 'ES6',
         moduleResolution: 'node',
         noImplicitAny: true,
         experimentalDecorators: true,
-        emitDecoratorMetadata: true
+        emitDecoratorMetadata: true,
+        sourceMap: true
     }
 };
 
 module.exports = {
-    input: resolveFile(`src/${process.env.TARGET}/entry.ts`),
+    input: resolveFile(`src/entry-${process.env.TARGET}.ts`),
+    // input: resolveFile('src/app.ts'),
     onwarn: function(warning) {
         // Skip certain warnings
     

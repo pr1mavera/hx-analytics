@@ -11,8 +11,6 @@ type Length<T extends any[]> = T['length'];
 // type Currying<F extends ((...arg: any) => R), R> = <T extends any[]>(...args: T) => ;
 // type Curry<P extends any[], R> = (fn: ((...args) => R), arity?: number) => <T extends any[]>(...args: T) => ;
 
-declare module 'whats-element/pure';
-
 // 工具类
 interface Utils {
 
@@ -134,6 +132,15 @@ interface CustomStorage {
     clear: () => void;
 }
 
+interface EventSubscriber<T extends { [x: string]: any, modeType: string }, S extends { unsubscribe(): void }> {
+    ctx: T;
+    subs: S[];
+    subscribe(): void;
+    unsubscribe(): void;
+    on(event: string, sub: S): void;
+    off(event: string): void;
+}
+
 type Rect = [ number, number, number, number ];
 interface PointBase {
     pid: string;
@@ -176,24 +183,16 @@ type ClientInfo = {
 
 interface ReportStrategy {
     info: ClientInfo;
-    controller(data: Obj): void;
+    controller: 'storage' | 'server';
     formatDatagram(data: Obj): Obj;
     report2Storage(data: Obj): void;
     report2Server(data: Obj): void;
 }
 
-interface Report2Local extends ReportStrategy {
-
-}
-
-interface Report2Server extends ReportStrategy {
-    onError(): void;
-}
-
 // 模式生命周期
 interface ModeLifeCycle {
     readonly modeType: string;
-    subs: any[];
+    // subs: any[];
     events?: Obj;
     onEnter(options?: Obj): void;
     onExit(): void;

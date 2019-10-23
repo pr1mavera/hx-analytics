@@ -1,10 +1,7 @@
 
 (function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.head.appendChild(r) })(document);
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global = global || self, global.ha = factory());
-}(this, function () { 'use strict';
+var ha = (function () {
+	'use strict';
 
 	var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -1140,6 +1137,65 @@
 	    });
 	})(Reflect$1 || (Reflect$1 = {}));
 
+	/*! *****************************************************************************
+	Copyright (c) Microsoft Corporation. All rights reserved.
+	Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+	this file except in compliance with the License. You may obtain a copy of the
+	License at http://www.apache.org/licenses/LICENSE-2.0
+
+	THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+	KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+	WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+	MERCHANTABLITY OR NON-INFRINGEMENT.
+
+	See the Apache Version 2.0 License for specific language governing permissions
+	and limitations under the License.
+	***************************************************************************** */
+	/* global Reflect, Promise */
+
+	var extendStatics = function(d, b) {
+	    extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return extendStatics(d, b);
+	};
+
+	function __extends(d, b) {
+	    extendStatics(d, b);
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	}
+
+	var __assign = function() {
+	    __assign = Object.assign || function __assign(t) {
+	        for (var s, i = 1, n = arguments.length; i < n; i++) {
+	            s = arguments[i];
+	            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+	        }
+	        return t;
+	    };
+	    return __assign.apply(this, arguments);
+	};
+
+	function __decorate(decorators, target, key, desc) {
+	    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+	    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+	    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+	    return c > 3 && r && Object.defineProperty(target, key, r), r;
+	}
+
+	function __metadata(metadataKey, metadataValue) {
+	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
+	}
+
+	function __spreadArrays() {
+	    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+	    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+	        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+	            r[k] = a[j];
+	    return r;
+	}
+
 	function getCoords(elem) {
 	    var box = elem.getBoundingClientRect();
 	    var body = document.body;
@@ -1347,38 +1403,53 @@
 	prototype.draw = noop;
 	window.whatsElement = whatsElementPure;
 
-	const _ = function () { };
-	_.unboundMethod = function (methodName, argCount = 2) {
-	    return this.curry((...args) => {
-	        const obj = args.pop();
-	        return obj[methodName](...args);
+	var _ = function () { };
+	_.unboundMethod = function (methodName, argCount) {
+	    if (argCount === void 0) { argCount = 2; }
+	    return this.curry(function () {
+	        var args = [];
+	        for (var _i = 0; _i < arguments.length; _i++) {
+	            args[_i] = arguments[_i];
+	        }
+	        var obj = args.pop();
+	        return obj[methodName].apply(obj, args);
 	    }, argCount);
 	};
-	_.curry = (fn, arity = fn.length) => {
+	_.curry = function (fn, arity) {
+	    if (arity === void 0) { arity = fn.length; }
 	    // 1. 构造一个这样的函数：
 	    //    即：接收前一部分参数，返回一个 接收后一部分参数 的函数，返回的那个函数需在内部判断是否执行原函数
-	    const nextCurried = (...prev) => (...next) => {
-	        const args = [...prev, ...next];
-	        return args.length >= arity
-	            ? fn(...args)
-	            : nextCurried(...args);
+	    var nextCurried = function () {
+	        var prev = [];
+	        for (var _i = 0; _i < arguments.length; _i++) {
+	            prev[_i] = arguments[_i];
+	        }
+	        return function () {
+	            var next = [];
+	            for (var _i = 0; _i < arguments.length; _i++) {
+	                next[_i] = arguments[_i];
+	            }
+	            var args = __spreadArrays(prev, next);
+	            return args.length >= arity
+	                ? fn.apply(void 0, args) : nextCurried.apply(void 0, args);
+	        };
 	    };
 	    // 2. 将构造的这个函数执行并返回，初始入参为空
 	    return nextCurried();
 	};
 	_.map = _.unboundMethod('map', 2);
-	const { sessionStorage, localStorage } = window;
-	const [SessStorage, LocStorage] = _.map((storage) => ({
-	    get: key => JSON.parse(storage.getItem(key)),
-	    set: (key, val) => storage.setItem(key, JSON.stringify(val)),
-	    remove: key => storage.removeItem(key),
-	    clear: () => storage.clear()
-	}))([sessionStorage, localStorage]);
+	var _a = window, sessionStorage = _a.sessionStorage, localStorage = _a.localStorage;
+	var _b = _.map(function (storage) { return ({
+	    get: function (key) { return JSON.parse(storage.getItem(key)); },
+	    set: function (key, val) { return storage.setItem(key, JSON.stringify(val)); },
+	    remove: function (key) { return storage.removeItem(key); },
+	    clear: function () { return storage.clear(); }
+	}); })([sessionStorage, localStorage]), SessStorage = _b[0], LocStorage = _b[1];
 	_.SessStorage = SessStorage;
 	_.LocStorage = LocStorage;
-	_.inIframe = () => window && window.self !== window.top;
-	_.isType = (type, staff) => Object.prototype.toString.call(staff) === `[object ${type}]`;
-	_.firstUpperCase = str => str.toLowerCase().replace(/( |^)[a-z]/g, (s) => s.toUpperCase());
+	_.inIframe = function () { return window && window.self !== window.top; };
+	_.isType = function (type, staff) { return Object.prototype.toString.call(staff) === "[object " + type + "]"; };
+	_.firstUpperCase = function (str) { return str.toLowerCase().replace(/( |^)[a-z]/g, function (s) { return s.toUpperCase(); }); };
 	_.createVisitId = function (appId) {
 	    return ''
 	        // 应用id
@@ -1388,8 +1459,9 @@
 	        // 6位随机数
 	        + this.randomInRange(100000, 999999);
 	};
-	_.formatDate = (format, date = new Date()) => {
-	    const map = {
+	_.formatDate = function (format, date) {
+	    if (date === void 0) { date = new Date(); }
+	    var map = {
 	        'M': date.getMonth() + 1,
 	        'd': date.getDate(),
 	        'h': date.getHours(),
@@ -1410,48 +1482,49 @@
 	            return (date.getFullYear() + '').substr(4 - all.length);
 	        }
 	        else if (t === 'S') {
-	            const ms = `00${date.getMilliseconds()}`;
+	            var ms = "00" + date.getMilliseconds();
 	            return ms.substr(ms.length - 3);
 	        }
 	        return all;
 	    });
 	    return format;
 	};
-	_.randomInRange = (min, max) => Math.floor(Math.random() * (max - min) + min);
+	_.randomInRange = function (min, max) { return Math.floor(Math.random() * (max - min) + min); };
 	_.getElemPid = function (sysId, pageId, e) {
 	    try {
-	        const { type, wid } = new whatsElementPure().getUniqueId(e);
-	        return `${wid}!${type}!${sysId}!${pageId}`;
+	        var _a = new whatsElementPure().getUniqueId(e), type = _a.type, wid = _a.wid;
+	        // const { type, wid } = { type: 'type', wid: 'wid' };
+	        return wid + "!" + type + "!" + sysId + "!" + pageId;
 	    }
-	    catch (_a) {
+	    catch (_b) {
 	        return null;
 	    }
 	};
-	_.getElemByPid = pid => {
-	    const id = pid.split('!')[0];
+	_.getElemByPid = function (pid) {
+	    var id = pid.split('!')[0];
 	    return document.getElementById(id) || document.getElementsByName(id)[0] || document.querySelector(id);
 	};
-	_.getElemClientRect = e => {
-	    const { left, top, right, bottom } = e.getBoundingClientRect();
+	_.getElemClientRect = function (e) {
+	    var _a = e.getBoundingClientRect(), left = _a.left, top = _a.top, right = _a.right, bottom = _a.bottom;
 	    // [ x, y, w, h ]
 	    return [left, top, right - left, bottom - top];
 	};
-	_.deviceInfo = () => {
-	    const u = navigator.userAgent;
-	    const ua = u.toLowerCase();
-	    let name;
-	    let version;
-	    let browser = 'wx';
-	    let connType = /nettype/.test(ua) ? ua.match(/NetType\/(\S*)/)[1] : 'unknown';
+	_.deviceInfo = function () {
+	    var u = navigator.userAgent;
+	    var ua = u.toLowerCase();
+	    var name;
+	    var version;
+	    var browser = 'wx';
+	    var connType = /nettype/.test(ua) ? ua.match(/NetType\/(\S*)/)[1] : 'unknown';
 	    if (u.indexOf('Android') > -1 || u.indexOf('Linux') > -1) {
 	        // Android
-	        const reg = /android [\d._]+/gi;
+	        var reg = /android [\d._]+/gi;
 	        name = 'Android';
 	        version = parseFloat((ua.match(reg) + '').replace(/[^0-9|_.]/ig, '').replace(/_/ig, '.'));
 	    }
 	    else if (u.indexOf('iPhone') > -1) {
 	        // iPhone
-	        const ver = ua.match(/cpu iphone os (.*?) like mac os/);
+	        var ver = ua.match(/cpu iphone os (.*?) like mac os/);
 	        name = 'iPhone';
 	        version = parseFloat(ver[1].replace(/_/g, '.'));
 	        // 微信内置浏览器否
@@ -1462,179 +1535,46 @@
 	        version = -1;
 	    }
 	    return {
-	        name,
-	        version,
-	        browser,
-	        connType
+	        name: name,
+	        version: version,
+	        browser: browser,
+	        connType: connType
 	    };
 	};
-	_.mixins = function (...list) {
+	_.mixins = function () {
+	    var list = [];
+	    for (var _i = 0; _i < arguments.length; _i++) {
+	        list[_i] = arguments[_i];
+	    }
 	    return function (constructor) {
-	        Object.assign(constructor.prototype, ...list);
+	        Object.assign.apply(Object, __spreadArrays([constructor.prototype], list));
 	    };
 	};
 	_.reloadConstructor = function (constructor) {
-	    return class ReloadConstructor extends constructor {
-	    };
+	    return /** @class */ (function (_super) {
+	        __extends(ReloadConstructor, _super);
+	        function ReloadConstructor() {
+	            return _super !== null && _super.apply(this, arguments) || this;
+	        }
+	        return ReloadConstructor;
+	    }(constructor));
 	};
 
-	class Browse {
-	    constructor(event, user) {
+	var Browse = /** @class */ (function () {
+	    function Browse(event, user) {
 	        this.modeType = 'browse';
 	    }
-	    onEnter() { }
-	    onExit() { }
-	    onTrigger() {
+	    Browse.prototype.onEnter = function () { };
+	    Browse.prototype.onExit = function () { };
+	    Browse.prototype.onTrigger = function () {
 	        console.log('点吧~老弟嗷~我浏览模式啥也不会干的~');
-	    }
-	}
+	    };
+	    return Browse;
+	}());
 
-	/*! *****************************************************************************
-	Copyright (c) Microsoft Corporation. All rights reserved.
-	Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-	this file except in compliance with the License. You may obtain a copy of the
-	License at http://www.apache.org/licenses/LICENSE-2.0
-
-	THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-	KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-	WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-	MERCHANTABLITY OR NON-INFRINGEMENT.
-
-	See the Apache Version 2.0 License for specific language governing permissions
-	and limitations under the License.
-	***************************************************************************** */
-	/* global Reflect, Promise */
-
-	var extendStatics = function(d, b) {
-	    extendStatics = Object.setPrototypeOf ||
-	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-	    return extendStatics(d, b);
-	};
-
-	function __extends(d, b) {
-	    extendStatics(d, b);
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	}
-
-	function __decorate(decorators, target, key, desc) {
-	    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-	    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-	    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-	    return c > 3 && r && Object.defineProperty(target, key, r), r;
-	}
-
-	function __metadata(metadataKey, metadataValue) {
-	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
-	}
-
-	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
-	const EventListener = {
-	    'setting-click': [
-	        { capture: true },
-	        function (config) {
-	            return this.events.click(config).subscribe((e) => {
-	                e.stopPropagation();
-	                // 包装事件数据，触发事件消费 onTrigger;
-	                this.onTrigger({
-	                    tag: 'selectPoint',
-	                    point: this.domMasker.activePoint,
-	                    // 是否是重复设置的埋点
-	                    isRepeat: this.domMasker.points.filter((point) => point.pid === this.domMasker.activePoint.pid).length !== 0
-	                });
-	            });
-	        }
-	    ],
-	    'setting-mousemove': [
-	        { capture: false, debounceTime: 200 },
-	        function (config) {
-	            return this.events.mousemove(config).subscribe((e) => {
-	                // 包装事件数据，触发事件消费 onTrigger
-	                const activePoint = new Point(e.target);
-	                if (activePoint !== this.domMasker.activePoint) {
-	                    // 获取的元素为新的捕捉元素
-	                    this.domMasker.activePoint = activePoint;
-	                    // 渲染遮罩层
-	                    this.domMasker.reset();
-	                    this.domMasker.render(this.domMasker.canvas.getContext('2d'), new Point(e.target));
-	                }
-	            });
-	        }
-	    ],
-	    'setting-preset': [
-	        {},
-	        function () {
-	            return this.events.messageOf('preset').subscribe((msg) => {
-	                this.domMasker.preset(msg.data.points);
-	            });
-	        }
-	    ],
-	};
-	let Setting = class Setting {
-	    constructor(events, user) {
-	        this.modeType = 'setting';
-	        this.events = events;
-	        this.subs = [];
-	        // 单独注册父页面的重置通讯
-	        // 捕捉到元素之后 Setting 模式会将当前绑定的 setting- 监控事件都注销
-	        // 因此在不改变模式的情况下需要依靠父窗口消息推送 reset 指令来重新开启捕捉元素
-	        this.events.messageOf('reset').subscribe((msg) => {
-	            // 绑定监控事件
-	            this.subscribe();
-	            // 若此处将新的预设埋点传过来了，则更新，否则使用原来的
-	            msg.data.points && this.domMasker.preset(msg.data.points);
-	            // 重置埋点蒙板
-	            this.domMasker.reset();
-	        });
-	    }
-	    subscribe() {
-	        // 注册事件监听
-	        // 将自身所有 模式 + '-' 开头的事件监听器方法全部注册，并记录至 subs
-	        for (const key in this) {
-	            if (key.startsWith(this.modeType + '-')) {
-	                const [config, cb] = this[key];
-	                this.subs.push(cb.call(this, config));
-	            }
-	        }
-	    }
-	    unsubscribe() {
-	        // 注销事件监听
-	        this.subs.length && this.subs.forEach((unsub) => unsub.unsubscribe());
-	        this.subs = [];
-	    }
-	    onEnter(points = []) {
-	        // 绑定监控事件
-	        this.subscribe();
-	        // 初始化埋点交互遮罩
-	        this.domMasker = DomMasker.getInstance.call(points);
-	        // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
-	        points && this.domMasker.preset(points);
-	        // 手动重置 主绘制canvas
-	        this.domMasker.reset();
-	        // todo: 阻止文档滚动
-	    }
-	    onExit() {
-	        // 注销事件监听
-	        this.unsubscribe();
-	        this.domMasker.clear();
-	    }
-	    onTrigger(data) {
-	        console.log('SettingLifeCycle onTrigger：', data);
-	        // console.log('当前的Points: ', this.domMasker.points);
-	        // 当前已捕获到埋点，通过注销绑定的监听可保持埋点蒙板状态
-	        // 注销绑定的监听
-	        this.unsubscribe();
-	        // 通知父层设置层埋点捕捉完毕
-	        window.parent && window.parent.postMessage(data, '*');
-	    }
-	};
-	Setting = __decorate([
-	    _.mixins(EventListener),
-	    __metadata("design:paramtypes", [Object, Object])
-	], Setting);
-	const customCanvas = (width, height, color = 'rgba(77, 131, 202, 0.5)') => {
-	    let canvas = document.createElement('canvas');
+	var customCanvas = function (width, height, color) {
+	    if (color === void 0) { color = 'rgba(77, 131, 202, 0.5)'; }
+	    var canvas = document.createElement('canvas');
 	    canvas.width = width;
 	    canvas.height = height;
 	    canvas.style.position = 'fixed';
@@ -1642,66 +1582,15 @@
 	    canvas.style.left = '0';
 	    canvas.style.zIndex = '9999';
 	    canvas.style.pointerEvents = 'none';
-	    const ctx = canvas.getContext('2d');
+	    var ctx = canvas.getContext('2d');
 	    ctx.fillStyle = color;
 	    ctx.font = '18px serif';
 	    ctx.textBaseline = 'ideographic';
 	    return canvas;
 	};
-	class DomMasker {
-	    constructor(points) {
-	        // points: [{ pid:'span.corner.top!document.querySelector()!sysId!pageId' }]
-	        // 初始化 主绘制canvas / 缓存canvas
-	        this.canvas = customCanvas(DomMasker.w, DomMasker.h);
-	        this.tempCanvas = customCanvas(DomMasker.w, DomMasker.h, 'rgba(200, 100, 50, 0.6)');
-	        // 插入页面根节点
-	        document.body.appendChild(this.canvas);
-	    }
-	    static getInstance(points = []) {
-	        if (!DomMasker.instance) {
-	            DomMasker.instance = new DomMasker(points);
-	        }
-	        return DomMasker.instance;
-	    }
-	    // 将预设埋点信息标准化，并将信息对应的绘制到 缓存canvas 上
-	    // 注意：此API不会造成页面 主绘制canvas 的绘制
-	    // 幂等操作
-	    preset(points) {
-	        console.log('this.tempCanvas：', this);
-	        this.tempCanvas.getContext('2d').clearRect(0, 0, DomMasker.w, DomMasker.h);
-	        this.points = points.map((p) => new Point(p));
-	        const ctx = this.tempCanvas.getContext('2d');
-	        // 绘制预设埋点蒙版，保存在内存中
-	        this.points.forEach((point) => {
-	            this.render(ctx, point);
-	        });
-	    }
-	    clear() {
-	        this.canvas.getContext('2d').clearRect(0, 0, DomMasker.w, DomMasker.h);
-	    }
-	    reset() {
-	        this.clear();
-	        if (this.points.length) {
-	            // 将缓存信息当做背景绘制到 主绘制canvas
-	            const ctx = this.canvas.getContext('2d');
-	            ctx.drawImage(this.tempCanvas, 0, 0);
-	        }
-	    }
-	    render(ctx, point) {
-	        const { tag, rect: [x, y, width, height] } = point;
-	        ctx.fillRect(x, y, width, height);
-	        ctx.fillText(tag, x, y);
-	        // ctx.save();
-	        // ctx.strokeStyle = '#fff';
-	        // ctx.lineWidth = 1;
-	        // ctx.strokeText(tag, x, y);
-	        // ctx.restore();
-	    }
-	}
-	DomMasker.w = window.innerWidth;
-	DomMasker.h = window.innerHeight;
-	class Point {
-	    constructor(origin) {
+
+	var Point = /** @class */ (function () {
+	    function Point(origin) {
 	        if (origin instanceof EventTarget) {
 	            this.createByEvent(origin);
 	        }
@@ -1709,103 +1598,302 @@
 	            this.createByPointBase(origin);
 	        }
 	    }
-	    createByPointBase(origin) {
+	    Point.prototype.createByPointBase = function (origin) {
 	        this.pid = origin.pid;
-	        const elem = _.getElemByPid(origin.pid);
+	        var elem = _.getElemByPid(origin.pid);
 	        this.tag = '<' + elem.tagName.toLowerCase() + '>';
 	        // [ x, y, w, h ]
 	        this.rect = _.getElemClientRect(elem);
-	    }
-	    createByEvent(origin) {
+	    };
+	    Point.prototype.createByEvent = function (origin) {
 	        this.pid = _.getElemPid('sysId', 'pageId', origin);
 	        this.tag = '<' + origin.tagName.toLowerCase() + '>';
 	        // [ x, y, w, h ]
 	        this.rect = _.getElemClientRect(origin);
+	    };
+	    return Point;
+	}());
+
+	var DomMasker = /** @class */ (function () {
+	    function DomMasker(points) {
+	        // points: [{ pid:'span.corner.top!document.querySelector()!sysId!pageId' }]
+	        // 初始化 主绘制canvas / 缓存canvas
+	        this.canvas = customCanvas(DomMasker.w, DomMasker.h);
+	        this.tempCanvas = customCanvas(DomMasker.w, DomMasker.h, 'rgba(200, 100, 50, 0.6)');
+	        // 插入页面根节点
+	        document.body.appendChild(this.canvas);
 	    }
-	}
+	    DomMasker.getInstance = function (points) {
+	        if (points === void 0) { points = []; }
+	        if (!DomMasker.instance) {
+	            DomMasker.instance = new DomMasker(points);
+	        }
+	        return DomMasker.instance;
+	    };
+	    // 将预设埋点信息标准化，并将信息对应的绘制到 缓存canvas 上
+	    // 注意：此API不会造成页面 主绘制canvas 的绘制
+	    // 幂等操作
+	    DomMasker.prototype.preset = function (points) {
+	        var _this = this;
+	        console.log('this.tempCanvas：', this);
+	        this.tempCanvas.getContext('2d').clearRect(0, 0, DomMasker.w, DomMasker.h);
+	        this.points = points.map(function (p) { return new Point(p); });
+	        var ctx = this.tempCanvas.getContext('2d');
+	        // 绘制预设埋点蒙版，保存在内存中
+	        this.points.forEach(function (point) {
+	            _this.render(ctx, point);
+	        });
+	    };
+	    DomMasker.prototype.clear = function () {
+	        this.canvas.getContext('2d').clearRect(0, 0, DomMasker.w, DomMasker.h);
+	    };
+	    DomMasker.prototype.reset = function () {
+	        this.clear();
+	        if (this.points.length) {
+	            // 将缓存信息当做背景绘制到 主绘制canvas
+	            var ctx = this.canvas.getContext('2d');
+	            ctx.drawImage(this.tempCanvas, 0, 0);
+	        }
+	    };
+	    DomMasker.prototype.render = function (ctx, point) {
+	        var tag = point.tag, _a = point.rect, x = _a[0], y = _a[1], width = _a[2], height = _a[3];
+	        ctx.fillRect(x, y, width, height);
+	        ctx.fillText(tag, x, y);
+	        // ctx.save();
+	        // ctx.strokeStyle = '#fff';
+	        // ctx.lineWidth = 1;
+	        // ctx.strokeText(tag, x, y);
+	        // ctx.restore();
+	    };
+	    DomMasker.w = window.innerWidth;
+	    DomMasker.h = window.innerHeight;
+	    return DomMasker;
+	}());
+
+	var EventSubscriber = /** @class */ (function () {
+	    function EventSubscriber(ctx) {
+	        this.subs = [];
+	        this.ctx = ctx;
+	    }
+	    EventSubscriber.prototype.subscribe = function () {
+	        // 统一注册事件监听
+	        // 将 ctx 所有 模式 + '-' 开头的事件监听器方法全部注册，并记录至 subs
+	        for (var key in this.ctx) {
+	            if (key.startsWith(this.ctx.modeType + '-')) {
+	                var _a = this.ctx[key], config = _a[0], cb = _a[1];
+	                this.subs.push(cb.call(this.ctx, config));
+	            }
+	        }
+	    };
+	    EventSubscriber.prototype.unsubscribe = function () {
+	        // 统一注销事件监听
+	        this.subs.length && this.subs.forEach(function (unsub) { return unsub.unsubscribe(); });
+	        this.subs = [];
+	    };
+	    // 单独注册自定义事件
+	    EventSubscriber.prototype.on = function (event, sub) {
+	        this[event] = sub;
+	    };
+	    // 单独注销自定义事件
+	    EventSubscriber.prototype.off = function (event) {
+	        // 存在即注销
+	        this[event] &&
+	            this[event].unsubscribe &&
+	            this[event].unsubscribe();
+	        this[event] = undefined;
+	    };
+	    return EventSubscriber;
+	}());
 
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
-	const EventListener$1 = {
+	var EventListener = {
+	    'setting-click': [
+	        { capture: true },
+	        function (config) {
+	            var _this = this;
+	            return this.events.click(config).subscribe(function (e) {
+	                e.stopPropagation();
+	                // 包装事件数据，触发事件消费 onTrigger;
+	                _this.onTrigger({
+	                    tag: 'selectPoint',
+	                    point: _this.domMasker.activePoint,
+	                    // 是否是重复设置的埋点
+	                    isRepeat: _this.domMasker.points.filter(function (point) { return point.pid === _this.domMasker.activePoint.pid; }).length !== 0
+	                });
+	            });
+	        }
+	    ],
+	    'setting-mousemove': [
+	        { capture: false, debounceTime: 200 },
+	        function (config) {
+	            var _this = this;
+	            return this.events.mousemove(config).subscribe(function (e) {
+	                // 包装事件数据，触发事件消费 onTrigger
+	                var activePoint = new Point(e.target);
+	                if (activePoint !== _this.domMasker.activePoint) {
+	                    // 获取的元素为新的捕捉元素
+	                    _this.domMasker.activePoint = activePoint;
+	                    // 渲染遮罩层
+	                    _this.domMasker.reset();
+	                    _this.domMasker.render(_this.domMasker.canvas.getContext('2d'), new Point(e.target));
+	                }
+	            });
+	        }
+	    ],
+	    'setting-preset': [
+	        {},
+	        function () {
+	            var _this = this;
+	            return this.events.messageOf('preset').subscribe(function (msg) {
+	                _this.domMasker.preset(msg.data.points);
+	            });
+	        }
+	    ],
+	};
+	var Setting = /** @class */ (function () {
+	    function Setting(events, user) {
+	        this.modeType = 'setting';
+	        this.events = events;
+	        this.evtSubs = new EventSubscriber(this);
+	    }
+	    Setting.prototype.onEnter = function (points) {
+	        var _this = this;
+	        if (points === void 0) { points = []; }
+	        // 绑定监控事件
+	        this.evtSubs.subscribe();
+	        // 初始化埋点交互遮罩
+	        this.domMasker = DomMasker.getInstance.call(points);
+	        // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
+	        points && this.domMasker.preset(points);
+	        // 手动重置 主绘制canvas
+	        this.domMasker.reset();
+	        // 单独注册父页面的重置通讯
+	        // 捕捉到元素之后 Setting 模式会将当前绑定的 setting- 监控事件都注销
+	        // 因此在不改变模式的情况下需要依靠父窗口消息推送 reset 指令来重新开启捕捉元素
+	        this.evtSubs.on('reset', this.events.messageOf('reset').subscribe(function (msg) {
+	            // 绑定监控事件
+	            _this.evtSubs.subscribe();
+	            // 若此处将新的预设埋点传过来了，则更新，否则使用原来的
+	            msg.data.points && _this.domMasker.preset(msg.data.points);
+	            // 重置埋点蒙板
+	            _this.domMasker.reset();
+	        }));
+	        // todo: 阻止文档滚动
+	    };
+	    Setting.prototype.onExit = function () {
+	        // 注销事件监听
+	        this.evtSubs.unsubscribe();
+	        // 单独注销
+	        this.evtSubs.off('reset');
+	        this.domMasker.clear();
+	    };
+	    Setting.prototype.onTrigger = function (data) {
+	        console.log('SettingLifeCycle onTrigger：', data);
+	        // console.log('当前的Points: ', this.domMasker.points);
+	        // 当前已捕获到埋点，通过注销绑定的监听可保持埋点蒙板状态
+	        // 注销绑定的监听
+	        this.evtSubs.unsubscribe();
+	        // 通知父层设置层埋点捕捉完毕
+	        window.parent && window.parent.postMessage(data, '*');
+	    };
+	    Setting = __decorate([
+	        _.mixins(EventListener),
+	        __metadata("design:paramtypes", [Object, Object])
+	    ], Setting);
+	    return Setting;
+	}());
+
+	var ReportStrategy = /** @class */ (function () {
+	    function ReportStrategy(user) {
+	        this.controller = 'server';
+	        // 合并用户信息、设备信息
+	        var _a = _.deviceInfo(), name = _a.name, version = _a.version, browser = _a.browser, connType = _a.connType;
+	        this.info = __assign(__assign({}, user), { batchId: _.createVisitId(user.appId), clientType: browser, sysVersion: name + " " + version, userNetWork: connType });
+	    }
+	    Object.defineProperty(ReportStrategy.prototype, "report", {
+	        get: function () {
+	            // 根据策略（本地缓存 / 远程接口），返回对应的回调
+	            var strategy = "report2" + _.firstUpperCase(this.controller);
+	            return this[strategy];
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    ReportStrategy.getInstance = function (user) {
+	        if (!ReportStrategy.instance) {
+	            ReportStrategy.instance = new ReportStrategy(user);
+	        }
+	        return ReportStrategy.instance;
+	    };
+	    ReportStrategy.prototype.formatDatagram = function (data) {
+	    };
+	    ReportStrategy.prototype.report2Storage = function (data) {
+	        console.log('上报至 - 本地缓存', data);
+	    };
+	    ReportStrategy.prototype.report2Server = function (data) {
+	        console.log('上报至 - 远程服务', data);
+	    };
+	    return ReportStrategy;
+	}());
+
+	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
+	var EventListener$1 = {
 	    'report-click': [
 	        { capture: false },
 	        function (config) {
-	            return this.events.click(config).subscribe((e) => {
+	            var _this = this;
+	            return this.events.click(config).subscribe(function (e) {
 	                // 包装事件数据，触发事件消费 onTrigger
-	                this.onTrigger(e);
+	                _this.onTrigger(e);
 	            });
 	        }
 	    ],
 	    'report-change-strategy': [
 	        {},
 	        function () {
-	            return this.events.netStatusChange().subscribe((type) => {
-	                const strategy = type === 'online' ? 'server' : 'storage';
+	            var _this = this;
+	            return this.events.netStatusChange().subscribe(function (type) {
+	                var strategy = type === 'online' ? 'server' : 'storage';
 	                console.log('网络变化，切换当前行为数据消费策略: ', strategy);
 	                // 网络状态变化，切换当前行为数据消费策略
-	                this.reportStrategy.controller = strategy;
+	                _this.reportStrategy.controller = strategy;
 	            });
 	        }
 	    ],
 	};
-	let Report = class Report {
-	    constructor(events, user) {
+	var Report = /** @class */ (function () {
+	    function Report(events, user) {
 	        this.modeType = 'report';
 	        this.events = events;
 	        this.subs = [];
 	        this.reportStrategy = ReportStrategy.getInstance(user);
 	    }
-	    onEnter() {
+	    Report.prototype.onEnter = function () {
 	        // 注册事件监听
 	        console.log(this);
 	        // 将自身所有 模式 + '-' 开头的事件监听器方法全部注册，并记录至 subs
-	        for (const key in this) {
+	        for (var key in this) {
 	            if (key.startsWith(this.modeType + '-')) {
-	                const [config, cb] = this[key];
+	                var _a = this[key], config = _a[0], cb = _a[1];
 	                this.subs.push(cb.call(this, config));
 	            }
 	        }
-	    }
-	    onExit() {
+	    };
+	    Report.prototype.onExit = function () {
 	        // 注销事件监听
-	        this.subs.length && this.subs.forEach((unsub) => unsub.unsubscribe());
+	        this.subs.length && this.subs.forEach(function (unsub) { return unsub.unsubscribe(); });
 	        this.subs = [];
-	    }
-	    onTrigger(data) {
+	    };
+	    Report.prototype.onTrigger = function (data) {
 	        // 根据当前事件消费者消费数据
 	        this.reportStrategy.report(data);
-	    }
-	};
-	Report = __decorate([
-	    _.mixins(EventListener$1),
-	    __metadata("design:paramtypes", [Object, Object])
-	], Report);
-	class ReportStrategy {
-	    constructor(user) {
-	        this.controller = 'server';
-	        // 合并用户信息、设备信息
-	        const { name, version, browser, connType } = _.deviceInfo();
-	        this.info = Object.assign(Object.assign({}, user), { batchId: _.createVisitId(user.appId), clientType: browser, sysVersion: `${name} ${version}`, userNetWork: connType });
-	    }
-	    get report() {
-	        // 根据策略（本地缓存 / 远程接口），返回对应的回调
-	        const strategy = `report2${_.firstUpperCase(this.controller)}`;
-	        return this[strategy];
-	    }
-	    static getInstance(user) {
-	        if (!ReportStrategy.instance) {
-	            ReportStrategy.instance = new ReportStrategy(user);
-	        }
-	        return ReportStrategy.instance;
-	    }
-	    formatDatagram(data) {
-	    }
-	    report2Storage(data) {
-	        console.log('上报至 - 本地缓存', data);
-	    }
-	    report2Server(data) {
-	        console.log('上报至 - 远程服务', data);
-	    }
-	}
+	    };
+	    Report = __decorate([
+	        _.mixins(EventListener$1),
+	        __metadata("design:paramtypes", [Object, Object])
+	    ], Report);
+	    return Report;
+	}());
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isFunction(x) {
@@ -3220,16 +3308,16 @@
 	// tp 页面停留时长上报
 	// 事件注册订阅调度机制
 	// 各模式模块只维护当前的事件及其回调的列表，在对应生命周期中订阅及取消订阅
-	const click = config => fromEvent(document, 'click', { capture: config.capture });
-	const mousemove = config => fromEvent(document, 'mousemove', { capture: config.capture }).pipe(sampleTime(config.debounceTime), filter(e => e.target.tagName !== 'HTML'));
-	const load = () => fromEvent(document, 'load');
-	const beforeUnload = () => fromEvent(document, 'beforeunload');
-	const hashchange = () => fromEvent(document, 'hashchange');
-	const popstate = () => fromEvent(document, 'popstate');
-	const visibilitychange = () => fromEvent(document, 'visibilitychange');
-	const online = () => fromEvent(window, 'online');
-	const offline = () => fromEvent(window, 'offline');
-	const message = () => fromEvent(window, 'message');
+	var click = function (config) { return fromEvent(document, 'click', { capture: config.capture }); };
+	var mousemove = function (config) { return fromEvent(document, 'mousemove', { capture: config.capture }).pipe(sampleTime(config.debounceTime), filter(function (e) { return e.target.tagName !== 'HTML'; })); };
+	var load = function () { return fromEvent(document, 'load'); };
+	var beforeUnload = function () { return fromEvent(document, 'beforeunload'); };
+	var hashchange = function () { return fromEvent(document, 'hashchange'); };
+	var popstate = function () { return fromEvent(document, 'popstate'); };
+	var visibilitychange = function () { return fromEvent(document, 'visibilitychange'); };
+	var online = function () { return fromEvent(window, 'online'); };
+	var offline = function () { return fromEvent(window, 'offline'); };
+	var message = function () { return fromEvent(window, 'message'); };
 
 	// // 自定义事件 | 页面初始化后的性能数据上报
 	// export const performance: () => Observable<Event> =
@@ -3256,8 +3344,8 @@
 	//         tag: 'reset'
 	//     }
 	// }
-	const messageOf = tag => message().pipe(filter((msg) => msg.data.tag === tag));
-	const netStatusChange = () => merge(online(), offline()).pipe(map((e) => e.type));
+	var messageOf = function (tag) { return message().pipe(filter(function (msg) { return msg.data.tag === tag; })); };
+	var netStatusChange = function () { return merge(online(), offline()).pipe(map(function (e) { return e.type; })); };
 
 
 
@@ -3302,45 +3390,53 @@
 	// 行为事件主动上报 push | public
 	// 上报统一入口 _report | private
 	// 模式切换 _changeMode | private
-	class HXAnalytics {
-	    constructor() {
+	var HXAnalytics = /** @class */ (function () {
+	    function HXAnalytics() {
 	        // this.modeContainer = mode;
 	    }
-	    set mode(modeType) {
-	        if (this.mode === modeType)
-	            return;
-	        // last mode exit
-	        this._mode && this._mode.onExit();
-	        // 更新 mode
-	        this._mode = this.modeContainer[modeType];
-	        // mode enter
-	        this._mode.onEnter(Reflect.getMetadata('onMessageSetMode', this));
-	    }
-	    get mode() {
-	        return this._mode ? this._mode.modeType : null;
-	    }
+	    Object.defineProperty(HXAnalytics.prototype, "mode", {
+	        get: function () {
+	            return this._mode ? this._mode.modeType : null;
+	        },
+	        set: function (modeType) {
+	            if (this.mode === modeType)
+	                return;
+	            // last mode exit
+	            this._mode && this._mode.onExit();
+	            // 更新 mode
+	            this._mode = this.modeContainer[modeType];
+	            // mode enter
+	            this._mode.onEnter(Reflect.getMetadata('onMessageSetMode', this));
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
 	    // 提供应用开发人员主动埋点能力
-	    push(data) {
+	    HXAnalytics.prototype.push = function (data) {
 	        this._mode.onTrigger(data);
-	    }
-	    init(user, { mode } = {
-	        mode: {
-	            browse: new Browse(events, user),
-	            report: new Report(events, user),
-	            setting: new Setting(events, user)
-	        }
-	    }) {
+	    };
+	    HXAnalytics.prototype.init = function (user, _a) {
+	        var _this = this;
+	        var mode = (_a === void 0 ? {
+	            mode: {
+	                browse: new Browse(events, user),
+	                report: new Report(events, user),
+	                setting: new Setting(events, user)
+	            }
+	        } : _a).mode;
 	        this.modeContainer = mode;
 	        this.mode = _.inIframe() ? 'browse' : 'report';
 	        // 绑定模式切换事件
-	        messageOf('mode').subscribe((msg) => {
-	            Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
-	            this.mode = msg.data.mode;
+	        messageOf('mode').subscribe(function (msg) {
+	            Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, _this);
+	            _this.mode = msg.data.mode;
 	        });
 	        return this;
-	    }
-	}
-	const ha = new HXAnalytics();
+	    };
+	    return HXAnalytics;
+	}());
+
+	var ha = new HXAnalytics();
 	// interface PointBase {
 	//     pid: 'span.corner.top!document.querySelector()!sysId!pageId'
 	// }
@@ -3384,5 +3480,5 @@
 
 	return ha;
 
-}));
+}());
 //# sourceMappingURL=hx-analytics-jssdk.js.map
