@@ -1,6 +1,8 @@
 import { HXAnalytics } from './jssdk/HXAnalytics';
+import container from './jssdk/inversify.config';
+import TYPES from './jssdk/types';
 
-const ha = new HXAnalytics();
+const ha = container.get<HXAnalytics>(TYPES.HXAnalytics);
 
 export default ha;
 

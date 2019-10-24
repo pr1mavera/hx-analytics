@@ -1,13 +1,18 @@
-import { customCanvas } from './CustomCanvas';
-import { Point } from './Point';
+// import { customCanvas } from './CustomCanvas';
+// import { Point } from './Point';
+import TYPES from '../jssdk/types';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class DomMasker implements DomMasker {
-    private static instance: DomMasker;
+    // private static instance: DomMasker;
     static w: number = window.innerWidth;
     static h: number = window.innerHeight;
+
+    _INITED: boolean = false;
     // _active: boolean;
     // 预设埋点
-    points: Point[];
+    points: Point[] = [];
     // 当前圈选埋点
     activePoint: Point;
 
@@ -16,18 +21,25 @@ export class DomMasker implements DomMasker {
     // 缓存canvas
     tempCanvas: HTMLCanvasElement;
 
-    public static getInstance(points: PointBase[] = []) {
-        if (!DomMasker.instance) {
-            DomMasker.instance = new DomMasker(points);
-        }
-        return DomMasker.instance;
-    }
-    private constructor(points: PointBase[]) {
-        // points: [{ pid:'span.corner.top!document.querySelector()!sysId!pageId' }]
+    // 单个埋点构造器
+    createPoint: (origin: PointBase | EventTarget) => Point;
+    customCanvas: (width: number, height: number, color?: string) => HTMLCanvasElement;
 
+    constructor(
+        @inject(TYPES.Point) createPoint: (origin: PointBase | EventTarget) => Point,
+        @inject(TYPES.CustomCanvas) customCanvas: (width: number, height: number, color?: string) => HTMLCanvasElement
+    ) {
+        // points: [{ pid:'span.corner.top!document.querySelector()!sysId!pageId' }]
+        // 初始化单个埋点构造器
+        this.createPoint = createPoint;
+        this.customCanvas = customCanvas;
+    }
+
+    init() {
+        this._INITED = true;
         // 初始化 主绘制canvas / 缓存canvas
-        this.canvas = customCanvas(DomMasker.w, DomMasker.h);
-        this.tempCanvas = customCanvas(DomMasker.w, DomMasker.h, 'rgba(200, 100, 50, 0.6)');
+        this.canvas = this.customCanvas(DomMasker.w, DomMasker.h);
+        this.tempCanvas = this.customCanvas(DomMasker.w, DomMasker.h, 'rgba(200, 100, 50, 0.6)');
 
         // 插入页面根节点
         document.body.appendChild(this.canvas);
@@ -37,8 +49,10 @@ export class DomMasker implements DomMasker {
     // 幂等操作
     preset(points: PointBase[]) {
         console.log('this.tempCanvas：', this);
+        // 清空缓存canvas
         this.tempCanvas.getContext('2d').clearRect(0, 0, DomMasker.w, DomMasker.h);
-        this.points = points.map((p: PointBase) => new Point(p));
+        // 绑定预设埋点
+        this.points = points.map((p: PointBase) => this.createPoint(p));
 
         const ctx = this.tempCanvas.getContext('2d');
         // 绘制预设埋点蒙版，保存在内存中

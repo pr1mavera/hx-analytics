@@ -1,3 +1,4 @@
+declare module 'rx';
 declare module 'whats-element/src/whatsElementPure';
 
 type Obj = { [ x: string ]: any };
@@ -117,11 +118,11 @@ interface Utils {
      */
     deviceInfo: () => { name: string, version: number, browser: string, connType: string };
 
-    /**
-     * 装饰器 | 混合属性
-     * @param {Array} ...list 待混合属性的数组
-     */
-    mixins: (...list: Obj[]) => (...x: any[]) => void;
+    // /**
+    //  * 装饰器 | 混合属性
+    //  * @param {Array} ...list 待混合属性的数组
+    //  */
+    // mixins: (...list: Obj[]) => (...x: any[]) => void;
 
     // reloadConstructor: <T extends { new(...args:any[]): {} }>(constructor: T) => 
 }
@@ -132,9 +133,25 @@ interface CustomStorage {
     clear: () => void;
 }
 
+interface AppEvent {
+    click: (config: Obj) => any;
+    mousemove: (config: Obj) => any;
+    load: () => any;
+    beforeUnload: () => any;
+    hashchange: () => any;
+    popstate: () => any;
+    visibilitychange: () => any;
+    online: () => any;
+    offline: () => any;
+    message: () => any;
+    messageOf: (tag: string) => any;
+    netStatusChange: () => any;
+}
+
 interface EventSubscriber<T extends { [x: string]: any, modeType: string }, S extends { unsubscribe(): void }> {
     ctx: T;
     subs: S[];
+    init(ctx: T): EventSubscriber<T, S>;
     subscribe(): void;
     unsubscribe(): void;
     on(event: string, sub: S): void;
@@ -149,9 +166,10 @@ interface Point extends PointBase {
     pid: string;
     tag: string;
     rect: number[];
+    create(origin: PointBase | EventTarget): Point;
 }
 interface DomMasker {
-    // _active: boolean;
+    _INITED: boolean;
     // 预设埋点
     points: Point[];
     // 当前圈选埋点
@@ -161,10 +179,11 @@ interface DomMasker {
     canvas: HTMLCanvasElement;
     // 缓存canvas
     tempCanvas: HTMLCanvasElement;
-    preset(): void;
+    init(): void;
+    preset(points: PointBase[]): void;
     clear(): void;
     reset(): void;
-    render(): void;
+    render(ctx: CanvasRenderingContext2D, point: Point): void;
 }
 
 type UserInfo = {
@@ -184,6 +203,7 @@ type ClientInfo = {
 interface ReportStrategy {
     info: ClientInfo;
     controller: 'storage' | 'server';
+    report: (data: Obj) => void;
     formatDatagram(data: Obj): Obj;
     report2Storage(data: Obj): void;
     report2Server(data: Obj): void;
@@ -193,7 +213,7 @@ interface ReportStrategy {
 interface ModeLifeCycle {
     readonly modeType: string;
     // subs: any[];
-    events?: Obj;
+    // events?: Obj;
     onEnter(options?: Obj): void;
     onExit(): void;
     onTrigger(data: any): void;

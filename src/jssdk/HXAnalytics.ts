@@ -1,7 +1,7 @@
+import TYPES from './types';
+import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
-import _ from '../utils';
-import { Browse, Setting, Report } from '../mode';
-import * as events from '../jssdk/events';
+// import { _ } from '../utils';
 // import http from './service/request';
 
 // const getUserInfoByOpenID = (openID: string) => http.get('user', `/video/user?openId=${openID}`);
@@ -33,14 +33,22 @@ import * as events from '../jssdk/events';
 // 上报统一入口 _report | private
 // 模式切换 _changeMode | private
 
+@injectable()
 export class HXAnalytics {
 
     _mode: ModeLifeCycle;
-    modeContainer: {
-        [ key: string ]: ModeLifeCycle
+
+    // 容器注入 | 事件
+    @inject(TYPES.AppEvent) private events: AppEvent;
+    // 容器注入 | 工具
+    @inject(TYPES.Utils) private _: Utils;
+
+    private modeContainer: {
+        [x: string]: ModeLifeCycle
     };
 
     set mode(modeType: string) {
+        if (!this.modeContainer) return;
         if (this.mode === modeType) return;
         // last mode exit
         this._mode && this._mode.onExit();
@@ -53,28 +61,31 @@ export class HXAnalytics {
         return this._mode ? this._mode.modeType : null;
     }
 
-    constructor() {
-        // this.modeContainer = mode;
+    constructor(
+        // 容器注入 | 模式
+        @inject(TYPES.Browse) browse: ModeLifeCycle,
+        @inject(TYPES.Report) report: ModeLifeCycle,
+        @inject(TYPES.Setting) setting: ModeLifeCycle,
+    ) {
+        this.modeContainer = { browse, report, setting };
     }
-    // 提供应用开发人员主动埋点能力
-    push(data: Obj) {
-        this._mode.onTrigger(data);
-    }
-    init(user: UserInfo, { mode }: Container = {
-        mode: {
-            browse: new Browse(events, user),
-            report: new Report(events, user),
-            setting: new Setting(events, user)
-        }
-    }) {
-        this.modeContainer = mode;
-        this.mode = _.inIframe() ? 'browse' : 'report';
+
+    // 应用初始化入口
+    init(user: UserInfo) {
+        
+        this.mode = this._.inIframe() ? 'browse' : 'report';
 
         // 绑定模式切换事件
-        events.messageOf('mode').subscribe((msg: Obj) => {
+        this.events.messageOf('mode').subscribe((msg: Obj) => {
             Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
             this.mode = msg.data.mode;
         });
+
         return this;
+    }
+
+    // 提供应用开发人员主动埋点能力
+    push(data: Obj) {
+        this._mode.onTrigger(data);
     }
 }

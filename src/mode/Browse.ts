@@ -1,8 +1,9 @@
+import { injectable } from 'inversify';
+
+@injectable()
 export class Browse implements ModeLifeCycle {
     readonly modeType: string = 'browse';
-    subs: [any?];
     events: Obj;
-    constructor(event: Obj, user: UserInfo) {}
     onEnter() {}
     onExit() {}
     onTrigger() {

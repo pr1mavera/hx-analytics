@@ -1,9 +1,7 @@
-import _ from '../utils';
-import { DomMasker } from '../utils/DomMasker';
-import { Point } from '../utils/Point';
+import TYPES from '../jssdk/types';
+import { inject, injectable } from 'inversify';
 
 import { Subscription } from 'rxjs';
-import { EventSubscriber } from '../utils/EventSubscriber';
 
 // report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 const EventListener = {
@@ -29,13 +27,20 @@ const EventListener = {
         function (config: Obj): Subscription {
             return this.events.mousemove(config).subscribe((e: MouseEvent) => {
                 // 包装事件数据，触发事件消费 onTrigger
-                const activePoint = new Point(e.target);
-                if (activePoint !== this.domMasker.activePoint) {
+                const activePoint = this.createPoint(e.target);
+
+                if (
+                    // 当前为第一次绘制，活动元素还未初始化
+                    !this.domMasker.activePoint ||
+                    // 捕捉元素与缓存活动元素相同
+                    activePoint.pid !== this.domMasker.activePoint.pid
+                ) {
                     // 获取的元素为新的捕捉元素
                     this.domMasker.activePoint = activePoint;
-                    // 渲染遮罩层
+                    // 渲染基础遮罩层
                     this.domMasker.reset();
-                    this.domMasker.render(this.domMasker.canvas.getContext('2d'), new Point(e.target));
+                    // 渲染当前活动埋点
+                    this.domMasker.render(this.domMasker.canvas.getContext('2d'), activePoint);
                 }
             });
         }
@@ -52,23 +57,44 @@ const EventListener = {
     ],
 };
 
-@_.mixins(EventListener)
+function mixins <T>(...list: Obj[]) {
+    return function (constructor: { new (...args: any[]): T; }) {
+        Object.assign(constructor.prototype, ...list);
+    }
+}
+
+@mixins<Setting>(EventListener)
+@injectable()
 export class Setting implements ModeLifeCycle {
     [x: string]: any;
     readonly modeType: string = 'setting';
-    evtSubs: EventSubscriber<Setting, Subscription>;
-    events: Obj;
-    domMasker: DomMasker;
-    constructor(events: Obj, user: UserInfo) {
-        this.events = events;
-        this.evtSubs = new EventSubscriber<Setting, Subscription>(this);
+    // 单个埋点构造器
+    createPoint: (origin: PointBase | EventTarget) => Point;
+    // 注入配置遮罩模块
+    @inject(TYPES.DomMasker) private domMasker: DomMasker;
+    // 注入应用事件层
+    @inject(TYPES.AppEvent) private events: AppEvent;
+    // 容器注入 | 工具
+    @inject(TYPES.Utils) private _: Utils;
+    // 注入事件订阅器
+    private evtSubs: EventSubscriber<Setting, Subscription>;
+
+    constructor(
+        @inject(TYPES.Point) createPoint: (origin: PointBase | EventTarget) => Point,
+        @inject(TYPES.EventSubscriber) eventSubscriber: EventSubscriber<Setting, Subscription>
+    ) {
+        this.evtSubs = eventSubscriber.init(this);
+        // 初始化单个埋点构造器
+        this.createPoint = createPoint;
+        // this.events = events;
+        // this.evtSubs = new EventSubscriber<Setting, Subscription>(this);
     }
     onEnter(points: PointBase[] = []) {
 
         // 绑定监控事件
         this.evtSubs.subscribe();
         // 初始化埋点交互遮罩
-        this.domMasker = DomMasker.getInstance.call(points);
+        !this.domMasker._INITED && this.domMasker.init();
 
         // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
         points && this.domMasker.preset(points);
@@ -104,6 +130,6 @@ export class Setting implements ModeLifeCycle {
         // 注销绑定的监听
         this.evtSubs.unsubscribe();
         // 通知父层设置层埋点捕捉完毕
-        window.parent && window.parent.postMessage(data, '*');
+        this._.inIframe() && window.parent.postMessage(data, '*');
     }
 }

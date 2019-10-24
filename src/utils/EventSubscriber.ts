@@ -1,10 +1,18 @@
+import { injectable } from 'inversify';
+
+@injectable()
 export class EventSubscriber<T extends { [x: string]: any, modeType: string }, S extends { unsubscribe(): void }> implements EventSubscriber<T, S> {
     [x: string]: any;
+
     ctx: T;
     subs: S[] = [];
-    constructor(ctx: T) {
+
+    // 初始化入口，需传入绑定上下文
+    init(ctx: T) {
         this.ctx = ctx;
+        return this;
     }
+
     subscribe() {
         // 统一注册事件监听
         // 将 ctx 所有 模式 + '-' 开头的事件监听器方法全部注册，并记录至 subs

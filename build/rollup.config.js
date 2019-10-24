@@ -12,6 +12,7 @@ const tsconfig = {
     compilerOptions: {
         target: 'es5',
         allowJs: true,
+        types: ['reflect-metadata', 'rx'],
         module: 'ES6',
         moduleResolution: 'node',
         noImplicitAny: true,
