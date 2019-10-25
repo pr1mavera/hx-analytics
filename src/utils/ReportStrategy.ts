@@ -23,8 +23,6 @@ export class ReportStrategy implements ReportStrategy {
         this._ = _;
         const user: UserInfo = {
             appId: 'appId',
-            sysId: 'sysId',
-            origin: 'WE',
             openId: 'oKXX7wKQhDf0sixuV0z-gEB8Y8is'
         }
         // 合并用户信息、设备信息

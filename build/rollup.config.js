@@ -27,6 +27,7 @@ module.exports = {
     // input: resolveFile('src/app.ts'),
     onwarn: function(warning) {
         // Skip certain warnings
+        if ( /Circular/.test(warning) ) { return; }
     
         // should intercept ... but doesn't in some rollup versions
         if ( warning.code === 'THIS_IS_UNDEFINED' ) { return; }

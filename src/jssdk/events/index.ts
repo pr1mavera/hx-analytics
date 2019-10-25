@@ -1,5 +1,9 @@
-import { fromEvent, merge, Observable } from 'rxjs';
+import { fromEvent, merge } from 'rxjs';
 import { sampleTime, filter, map } from 'rxjs/operators';
+
+// const DomEvent = (target: HTMLElement, eventName: string, options: EventListenerOptions) => {
+    
+// }
 
 // 单个事件模块实现
 

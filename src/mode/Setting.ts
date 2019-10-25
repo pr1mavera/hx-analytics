@@ -1,6 +1,5 @@
 import TYPES from '../jssdk/types';
 import { inject, injectable } from 'inversify';
-
 import { Subscription } from 'rxjs';
 
 // report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
@@ -130,6 +129,6 @@ export class Setting implements ModeLifeCycle {
         // 注销绑定的监听
         this.evtSubs.unsubscribe();
         // 通知父层设置层埋点捕捉完毕
-        this._.inIframe() && window.parent.postMessage(data, '*');
+        window.parent && window.parent.postMessage(JSON.stringify(data), '*');
     }
 }

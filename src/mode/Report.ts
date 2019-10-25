@@ -1,8 +1,5 @@
 import TYPES from '../jssdk/types';
-import container from '../jssdk/inversify.config';
 import { inject, injectable } from 'inversify';
-
-// import { _ } from '../utils';
 import { Subscription } from 'rxjs';
 
 // report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger

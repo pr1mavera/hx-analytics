@@ -1,8 +1,5 @@
 import TYPES from './types';
 import { inject, injectable } from 'inversify';
-import 'reflect-metadata';
-// import { _ } from '../utils';
-// import http from './service/request';
 
 // const getUserInfoByOpenID = (openID: string) => http.get('user', `/video/user?openId=${openID}`);
 // window.addEventListener('beforeunload', () => {
@@ -34,9 +31,9 @@ import 'reflect-metadata';
 // 模式切换 _changeMode | private
 
 @injectable()
-export class HXAnalytics {
+export class HXAnalytics implements HXAnalytics {
 
-    _mode: ModeLifeCycle;
+    private _mode: ModeLifeCycle;
 
     // 容器注入 | 事件
     @inject(TYPES.AppEvent) private events: AppEvent;
@@ -48,14 +45,16 @@ export class HXAnalytics {
     };
 
     set mode(modeType: string) {
-        if (!this.modeContainer) return;
+        if (!this.modeContainer[modeType]) {
+            throw Error('you are trying to enter an extra mode, please check the version of the jssdk you cited !')
+        };
         if (this.mode === modeType) return;
         // last mode exit
         this._mode && this._mode.onExit();
         // 更新 mode
         this._mode = this.modeContainer[modeType];
         // mode enter
-        this._mode.onEnter(Reflect.getMetadata('onMessageSetMode', this));
+        // this._mode.onEnter(Reflect.getMetadata('onMessageSetMode', this));
     }
     get mode(): string {
         return this._mode ? this._mode.modeType : null;
@@ -66,19 +65,27 @@ export class HXAnalytics {
         @inject(TYPES.Browse) browse: ModeLifeCycle,
         @inject(TYPES.Report) report: ModeLifeCycle,
         @inject(TYPES.Setting) setting: ModeLifeCycle,
+        // @inject(TYPES.ModeContainer) modeContainer: {
+        //     [x: string]: ModeLifeCycle
+        // }
     ) {
         this.modeContainer = { browse, report, setting };
+        // this.modeContainer = modeContainer;
     }
 
     // 应用初始化入口
     init(user: UserInfo) {
         
         this.mode = this._.inIframe() ? 'browse' : 'report';
+        // mode enter
+        this._mode.onEnter();
 
         // 绑定模式切换事件
         this.events.messageOf('mode').subscribe((msg: Obj) => {
-            Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
+            // Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
             this.mode = msg.data.mode;
+            // mode enter
+            this._mode.onEnter(msg.data.points);
         });
 
         return this;

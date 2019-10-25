@@ -1,6 +1,13 @@
-import { HXAnalytics } from './jssdk/HXAnalytics';
 import container from './jssdk/inversify.config';
 import TYPES from './jssdk/types';
+
+// window.onerror = function (msg, url, row, col, error) {
+//     console.log('错误 ❌: ', {
+//         msg, url, row, col, error
+//     });
+//     // return true 防止错误向上抛出
+//     return true;
+// }
 
 const ha = container.get<HXAnalytics>(TYPES.HXAnalytics);
 

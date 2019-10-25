@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { Container } from 'inversify';
 import { Subscription } from 'rxjs';
 import TYPES from "./types";
@@ -32,6 +33,12 @@ container.bind<Utils>(TYPES.Utils).toFunction(_);
 container.bind<ModeLifeCycle>(TYPES.Browse).to(Browse);
 container.bind<ModeLifeCycle>(TYPES.Setting).to(Setting);
 container.bind<ModeLifeCycle>(TYPES.Report).to(Report);
+// const modeContainer = {
+//     browse: container.get<ModeLifeCycle>(TYPES.Browse),
+//     setting: container.get<ModeLifeCycle>(TYPES.Setting),
+//     report: container.get<ModeLifeCycle>(TYPES.Report)
+// };
+// container.bind<{ [x: string]: ModeLifeCycle }>(TYPES.ModeContainer).toConstantValue(modeContainer);
 
 // 事件订阅器集合
 container.bind<EventSubscriber<ModeLifeCycle, Subscription>>(TYPES.EventSubscriber).to(EventSubscriber);

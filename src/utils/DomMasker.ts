@@ -48,7 +48,6 @@ export class DomMasker implements DomMasker {
     // 注意：此API不会造成页面 主绘制canvas 的绘制
     // 幂等操作
     preset(points: PointBase[]) {
-        console.log('this.tempCanvas：', this);
         // 清空缓存canvas
         this.tempCanvas.getContext('2d').clearRect(0, 0, DomMasker.w, DomMasker.h);
         // 绑定预设埋点

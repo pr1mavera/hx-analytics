@@ -107,9 +107,9 @@ _.getElemByPid = pid => {
 };
 
 _.getElemClientRect = e => {
-    const { left, top, right, bottom } = e.getBoundingClientRect();
+    const { left, top, width, height } = e.getBoundingClientRect();
     // [ x, y, w, h ]
-    return [left, top, right - left, bottom - top];
+    return [ Math.round(left), Math.round(top), Math.round(width), Math.round(height) ];
 }
 
 _.deviceInfo = () => {

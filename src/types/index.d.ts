@@ -188,8 +188,6 @@ interface DomMasker {
 
 type UserInfo = {
     appId: string;
-    sysId: string;
-    origin: string;
     openId: string;
 }
 type ClientInfo = {
@@ -242,9 +240,7 @@ type SafeRequest = {
     url: (host: string, url: string) => string;
 }
 
-// 全局容器
-interface Container {
-    mode: {
-        [ key: string ]: ModeLifeCycle;
-    };
+interface HXAnalytics {
+    init(user: UserInfo): HXAnalytics;
+    push(data: Obj): void;
 }

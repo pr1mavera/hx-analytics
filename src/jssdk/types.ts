@@ -10,6 +10,7 @@ const TYPES = {
     Browse: Symbol.for('Browse'),
     Setting: Symbol.for('Setting'),
     Report: Symbol.for('Report'),
+    ModeContainer: Symbol.for('ModeContainer'),
 
     // 事件订阅器集合
     EventSubscriber: Symbol.for('EventSubscriber'),
