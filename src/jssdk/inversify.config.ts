@@ -6,6 +6,7 @@ import {
     HXAnalytics
 } from './HXAnalytics';
 import { AppEvent } from './events';
+import { Service } from './service';
 import {
     Browse,
     Setting,
@@ -13,6 +14,7 @@ import {
 } from '../mode';
 import {
     _,
+    AppConfig,
     customCanvas,
     DomMasker,
     EventSubscriber,
@@ -28,6 +30,10 @@ container.bind<HXAnalytics>(TYPES.HXAnalytics).to(HXAnalytics).inSingletonScope(
 container.bind<AppEvent>(TYPES.AppEvent).toConstantValue(AppEvent);
 // 全局工具
 container.bind<Utils>(TYPES.Utils).toFunction(_);
+// API
+container.bind<Service>(TYPES.Service).toConstantValue(Service);
+// 应用配置相关信息
+container.bind<AppConfig>(TYPES.Conf).to(AppConfig).inSingletonScope();
 
 // 模式
 container.bind<ModeLifeCycle>(TYPES.Browse).to(Browse);

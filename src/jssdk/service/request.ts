@@ -1,17 +1,26 @@
 // import './fetch';
 
 import conf from '../../config/index';
-import _ from '../../utils';
 // import { RequestMethods, RequestOptions } from '../../types';
 
 /**
  * 拼接请求地址
- * splitUrl :: (String -> String) -> String
+ * splitUrl :: (String -> String -> Object) -> String
  * @param {String} host 服务主机地址
  * @param {String} path API地址
+ * @param {Object} data 需要拼接成 query 的对象，可选 { a: 123, b: 456 } -> '?a=123&b=456'
  */
-const splitUrl: (host: string, path: string) => string
-    = (host, path) => (conf as any)[host] + path;
+const splitUrl: (host: string, path: string, data?: Obj) => string
+    = (host, path, data) => {
+        const query =
+            data ?
+                Object.keys(data).reduce(
+                    (q: string, k: string) => q += (q ? '&' : '?') + `${k}=${data[k]}`, ''
+                ) :
+                '';
+
+        return (conf as any)[host] + path + query;
+    };
 
 export default (() => {
     // 全局请求头暂存
@@ -33,7 +42,11 @@ export default (() => {
     = (method, url, data, options = {}) => {
         let { headers, body, ...rest } = options;
         // 存在 body ，则警告并忽略
-        body && console.warn('options 中设置的 body 将被忽略，请传入 data 参数代替');
+        body && console.warn(
+            'Warn in http request: You are trying to set a request body in args:options, and it will be ignore. Please set it in args:data !  \n',
+            `url: ${url} \n`,
+            `body: ${JSON.stringify(body)}`,
+        );
 
         const safeOptions = {
             method,
@@ -46,7 +59,7 @@ export default (() => {
         method === 'POST' || method === 'PUT' && Object.assign(safeOptions, {
             body: JSON.stringify(data),
         });
-    
+
         return fetch(url, safeOptions)
                 .then(response => response.json())
                 .catch(err => {
@@ -65,7 +78,7 @@ export default (() => {
             return _header;
         },
 
-        get: (host, url, options) => _request('GET', splitUrl(host, url), null, options),
+        get: (host, url, data, options) => _request('GET', splitUrl(host, url, data), null, options),
 
         post: (host, url, data, options) => _request('POST', splitUrl(host, url), data, options),
 

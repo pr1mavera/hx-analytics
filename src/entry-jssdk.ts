@@ -9,6 +9,11 @@ import TYPES from './jssdk/types';
 //     return true;
 // }
 
+// window.addEventListener('unhandledrejection', e => {
+//     e.preventDefault();
+//     console.log('错误 ❌: ', e.reason);
+// }, true);
+
 const ha = container.get<HXAnalytics>(TYPES.HXAnalytics);
 
 export default ha;

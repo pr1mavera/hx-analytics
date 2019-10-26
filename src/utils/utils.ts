@@ -1,4 +1,5 @@
 import whatsElement from 'whats-element/src/whatsElementPure';
+import { Service } from '../jssdk/service';
 
 export const _ = <Utils>function () { }
 
@@ -38,8 +39,7 @@ const [SessStorage, LocStorage] = _.map(
         remove: key => storage.removeItem(key),
         clear: () => storage.clear()
     } as CustomStorage)
-)
-    ([sessionStorage, localStorage]);
+)([sessionStorage, localStorage]);
 _.SessStorage = SessStorage;
 _.LocStorage = LocStorage;
 
@@ -111,6 +111,19 @@ _.getElemClientRect = e => {
     // [ x, y, w, h ]
     return [ Math.round(left), Math.round(top), Math.round(width), Math.round(height) ];
 }
+
+_.errorCaptured = async (asyncFn, formatter, ...rest) => {
+    try {
+        const { result: { code, message }, data } = await asyncFn(...rest);
+        if (code === Service.ERR_OK) {
+            return [ null, formatter ? formatter(data) : data ];
+        } else {
+            return [ message, data ];
+        }
+    } catch (ex) {
+        return [ ex, null ];
+    }
+};
 
 _.deviceInfo = () => {
     const u = navigator.userAgent;

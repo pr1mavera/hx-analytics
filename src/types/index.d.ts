@@ -114,6 +114,24 @@ interface Utils {
     getElemClientRect: (e: Element) => [ number, number, number, number ];
 
     /**
+     * Promise 同步错误处理
+     * @param {Function} asyncFn Promise工厂
+     * @param {Function} formatter 输出数据包格式化，纯函数，可选
+     * @param {Array} rest Promise工厂函数入参
+     * 
+     * @returns
+     * [
+     *      err: 出错情况下的错误信息,
+     *      res: 正常情况下的数据包
+     * ]
+     */
+    errorCaptured: (
+        asyncFn: (...arg: any) => Promise<any>,
+        formatter: ((x: any) => any) | null,
+        ...rest: any[]
+    ) => Promise<[ Obj | null, any ]>;
+
+    /**
      * 获取设备信息
      */
     deviceInfo: () => { name: string, version: number, browser: string, connType: string };
@@ -146,6 +164,31 @@ interface AppEvent {
     message: () => any;
     messageOf: (tag: string) => any;
     netStatusChange: () => any;
+}
+
+interface Service {
+    ERR_OK: string,
+
+    setHeader: (newHeader: Obj) => Obj;
+
+    /**
+     * 
+     */
+    appLoginAPI: (data?: any) => Promise<any>,
+
+    /**
+     * 日志上报
+     */
+    reportAPI: (data: {
+        [x: string]: any;
+        msgs: {
+            msg: string;
+            sysId: string;
+            pageId: string;
+            funcId: string;
+            type: number;
+        }[]
+    }) => Promise<any>,
 }
 
 interface EventSubscriber<T extends { [x: string]: any, modeType: string }, S extends { unsubscribe(): void }> {
@@ -186,6 +229,12 @@ interface DomMasker {
     render(ctx: CanvasRenderingContext2D, point: Point): void;
 }
 
+interface AppConfig extends Obj {
+    set(data: Obj): void;
+    get(key: string): any;
+    getSelf(): Obj;
+}
+
 type UserInfo = {
     appId: string;
     openId: string;
@@ -202,9 +251,8 @@ interface ReportStrategy {
     info: ClientInfo;
     controller: 'storage' | 'server';
     report: (data: Obj) => void;
-    formatDatagram(data: Obj): Obj;
-    report2Storage(data: Obj): void;
-    report2Server(data: Obj): void;
+    report2Storage(msgs: Obj[]): void;
+    report2Server(msgs: Obj[]): void;
 }
 
 // 模式生命周期
@@ -233,7 +281,7 @@ interface RequestOptions {
 // 请求
 type SafeRequest = {
     setHeader: (newHeader: Obj) => Obj;
-    get: (host: string, url: string, options?: RequestOptions) => Promise<any>;
+    get: (host: string, url: string, data: Obj | null, options?: RequestOptions) => Promise<any>;
     post: (host: string, url: string, data: Obj | null, options?: RequestOptions) => Promise<any>;
     put: (host: string, url: string, data: Obj | null, options?: RequestOptions) => Promise<any>;
     delete: (host: string, url: string, options?: RequestOptions) => Promise<any>;
@@ -241,6 +289,6 @@ type SafeRequest = {
 }
 
 interface HXAnalytics {
-    init(user: UserInfo): HXAnalytics;
+    init(user: UserInfo): Promise<any>;
     push(data: Obj): void;
 }

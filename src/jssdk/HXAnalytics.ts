@@ -39,6 +39,10 @@ export class HXAnalytics implements HXAnalytics {
     @inject(TYPES.AppEvent) private events: AppEvent;
     // 容器注入 | 工具
     @inject(TYPES.Utils) private _: Utils;
+    // 容器注入 | API
+    @inject(TYPES.Service) private service: Service;
+    // 容器注入 | 应用配置相关信息
+    @inject(TYPES.Conf) private conf: AppConfig;
 
     private modeContainer: {
         [x: string]: ModeLifeCycle
@@ -74,7 +78,40 @@ export class HXAnalytics implements HXAnalytics {
     }
 
     // 应用初始化入口
-    init(user: UserInfo) {
+    async init(user: UserInfo) {
+
+        // // 接口校验用户信息
+        // const [ err, res ] = await this._.errorCaptured(this.service.appLoginAPI, null, user);
+        // // 未通过：警告
+        // if (err) throw Error(`jssdk login error: ${err}`);
+
+        const res = {
+            sysInfo: {
+                appId: 'appId',
+                appName: 'appName',
+                sysId: 'sysId',
+                sysName: 'sysName',
+                origin: 'WE',
+            },
+            sysConfig: {}
+        }
+        
+        const { name, version, browser, connType } = this._.deviceInfo();
+
+        // 通过：保存签名，登录等信息至容器 初始化当前模式
+        this.conf.set({
+            ...res.sysInfo,
+            openId: user.openId,
+            batchId: this._.createVisitId(user.appId),
+            // 网络层系统配置
+            sysConfig: res.sysConfig,
+            // 设备信息
+            clientType: browser,
+            sysVersion: `${name} ${version}`,
+            userNetWork: connType
+        });
+
+        // this.service.setHeader();
         
         this.mode = this._.inIframe() ? 'browse' : 'report';
         // mode enter
@@ -87,8 +124,6 @@ export class HXAnalytics implements HXAnalytics {
             // mode enter
             this._mode.onEnter(msg.data.points);
         });
-
-        return this;
     }
 
     // 提供应用开发人员主动埋点能力

@@ -5,6 +5,10 @@ const TYPES = {
     AppEvent: Symbol.for('AppEvent'),
     // 全局工具
     Utils: Symbol.for('Utils'),
+    // API
+    Service: Symbol.for('Service'),
+    // 应用配置相关信息
+    Conf: Symbol.for('Config'),
 
     // 模式
     Browse: Symbol.for('Browse'),

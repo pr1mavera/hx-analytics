@@ -5,7 +5,12 @@ import { inject, injectable } from 'inversify';
 export class ReportStrategy implements ReportStrategy {
     [x: string]: any;
 
-    private _: Utils;
+    // 容器注入 | 工具
+    @inject(TYPES.Utils) private _: Utils;
+    // 容器注入 | API
+    @inject(TYPES.Service) private service: Service;
+
+    storageKey: string = 'UserBehaviorCache';
 
     _report: (data: Obj) => void;
     get report() {
@@ -14,35 +19,33 @@ export class ReportStrategy implements ReportStrategy {
         return <(data: Obj) => void>this[strategy];
     }
     
-    controller = 'server';
+    // 策略控制器
+    controller: 'server' | 'Storage' = 'server';
 
-    info: ClientInfo;
+    report2Storage(data: Obj[]) {
+        let cache = this._.LocStorage.get(this.storageKey);
+        cache && (cache = <Array<Obj>>cache.concat(data));
+        this._.LocStorage.set(this.storageKey, cache);
+        console.log('上报至 - 本地缓存', cache);
+    }
+    async report2Server(data: Obj[]) {
+        // 日志上报
+        const [ err ] = await this._.errorCaptured(this.service.reportAPI, null, { msgs: data });
 
-    constructor(@inject(TYPES.Utils) _: Utils) {
-
-        this._ = _;
-        const user: UserInfo = {
-            appId: 'appId',
-            openId: 'oKXX7wKQhDf0sixuV0z-gEB8Y8is'
+        if (err) {
+            console.warn(
+                'Warn in report2Server: ',
+                err,
+                '\n',
+                'this report data will be cached into LocalStorage, and will be resend on next time you visit this website ! '
+            );
+            this.report2Storage(data);
+        } else {
+            console.log('上报至 - 远程服务', data);
         }
-        // 合并用户信息、设备信息
-        const { name, version, browser, connType } = this._.deviceInfo();
-
-        this.info = {
-            ...user,
-            batchId: this._.createVisitId(user.appId),
-            clientType: browser,
-            sysVersion: `${name} ${version}`,
-            userNetWork: connType
-        }
     }
-    formatDatagram(data: Obj) {
-
-    }
-    report2Storage(data: Obj) {
-        console.log('上报至 - 本地缓存', data);
-    }
-    report2Server(data: Obj) {
-        console.log('上报至 - 远程服务', data);
+    resend() {
+        const cache = this._.LocStorage.get(this.storageKey);
+        this.report2Server(cache);
     }
 }
