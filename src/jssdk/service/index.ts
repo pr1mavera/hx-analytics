@@ -9,7 +9,7 @@ export const Service: Service = {
      */
     setHeader: http.setHeader,
 
-    appLoginAPI: data => http.get('user', '/log', data),
+    appLoginAPI: data => http.get('public', '/sys/login', data),
 
-    reportAPI: data => http.post('user', '/sys/login', data)
+    reportAPI: data => http.post('public', '/log', data),
 }

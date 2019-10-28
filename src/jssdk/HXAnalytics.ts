@@ -80,21 +80,21 @@ export class HXAnalytics implements HXAnalytics {
     // 应用初始化入口
     async init(user: UserInfo) {
 
-        // // 接口校验用户信息
-        // const [ err, res ] = await this._.errorCaptured(this.service.appLoginAPI, null, user);
-        // // 未通过：警告
-        // if (err) throw Error(`jssdk login error: ${err}`);
+        // 接口校验用户信息
+        const [ err, res ] = await this._.errorCaptured(this.service.appLoginAPI, null, user);
+        // 未通过：警告
+        if (err) throw Error(`jssdk login error: ${err}`);
 
-        const res = {
-            sysInfo: {
-                appId: 'appId',
-                appName: 'appName',
-                sysId: 'sysId',
-                sysName: 'sysName',
-                origin: 'WE',
-            },
-            sysConfig: {}
-        }
+        // const res = {
+        //     sysInfo: {
+        //         appId: 'appId',
+        //         appName: 'appName',
+        //         sysId: 'sysId',
+        //         sysName: 'sysName',
+        //         origin: 'WE',
+        //     },
+        //     sysConfig: {}
+        // }
         
         const { name, version, browser, connType } = this._.deviceInfo();
 
@@ -102,7 +102,7 @@ export class HXAnalytics implements HXAnalytics {
         this.conf.set({
             ...res.sysInfo,
             openId: user.openId,
-            batchId: this._.createVisitId(user.appId),
+            batchId: this._.createVisitId(res.sysInfo.appId),
             // 网络层系统配置
             sysConfig: res.sysConfig,
             // 设备信息

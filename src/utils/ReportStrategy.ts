@@ -28,24 +28,33 @@ export class ReportStrategy implements ReportStrategy {
         this._.LocStorage.set(this.storageKey, cache);
         console.log('上报至 - 本地缓存', cache);
     }
-    async report2Server(data: Obj[]) {
+    async report2Server(data: Obj[], ignoreErr?: 'ignoreErr') {
         // 日志上报
         const [ err ] = await this._.errorCaptured(this.service.reportAPI, null, { msgs: data });
 
         if (err) {
             console.warn(
                 'Warn in report2Server: ',
-                err,
-                '\n',
-                'this report data will be cached into LocalStorage, and will be resend on next time you visit this website ! '
+                err
             );
-            this.report2Storage(data);
+            // 是否将未成功上报的数据缓存进本地，若指定为 'ignoreErr' 则不缓存
+            if (!ignoreErr) {
+                console.warn('this report data will be cached into LocalStorage, and will be resend on next time you visit this website ! ');
+                this.report2Storage(data);
+            }
+            return false;
         } else {
             console.log('上报至 - 远程服务', data);
+            return true;
         }
     }
-    resend() {
+    async resend() {
         const cache = this._.LocStorage.get(this.storageKey);
-        this.report2Server(cache);
+        // 若存在缓存
+        cache &&
+        // 则尝试重新发送
+        await this.report2Server(cache, 'ignoreErr') &&
+        // 若成功将数据重新发送，则将缓存数据清空
+        this._.LocStorage.remove(this.storageKey);
     }
 }

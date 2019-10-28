@@ -252,7 +252,8 @@ interface ReportStrategy {
     controller: 'storage' | 'server';
     report: (data: Obj) => void;
     report2Storage(msgs: Obj[]): void;
-    report2Server(msgs: Obj[]): void;
+    report2Server(msgs: Obj[], ignoreErr?: boolean): Promise<boolean>;
+    resend(): void;
 }
 
 // 模式生命周期

@@ -73,6 +73,7 @@ export class Report implements ModeLifeCycle {
         if (!this._INITED) {
             this._INITED = true;
             this.onSystemLoaded();
+            this.reportStrategy.resend();
         }
     }
     onSystemLoaded() {
@@ -84,7 +85,7 @@ export class Report implements ModeLifeCycle {
             sysId: this.conf.get('sysId'),
             msg: this.formatDatagram(1)
         }
-        this.reportStrategy.report2Server([ reqData ]);
+        this.reportStrategy.report([ reqData ]);
     }
     onExit() {
         // 注销事件监听
@@ -100,7 +101,7 @@ export class Report implements ModeLifeCycle {
         // 埋点相关信息
         const extendsData = {
             pageId: location.pathname,
-            functId: point.pid,
+            funcId: point.pid,
             eventId: eventType,
             eventTime: Date.now()
         };
@@ -108,7 +109,7 @@ export class Report implements ModeLifeCycle {
         // 单条上报数据
         const reqData = {
             type: 2,
-            funcId: extendsData.functId,
+            funcId: extendsData.funcId,
             pageId: extendsData.pageId,
             sysId: this.conf.get('sysId'),
             msg: this.formatDatagram(2, extendsData)
@@ -121,7 +122,9 @@ export class Report implements ModeLifeCycle {
         // 对模板中的内容进行映射
         return this.conf.get(`reportType${type}`).reduce((temp: string, key: string) => {
             // 映射策略：全局系统配置 -> 传入的额外配置（一般包含当前触发的埋点信息） -> 占位
-            const val = this.conf.get(key) || extendsData[key] || '{' + key + '}';
+            const val = this.conf.get(key) ||
+                        extendsData[key] ||
+                        '$' + '{' + key + '}';
             const str = `${key}=${val}`
             return temp += '|' + str;
         }, `type=${type}`);

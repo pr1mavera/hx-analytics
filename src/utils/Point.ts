@@ -25,9 +25,15 @@ export class Point implements Point {
     private createByPointBase(origin: PointBase) {
         this.pid = origin.pid;
         const elem = this._.getElemByPid(origin.pid);
-        this.tag = '<' + elem.tagName.toLowerCase() + '>';
-        // [ x, y, w, h ]
-        this.rect = this._.getElemClientRect(elem);
+        if (!elem) {
+            // 未能通过 pid 找到对应 dom节点
+            this.tag = 'unknow';
+            this.rect = [ 0, 0, 0, 0 ];
+        } else {
+            this.tag = '<' + elem.tagName.toLowerCase() + '>';
+            // [ x, y, w, h ]
+            this.rect = this._.getElemClientRect(elem);
+        }
     }
     private createByEvent(origin: EventTarget) {
         this.pid = this._.getElemPid('sysId', 'pageId', <HTMLElement>origin);

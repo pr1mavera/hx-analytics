@@ -18,11 +18,13 @@
   "devDependencies": {
     "@babel/core": "^7.6.2",
     "@babel/plugin-transform-classes": "^7.5.5",
+    "@babel/plugin-transform-runtime": "^7.6.2",
     "@babel/preset-env": "^7.6.2",
     "@types/node": "^12.7.12",
     "@types/rx": "^4.1.1",
     "axios": "^0.19.0",
     "concurrently": "^5.0.0",
+    "core-js": "^2.6.10",
     "cross-env": "^6.0.0",
     "eslint": "^6.4.0",
     "eslint-plugin-typescript": "^0.14.0",
@@ -65,5 +67,10 @@
     "rxjs": "^6.5.3",
     "ts-toolbelt": "^4.8.16",
     "whats-element": "^1.1.1"
-  }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 version",
+    "not ie <= 8"
+  ]
 }

@@ -75,6 +75,8 @@ export class Setting implements ModeLifeCycle {
     @inject(TYPES.AppEvent) private events: AppEvent;
     // 容器注入 | 工具
     @inject(TYPES.Utils) private _: Utils;
+    // 容器注入 | 应用配置相关信息
+    @inject(TYPES.Conf) private conf: AppConfig;
     // 注入事件订阅器
     private evtSubs: EventSubscriber<Setting, Subscription>;
 
@@ -122,13 +124,42 @@ export class Setting implements ModeLifeCycle {
         this.domMasker.clear();
     }
     onTrigger(data: any) {
+
+        const conf = this.conf.getSelf();
+
+        Object.assign(data, {
+            ext: {
+                appId: conf.appId,
+                appName: conf.appName,
+                sysId: conf.sysId,
+                sysName: conf.sysName,
+                pageId: location.pathname
+            }
+        });
+
         console.log('SettingLifeCycle onTrigger：', data);
         // console.log('当前的Points: ', this.domMasker.points);
+
+        // 通知父层设置层埋点捕捉完毕
+        window.parent && window.parent.postMessage(JSON.stringify(data), '*');
 
         // 当前已捕获到埋点，通过注销绑定的监听可保持埋点蒙板状态
         // 注销绑定的监听
         this.evtSubs.unsubscribe();
-        // 通知父层设置层埋点捕捉完毕
-        window.parent && window.parent.postMessage(JSON.stringify(data), '*');
     }
 }
+
+// {
+//     appId: 'kzgm',
+//     appName: 'zhangxu',
+//     sysId: 'kfxt',
+//     sysName: 'fangmingwei',
+//     pageId: '/video/zhike/index.html',
+//     - pageName: '-',
+//     funcId: 'div.erweima>img!document.querySelector()!sysId!pageId',
+//     - funcName: '生成二维码',
+//     - funcIntention: '-',
+//     - eventId: 'click',
+//     - eventName: '点击',
+//     - eventType: '2'
+// }

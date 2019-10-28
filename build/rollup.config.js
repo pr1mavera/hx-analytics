@@ -59,7 +59,8 @@ module.exports = {
             plugins: [
                 ['@babel/plugin-transform-classes', {
                     'loose': true
-                }]
+                }],
+                '@babel/plugin-transform-runtime'
             ]
         }),
         replace({
