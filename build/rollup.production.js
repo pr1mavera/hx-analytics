@@ -22,7 +22,7 @@ const buildConfig = builds[TARGET];
 module.exports = buildConfig.formats.map(format => ({
     ...config,
     output: {
-        file: resolveFile(`dist/${TARGET}/hx-analytics-${TARGET}.${format}.min.js`),
+        file: resolveFile(`dist/${TARGET}/hx-analytics.${format}.min.js`),
         format,
         name: 'ha',
         sourcemap: false

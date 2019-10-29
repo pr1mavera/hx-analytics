@@ -8,9 +8,11 @@ export class Point implements Point {
     rect: number[];
 
     private _: Utils;
+    private conf: AppConfig;
 
-    constructor(_: Utils) {
+    constructor(_: Utils, conf: AppConfig) {
         this._ = _;
+        this.conf = conf;
     }
 
     create(origin: PointBase | EventTarget) {
@@ -24,9 +26,15 @@ export class Point implements Point {
     }
     private createByPointBase(origin: PointBase) {
         this.pid = origin.pid;
-        const elem = this._.getElemByPid(origin.pid);
+        const elem = this._.getElemByPid(this.pid);
         if (!elem) {
-            // 未能通过 pid 找到对应 dom节点
+            // 未能通过 pid 找到对应 dom节点（）
+            console.warn(
+                `Warn in Point.create: Can't find element with pid: `,
+                this.pid,
+                '\n',
+                `please check out the element's fingerprint or location.pathname!`
+            );
             this.tag = 'unknow';
             this.rect = [ 0, 0, 0, 0 ];
         } else {
@@ -36,7 +44,8 @@ export class Point implements Point {
         }
     }
     private createByEvent(origin: EventTarget) {
-        this.pid = this._.getElemPid('sysId', 'pageId', <HTMLElement>origin);
+        const sysId = this.conf.get('sysId');
+        this.pid = this._.getElemPid(sysId, location.pathname, <HTMLElement>origin);
         this.tag = '<' + (<HTMLElement>origin).tagName.toLowerCase() + '>';
         // [ x, y, w, h ]
         this.rect = this._.getElemClientRect(<Element>origin);

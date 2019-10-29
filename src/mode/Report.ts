@@ -18,7 +18,7 @@ const EventListener = {
         function(): Subscription {
             return this.events.netStatusChange().subscribe((type: string) => {
                 const strategy = type === 'online' ? 'server' : 'storage'
-                console.log('网络变化，切换当前行为数据消费策略: ', strategy)
+                console.log('Change report strategy by network fluctuation, current strategy: ', strategy)
                 // 网络状态变化，切换当前行为数据消费策略
                 this.reportStrategy.controller = strategy;
             });

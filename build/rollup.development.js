@@ -10,7 +10,7 @@ console.log('TARGET: ', TARGET)
 module.exports = {
     ...config,
     output: {
-        file: resolveFile(`dist/${TARGET}/hx-analytics-${TARGET}.js`),
+        file: resolveFile(`dist/${TARGET}/hx-analytics.js`),
         format: 'iife',
         name: 'ha',
         sourcemap: true

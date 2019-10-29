@@ -56,7 +56,7 @@ container.bind<ReportStrategy>(TYPES.ReportStrategy).to(ReportStrategy);
 container.bind<DomMasker>(TYPES.DomMasker).to(DomMasker).inSingletonScope();
 container.bind<(width: number, height: number, color?: string) => HTMLCanvasElement>(TYPES.CustomCanvas).toFunction(customCanvas);
 
-const createPoint = (origin: PointBase | EventTarget) => new Point(_).create(origin);
+const createPoint = (origin: PointBase | EventTarget) => new Point(_, container.get<AppConfig>(TYPES.Conf)).create(origin);
 container.bind<(origin: PointBase | EventTarget) => Point>(TYPES.Point).toFunction(createPoint);
 
 export default container;

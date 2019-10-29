@@ -2787,7 +2787,6 @@ var ha = (function () {
 	    CustomCanvas: Symbol.for('CustomCanvas'),
 	    Point: Symbol.for('Point')
 	};
-	//# sourceMappingURL=types.js.map
 
 	/*! *****************************************************************************
 	Copyright (c) Microsoft Corporation. All rights reserved.
@@ -3018,13 +3017,11 @@ var ha = (function () {
 	    ], HXAnalytics);
 	    return HXAnalytics;
 	}());
-	//# sourceMappingURL=HXAnalytics.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isFunction(x) {
 	    return typeof x === 'function';
 	}
-	//# sourceMappingURL=isFunction.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var _enable_super_gross_mode_that_will_cause_bad_things = false;
@@ -3041,13 +3038,11 @@ var ha = (function () {
 	        return _enable_super_gross_mode_that_will_cause_bad_things;
 	    },
 	};
-	//# sourceMappingURL=config.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function hostReportError(err) {
 	    setTimeout(function () { throw err; }, 0);
 	}
-	//# sourceMappingURL=hostReportError.js.map
 
 	/** PURE_IMPORTS_START _config,_util_hostReportError PURE_IMPORTS_END */
 	var empty = {
@@ -3063,17 +3058,14 @@ var ha = (function () {
 	    },
 	    complete: function () { }
 	};
-	//# sourceMappingURL=Observer.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var isArray = /*@__PURE__*/ (function () { return Array.isArray || (function (x) { return x && typeof x.length === 'number'; }); })();
-	//# sourceMappingURL=isArray.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isObject(x) {
 	    return x !== null && typeof x === 'object';
 	}
-	//# sourceMappingURL=isObject.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var UnsubscriptionErrorImpl = /*@__PURE__*/ (function () {
@@ -3089,7 +3081,6 @@ var ha = (function () {
 	    return UnsubscriptionErrorImpl;
 	})();
 	var UnsubscriptionError = UnsubscriptionErrorImpl;
-	//# sourceMappingURL=UnsubscriptionError.js.map
 
 	/** PURE_IMPORTS_START _util_isArray,_util_isObject,_util_isFunction,_util_UnsubscriptionError PURE_IMPORTS_END */
 	var Subscription = /*@__PURE__*/ (function () {
@@ -3221,7 +3212,6 @@ var ha = (function () {
 	function flattenUnsubscriptionErrors(errors) {
 	    return errors.reduce(function (errs, err) { return errs.concat((err instanceof UnsubscriptionError) ? err.errors : err); }, []);
 	}
-	//# sourceMappingURL=Subscription.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var rxSubscriber = /*@__PURE__*/ (function () {
@@ -3229,7 +3219,6 @@ var ha = (function () {
 	        ? /*@__PURE__*/ Symbol('rxSubscriber')
 	        : '@@rxSubscriber_' + /*@__PURE__*/ Math.random();
 	})();
-	//# sourceMappingURL=rxSubscriber.js.map
 
 	/** PURE_IMPORTS_START tslib,_util_isFunction,_Observer,_Subscription,_internal_symbol_rxSubscriber,_config,_util_hostReportError PURE_IMPORTS_END */
 	var Subscriber = /*@__PURE__*/ (function (_super) {
@@ -3454,7 +3443,6 @@ var ha = (function () {
 	    };
 	    return SafeSubscriber;
 	}(Subscriber));
-	//# sourceMappingURL=Subscriber.js.map
 
 	/** PURE_IMPORTS_START _Subscriber PURE_IMPORTS_END */
 	function canReportError(observer) {
@@ -3472,7 +3460,6 @@ var ha = (function () {
 	    }
 	    return true;
 	}
-	//# sourceMappingURL=canReportError.js.map
 
 	/** PURE_IMPORTS_START _Subscriber,_symbol_rxSubscriber,_Observer PURE_IMPORTS_END */
 	function toSubscriber(nextOrObserver, error, complete) {
@@ -3489,15 +3476,12 @@ var ha = (function () {
 	    }
 	    return new Subscriber(nextOrObserver, error, complete);
 	}
-	//# sourceMappingURL=toSubscriber.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var observable = /*@__PURE__*/ (function () { return typeof Symbol === 'function' && Symbol.observable || '@@observable'; })();
-	//# sourceMappingURL=observable.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function noop() { }
-	//# sourceMappingURL=noop.js.map
 
 	/** PURE_IMPORTS_START _noop PURE_IMPORTS_END */
 	function pipeFromArray(fns) {
@@ -3511,7 +3495,6 @@ var ha = (function () {
 	        return fns.reduce(function (prev, fn) { return fn(prev); }, input);
 	    };
 	}
-	//# sourceMappingURL=pipe.js.map
 
 	/** PURE_IMPORTS_START _util_canReportError,_util_toSubscriber,_symbol_observable,_util_pipe,_config PURE_IMPORTS_END */
 	var Observable = /*@__PURE__*/ (function () {
@@ -3622,7 +3605,6 @@ var ha = (function () {
 	    }
 	    return promiseCtor;
 	}
-	//# sourceMappingURL=Observable.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscription PURE_IMPORTS_END */
 	var Action = /*@__PURE__*/ (function (_super) {
@@ -3635,7 +3617,6 @@ var ha = (function () {
 	    };
 	    return Action;
 	}(Subscription));
-	//# sourceMappingURL=Action.js.map
 
 	/** PURE_IMPORTS_START tslib,_Action PURE_IMPORTS_END */
 	var AsyncAction = /*@__PURE__*/ (function (_super) {
@@ -3728,7 +3709,6 @@ var ha = (function () {
 	    };
 	    return AsyncAction;
 	}(Action));
-	//# sourceMappingURL=AsyncAction.js.map
 
 	var Scheduler = /*@__PURE__*/ (function () {
 	    function Scheduler(SchedulerAction, now) {
@@ -3747,7 +3727,6 @@ var ha = (function () {
 	    Scheduler.now = function () { return Date.now(); };
 	    return Scheduler;
 	}());
-	//# sourceMappingURL=Scheduler.js.map
 
 	/** PURE_IMPORTS_START tslib,_Scheduler PURE_IMPORTS_END */
 	var AsyncScheduler = /*@__PURE__*/ (function (_super) {
@@ -3803,13 +3782,11 @@ var ha = (function () {
 	    };
 	    return AsyncScheduler;
 	}(Scheduler));
-	//# sourceMappingURL=AsyncScheduler.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isScheduler(value) {
 	    return value && typeof value.schedule === 'function';
 	}
-	//# sourceMappingURL=isScheduler.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var subscribeToArray = function (array) {
@@ -3820,7 +3797,6 @@ var ha = (function () {
 	        subscriber.complete();
 	    };
 	};
-	//# sourceMappingURL=subscribeToArray.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription PURE_IMPORTS_END */
 	function scheduleArray(input, scheduler) {
@@ -3840,7 +3816,6 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
-	//# sourceMappingURL=scheduleArray.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_subscribeToArray,_scheduled_scheduleArray PURE_IMPORTS_END */
 	function fromArray(input, scheduler) {
@@ -3851,17 +3826,14 @@ var ha = (function () {
 	        return scheduleArray(input, scheduler);
 	    }
 	}
-	//# sourceMappingURL=fromArray.js.map
 
 	/** PURE_IMPORTS_START _AsyncAction,_AsyncScheduler PURE_IMPORTS_END */
 	var async = /*@__PURE__*/ new AsyncScheduler(AsyncAction);
-	//# sourceMappingURL=async.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function identity(x) {
 	    return x;
 	}
-	//# sourceMappingURL=identity.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	function map(project, thisArg) {
@@ -3904,7 +3876,6 @@ var ha = (function () {
 	    };
 	    return MapSubscriber;
 	}(Subscriber));
-	//# sourceMappingURL=map.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	var OuterSubscriber = /*@__PURE__*/ (function (_super) {
@@ -3923,7 +3894,6 @@ var ha = (function () {
 	    };
 	    return OuterSubscriber;
 	}(Subscriber));
-	//# sourceMappingURL=OuterSubscriber.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	var InnerSubscriber = /*@__PURE__*/ (function (_super) {
@@ -3949,7 +3919,6 @@ var ha = (function () {
 	    };
 	    return InnerSubscriber;
 	}(Subscriber));
-	//# sourceMappingURL=InnerSubscriber.js.map
 
 	/** PURE_IMPORTS_START _hostReportError PURE_IMPORTS_END */
 	var subscribeToPromise = function (promise) {
@@ -3964,7 +3933,6 @@ var ha = (function () {
 	        return subscriber;
 	    };
 	};
-	//# sourceMappingURL=subscribeToPromise.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function getSymbolIterator() {
@@ -3974,7 +3942,6 @@ var ha = (function () {
 	    return Symbol.iterator;
 	}
 	var iterator = /*@__PURE__*/ getSymbolIterator();
-	//# sourceMappingURL=iterator.js.map
 
 	/** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */
 	var subscribeToIterable = function (iterable) {
@@ -4001,7 +3968,6 @@ var ha = (function () {
 	        return subscriber;
 	    };
 	};
-	//# sourceMappingURL=subscribeToIterable.js.map
 
 	/** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
 	var subscribeToObservable = function (obj) {
@@ -4015,17 +3981,14 @@ var ha = (function () {
 	        }
 	    };
 	};
-	//# sourceMappingURL=subscribeToObservable.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var isArrayLike = (function (x) { return x && typeof x.length === 'number' && typeof x !== 'function'; });
-	//# sourceMappingURL=isArrayLike.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isPromise(value) {
 	    return !!value && typeof value.subscribe !== 'function' && typeof value.then === 'function';
 	}
-	//# sourceMappingURL=isPromise.js.map
 
 	/** PURE_IMPORTS_START _subscribeToArray,_subscribeToPromise,_subscribeToIterable,_subscribeToObservable,_isArrayLike,_isPromise,_isObject,_symbol_iterator,_symbol_observable PURE_IMPORTS_END */
 	var subscribeTo = function (result) {
@@ -4048,7 +4011,6 @@ var ha = (function () {
 	        throw new TypeError(msg);
 	    }
 	};
-	//# sourceMappingURL=subscribeTo.js.map
 
 	/** PURE_IMPORTS_START _InnerSubscriber,_subscribeTo,_Observable PURE_IMPORTS_END */
 	function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, destination) {
@@ -4063,7 +4025,6 @@ var ha = (function () {
 	    }
 	    return subscribeTo(result)(destination);
 	}
-	//# sourceMappingURL=subscribeToResult.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription,_symbol_observable PURE_IMPORTS_END */
 	function scheduleObservable(input, scheduler) {
@@ -4080,7 +4041,6 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
-	//# sourceMappingURL=scheduleObservable.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription PURE_IMPORTS_END */
 	function schedulePromise(input, scheduler) {
@@ -4099,7 +4059,6 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
-	//# sourceMappingURL=schedulePromise.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription,_symbol_iterator PURE_IMPORTS_END */
 	function scheduleIterable(input, scheduler) {
@@ -4143,19 +4102,16 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
-	//# sourceMappingURL=scheduleIterable.js.map
 
 	/** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
 	function isInteropObservable(input) {
 	    return input && typeof input[observable] === 'function';
 	}
-	//# sourceMappingURL=isInteropObservable.js.map
 
 	/** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */
 	function isIterable(input) {
 	    return input && typeof input[iterator] === 'function';
 	}
-	//# sourceMappingURL=isIterable.js.map
 
 	/** PURE_IMPORTS_START _scheduleObservable,_schedulePromise,_scheduleArray,_scheduleIterable,_util_isInteropObservable,_util_isPromise,_util_isArrayLike,_util_isIterable PURE_IMPORTS_END */
 	function scheduled(input, scheduler) {
@@ -4175,7 +4131,6 @@ var ha = (function () {
 	    }
 	    throw new TypeError((input !== null && typeof input || input) + ' is not observable');
 	}
-	//# sourceMappingURL=scheduled.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_subscribeTo,_scheduled_scheduled PURE_IMPORTS_END */
 	function from(input, scheduler) {
@@ -4189,7 +4144,6 @@ var ha = (function () {
 	        return scheduled(input, scheduler);
 	    }
 	}
-	//# sourceMappingURL=from.js.map
 
 	/** PURE_IMPORTS_START tslib,_util_subscribeToResult,_OuterSubscriber,_InnerSubscriber,_map,_observable_from PURE_IMPORTS_END */
 	function mergeMap(project, resultSelector, concurrent) {
@@ -4282,7 +4236,6 @@ var ha = (function () {
 	    };
 	    return MergeMapSubscriber;
 	}(OuterSubscriber));
-	//# sourceMappingURL=mergeMap.js.map
 
 	/** PURE_IMPORTS_START _mergeMap,_util_identity PURE_IMPORTS_END */
 	function mergeAll(concurrent) {
@@ -4291,7 +4244,6 @@ var ha = (function () {
 	    }
 	    return mergeMap(identity, concurrent);
 	}
-	//# sourceMappingURL=mergeAll.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_isArray,_util_isFunction,_operators_map PURE_IMPORTS_END */
 	function fromEvent(target, eventName, options, resultSelector) {
@@ -4350,7 +4302,6 @@ var ha = (function () {
 	function isEventTarget(sourceObj) {
 	    return sourceObj && typeof sourceObj.addEventListener === 'function' && typeof sourceObj.removeEventListener === 'function';
 	}
-	//# sourceMappingURL=fromEvent.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_isScheduler,_operators_mergeAll,_fromArray PURE_IMPORTS_END */
 	function merge() {
@@ -4375,7 +4326,6 @@ var ha = (function () {
 	    }
 	    return mergeAll(concurrent)(fromArray(observables, scheduler));
 	}
-	//# sourceMappingURL=merge.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	function filter(predicate, thisArg) {
@@ -4417,7 +4367,6 @@ var ha = (function () {
 	    };
 	    return FilterSubscriber;
 	}(Subscriber));
-	//# sourceMappingURL=filter.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber,_scheduler_async PURE_IMPORTS_END */
 	function sampleTime(period, scheduler) {
@@ -4463,7 +4412,6 @@ var ha = (function () {
 	    subscriber.notifyNext();
 	    this.schedule(state, period);
 	}
-	//# sourceMappingURL=sampleTime.js.map
 
 	// const DomEvent = (target: HTMLElement, eventName: string, options: EventListenerOptions) => {
 	// }
@@ -4503,7 +4451,6 @@ var ha = (function () {
 	        return merge(this.online(), this.offline()).pipe(map(function (e) { return e.type; }));
 	    }
 	};
-	//# sourceMappingURL=index.js.map
 
 	/* eslint-disable no-undef */
 	var development = {
@@ -4572,7 +4519,6 @@ var ha = (function () {
 	        url: function (host, url) { return splitUrl(host, url); },
 	    };
 	})();
-	//# sourceMappingURL=request.js.map
 
 	var Service = {
 	    ERR_OK: '0',
@@ -4583,7 +4529,6 @@ var ha = (function () {
 	    appLoginAPI: function (data) { return http.get('public', '/sys/login', data); },
 	    reportAPI: function (data) { return http.post('public', '/log', data); },
 	};
-	//# sourceMappingURL=index.js.map
 
 	var Browse = /** @class */ (function () {
 	    function Browse() {
@@ -4592,14 +4537,13 @@ var ha = (function () {
 	    Browse.prototype.onEnter = function () { };
 	    Browse.prototype.onExit = function () { };
 	    Browse.prototype.onTrigger = function () {
-	        console.log('点吧~老弟嗷~我浏览模式啥也不会干的~');
+	        console.warn('No data will upload with browse mode!');
 	    };
 	    Browse = __decorate([
 	        injectable()
 	    ], Browse);
 	    return Browse;
 	}());
-	//# sourceMappingURL=Browse.js.map
 
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 	var EventListener = {
@@ -4758,7 +4702,6 @@ var ha = (function () {
 	//     - eventName: '点击',
 	//     - eventType: '2'
 	// }
-	//# sourceMappingURL=Setting.js.map
 
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 	var EventListener$1 = {
@@ -4778,7 +4721,7 @@ var ha = (function () {
 	            var _this = this;
 	            return this.events.netStatusChange().subscribe(function (type) {
 	                var strategy = type === 'online' ? 'server' : 'storage';
-	                console.log('网络变化，切换当前行为数据消费策略: ', strategy);
+	                console.log('Change report strategy by network fluctuation, current strategy: ', strategy);
 	                // 网络状态变化，切换当前行为数据消费策略
 	                _this.reportStrategy.controller = strategy;
 	            });
@@ -4892,7 +4835,6 @@ var ha = (function () {
 	    ], Report);
 	    return Report;
 	}());
-	//# sourceMappingURL=Report.js.map
 
 	function getCoords(elem) {
 	    var box = elem.getBoundingClientRect();
@@ -5199,7 +5141,9 @@ var ha = (function () {
 	    }
 	};
 	_.getElemByPid = function (pid) {
-	    var id = pid.split('!')[0];
+	    var _a = pid.split('!'), id = _a[0], pageId = _a[3];
+	    if (pageId !== location.pathname)
+	        return null;
 	    return document.getElementById(id) || document.getElementsByName(id)[0] || document.querySelector(id);
 	};
 	_.getElemClientRect = function (e) {
@@ -5277,7 +5221,6 @@ var ha = (function () {
 	        return ReloadConstructor;
 	    }(constructor));
 	};
-	//# sourceMappingURL=utils.js.map
 
 	var AppConfig = /** @class */ (function () {
 	    function AppConfig() {
@@ -5330,7 +5273,6 @@ var ha = (function () {
 	    ], AppConfig);
 	    return AppConfig;
 	}());
-	//# sourceMappingURL=AppConfig.js.map
 
 	var customCanvas = function (width, height, color) {
 	    if (color === void 0) { color = 'rgba(77, 131, 202, 0.5)'; }
@@ -5348,7 +5290,6 @@ var ha = (function () {
 	    ctx.textBaseline = 'ideographic';
 	    return canvas;
 	};
-	//# sourceMappingURL=CustomCanvas.js.map
 
 	var DomMasker = /** @class */ (function () {
 	    function DomMasker(createPoint, customCanvas) {
@@ -5418,7 +5359,6 @@ var ha = (function () {
 	    ], DomMasker);
 	    return DomMasker;
 	}());
-	//# sourceMappingURL=DomMasker.js.map
 
 	var EventSubscriber = /** @class */ (function () {
 	    function EventSubscriber() {
@@ -5461,11 +5401,11 @@ var ha = (function () {
 	    ], EventSubscriber);
 	    return EventSubscriber;
 	}());
-	//# sourceMappingURL=EventSubscriber.js.map
 
 	var Point = /** @class */ (function () {
-	    function Point(_) {
+	    function Point(_, conf) {
 	        this._ = _;
+	        this.conf = conf;
 	    }
 	    Point.prototype.create = function (origin) {
 	        if (origin instanceof EventTarget) {
@@ -5478,9 +5418,10 @@ var ha = (function () {
 	    };
 	    Point.prototype.createByPointBase = function (origin) {
 	        this.pid = origin.pid;
-	        var elem = this._.getElemByPid(origin.pid);
+	        var elem = this._.getElemByPid(this.pid);
 	        if (!elem) {
-	            // 未能通过 pid 找到对应 dom节点
+	            // 未能通过 pid 找到对应 dom节点（）
+	            console.warn("Warn in Point.create: Can't find element with pid: ", this.pid, '\n', "please check out the element's fingerprint or location.pathname!");
 	            this.tag = 'unknow';
 	            this.rect = [0, 0, 0, 0];
 	        }
@@ -5491,18 +5432,18 @@ var ha = (function () {
 	        }
 	    };
 	    Point.prototype.createByEvent = function (origin) {
-	        this.pid = this._.getElemPid('sysId', 'pageId', origin);
+	        var sysId = this.conf.get('sysId');
+	        this.pid = this._.getElemPid(sysId, location.pathname, origin);
 	        this.tag = '<' + origin.tagName.toLowerCase() + '>';
 	        // [ x, y, w, h ]
 	        this.rect = this._.getElemClientRect(origin);
 	    };
 	    Point = __decorate([
 	        injectable(),
-	        __metadata("design:paramtypes", [Function])
+	        __metadata("design:paramtypes", [Function, Object])
 	    ], Point);
 	    return Point;
 	}());
-	//# sourceMappingURL=Point.js.map
 
 	var ReportStrategy = /** @class */ (function () {
 	    function ReportStrategy() {
@@ -5523,7 +5464,7 @@ var ha = (function () {
 	        var cache = this._.LocStorage.get(this.storageKey);
 	        cache && (cache = cache.concat(data));
 	        this._.LocStorage.set(this.storageKey, cache);
-	        console.log('上报至 - 本地缓存', cache);
+	        console.log('report to Storage: ', cache);
 	    };
 	    ReportStrategy.prototype.report2Server = function (data, ignoreErr) {
 	        return __awaiter$1(this, void 0, void 0, function () {
@@ -5543,7 +5484,7 @@ var ha = (function () {
 	                            return [2 /*return*/, false];
 	                        }
 	                        else {
-	                            console.log('上报至 - 远程服务', data);
+	                            console.log('report to Server: ', data);
 	                            return [2 /*return*/, true];
 	                        }
 	                        return [2 /*return*/];
@@ -5593,7 +5534,6 @@ var ha = (function () {
 	    ], ReportStrategy);
 	    return ReportStrategy;
 	}());
-	//# sourceMappingURL=ReportStrategy.js.map
 
 	var container = new Container();
 	container.bind(TYPES.HXAnalytics).to(HXAnalytics).inSingletonScope();
@@ -5622,9 +5562,8 @@ var ha = (function () {
 	// 埋点配置相关类型
 	container.bind(TYPES.DomMasker).to(DomMasker).inSingletonScope();
 	container.bind(TYPES.CustomCanvas).toFunction(customCanvas);
-	var createPoint = function (origin) { return new Point(_).create(origin); };
+	var createPoint = function (origin) { return new Point(_, container.get(TYPES.Conf)).create(origin); };
 	container.bind(TYPES.Point).toFunction(createPoint);
-	//# sourceMappingURL=inversify.config.js.map
 
 	// window.onerror = function (msg, url, row, col, error) {
 	//     console.log('错误 ❌: ', {
@@ -5678,9 +5617,8 @@ var ha = (function () {
 	// 用户身份校验
 	// 页面停留时长 页面切换机制
 	// 单测
-	//# sourceMappingURL=entry-jssdk.js.map
 
 	return ha;
 
 }());
-//# sourceMappingURL=hx-analytics-jssdk.js.map
+//# sourceMappingURL=hx-analytics.js.map

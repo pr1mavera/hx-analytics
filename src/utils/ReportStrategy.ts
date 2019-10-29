@@ -26,7 +26,7 @@ export class ReportStrategy implements ReportStrategy {
         let cache = this._.LocStorage.get(this.storageKey);
         cache && (cache = <Array<Obj>>cache.concat(data));
         this._.LocStorage.set(this.storageKey, cache);
-        console.log('上报至 - 本地缓存', cache);
+        console.log('report to Storage: ', cache);
     }
     async report2Server(data: Obj[], ignoreErr?: 'ignoreErr') {
         // 日志上报
@@ -44,7 +44,7 @@ export class ReportStrategy implements ReportStrategy {
             }
             return false;
         } else {
-            console.log('上报至 - 远程服务', data);
+            console.log('report to Server: ', data);
             return true;
         }
     }

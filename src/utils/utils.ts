@@ -102,7 +102,8 @@ _.getElemPid = function (sysId, pageId, e) {
 };
 
 _.getElemByPid = pid => {
-    const id = pid.split('!')[0];
+    const [ id, , , pageId ] = pid.split('!');
+    if (pageId !== location.pathname) return null;
     return document.getElementById(id) || document.getElementsByName(id)[0] || document.querySelector(id);
 };
 
