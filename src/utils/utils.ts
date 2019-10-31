@@ -145,7 +145,7 @@ _.deviceInfo = () => {
         name = 'iPhone';
         version = parseFloat(ver[1].replace(/_/g, '.'));
         // 微信内置浏览器否
-        browser = (ua.match(/MicroMessenger/i)[0] == 'micromessenger') ? 'wx' : 'safari';
+        browser = (ua.match(/MicroMessenger/i) && ua.match(/MicroMessenger/i)[0] == 'micromessenger') ? 'wx' : 'safari';
     } else if (u.indexOf('Windows Phone') > -1) {
         name = 'windowsPhone';
         version = -1;
