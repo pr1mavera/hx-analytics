@@ -72,7 +72,9 @@ export class Report implements ModeLifeCycle {
         // 在第一次进入的时候推送系统加载事件
         if (!this._INITED) {
             this._INITED = true;
+            // 上报访问记录
             this.onSystemLoaded();
+            // 上报上次访问未上报的行为数据
             this.reportStrategy.resend();
         }
     }

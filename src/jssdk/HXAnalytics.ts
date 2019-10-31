@@ -43,6 +43,8 @@ export class HXAnalytics implements HXAnalytics {
     @inject(TYPES.Service) private service: Service;
     // 容器注入 | 应用配置相关信息
     @inject(TYPES.Conf) private conf: AppConfig;
+    // 容器注入 | 消息通知
+    // @inject(TYPES.Message) private message: Message;
 
     private modeContainer: {
         [x: string]: ModeLifeCycle
@@ -58,7 +60,7 @@ export class HXAnalytics implements HXAnalytics {
         // 更新 mode
         this._mode = this.modeContainer[modeType];
         // mode enter
-        // this._mode.onEnter(Reflect.getMetadata('onMessageSetMode', this));
+        this._mode.onEnter();
     }
     get mode(): string {
         return this._mode ? this._mode.modeType : null;
@@ -82,8 +84,13 @@ export class HXAnalytics implements HXAnalytics {
 
         // 接口校验用户信息
         const [ err, res ] = await this._.errorCaptured(this.service.appLoginAPI, null, user);
+
         // 未通过：警告
-        if (err) throw Error(`jssdk login error: ${err}`);
+        if (err) {
+            // this._.inIframe() && this.message.error('jssdk 初始化失败', 5000);
+            this._.inIframe() && alert('jssdk 初始化失败');
+            throw Error(`jssdk login error: ${JSON.stringify(err)}`)
+        };
 
         // const res = {
         //     sysInfo: {
@@ -115,14 +122,14 @@ export class HXAnalytics implements HXAnalytics {
         
         this.mode = this._.inIframe() ? 'browse' : 'report';
         // mode enter
-        this._mode.onEnter();
+        // this._mode.onEnter();
 
         // 绑定模式切换事件
         this.events.messageOf('mode').subscribe((msg: Obj) => {
             // Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
             this.mode = msg.data.mode;
             // mode enter
-            this._mode.onEnter(msg.data.points);
+            // this._mode.onEnter(msg.data.points);
         });
     }
 

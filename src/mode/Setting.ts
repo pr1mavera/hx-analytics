@@ -31,10 +31,10 @@ const EventListener = {
                 if (
                     // 当前为第一次绘制，活动元素还未初始化
                     !this.domMasker.activePoint ||
-                    // 捕捉元素与缓存活动元素相同
+                    // 捕捉元素与缓存活动元素不相同
                     activePoint.pid !== this.domMasker.activePoint.pid
                 ) {
-                    // 获取的元素为新的捕捉元素
+                    // 设置新的捕捉元素
                     this.domMasker.activePoint = activePoint;
                     // 渲染基础遮罩层
                     this.domMasker.reset();
@@ -73,6 +73,8 @@ export class Setting implements ModeLifeCycle {
     @inject(TYPES.DomMasker) private domMasker: DomMasker;
     // 注入应用事件层
     @inject(TYPES.AppEvent) private events: AppEvent;
+    // 容器注入 | API
+    @inject(TYPES.Service) private service: Service;
     // 容器注入 | 工具
     @inject(TYPES.Utils) private _: Utils;
     // 容器注入 | 应用配置相关信息
@@ -90,28 +92,33 @@ export class Setting implements ModeLifeCycle {
         // this.events = events;
         // this.evtSubs = new EventSubscriber<Setting, Subscription>(this);
     }
-    onEnter(points: PointBase[] = []) {
+
+    async initPresetPoints() {
+        // 调接口获取当前页预设埋点信息
+        const points = await this.getPresetPoints();
+        // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
+        points && this.domMasker.preset(points);
+        // 手动重置 主绘制canvas
+        this.domMasker.reset();
+    }
+
+    async onEnter() {
 
         // 绑定监控事件
         this.evtSubs.subscribe();
         // 初始化埋点交互遮罩
         !this.domMasker._INITED && this.domMasker.init();
 
-        // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
-        points && this.domMasker.preset(points);
-        // 手动重置 主绘制canvas
-        this.domMasker.reset();
+        this.initPresetPoints();
 
         // 单独注册父页面的重置通讯
         // 捕捉到元素之后 Setting 模式会将当前绑定的 setting- 监控事件都注销
         // 因此在不改变模式的情况下需要依靠父窗口消息推送 reset 指令来重新开启捕捉元素
-        this.evtSubs.on('reset', this.events.messageOf('reset').subscribe((msg: { data: { tag: string, points?: PointBase[] } }) => {
+        this.evtSubs.on('reset', this.events.messageOf('reset').subscribe(async (msg: { data: { tag: string, points?: PointBase[] } }) => {
             // 绑定监控事件
             this.evtSubs.subscribe();
-            // 若此处将新的预设埋点传过来了，则更新，否则使用原来的
-            msg.data.points && this.domMasker.preset(msg.data.points);
-            // 重置埋点蒙板
-            this.domMasker.reset();
+            // 初始化埋点交互遮罩
+            this.initPresetPoints();
         }));
 
         // todo: 阻止文档滚动
@@ -146,6 +153,29 @@ export class Setting implements ModeLifeCycle {
         // 当前已捕获到埋点，通过注销绑定的监听可保持埋点蒙板状态
         // 注销绑定的监听
         this.evtSubs.unsubscribe();
+    }
+    async getPresetPoints() {
+        const rules = {
+            pageId: location.pathname,
+            appName: this.conf.get('appName'),
+            sysName: this.conf.get('sysName'),
+            pageSize: -1,
+        };
+        // const rules = {
+        //     pageId: '/video/zhike/index.html',
+        //     appId: 'kzgm',
+        //     sysId: 'kfxt',
+        //     pageSize: -1,
+        // };
+
+        const [ err, res ] = await this._.errorCaptured(this.service.getPresetPointsAPI, null, rules);
+
+        if (err) {
+            console.warn(`Warn in getPresetPointsAPI: `, err);
+            return [];
+        }
+
+        return <PointBase[]>res;
     }
 }
 

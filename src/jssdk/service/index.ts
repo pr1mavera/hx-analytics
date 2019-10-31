@@ -12,4 +12,6 @@ export const Service: Service = {
     appLoginAPI: data => http.get('public', '/sys/login', data),
 
     reportAPI: data => http.post('public', '/log', data),
+
+    getPresetPointsAPI: data => http.get('public', '/config/query/list', data)
 }

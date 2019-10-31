@@ -13,13 +13,14 @@ const { relative } = require('path');
 const { resolveFile, deleteall, blue, getSize } = require('./utils');
 
 const TARGET = process.env.TARGET;
-console.log('file: ', resolveFile(`dist/${TARGET}/hx-analytics-${TARGET}.min.js`))
+console.log('file: ', resolveFile(`dist/${TARGET}/hx-analytics.min.js`))
 
 const distPath = resolveFile(`dist/${process.env.TARGET}`);
-if (fs.existsSync(distPath)) {
-    deleteall(distPath);
+if (!fs.existsSync(distPath)) {
+    // deleteall(distPath);
+    fs.mkdirSync(distPath, {recursive: true});
 }
-fs.mkdirSync(distPath);
+// fs.mkdirSync(distPath, {recursive: true});
 
 const banner =
     '/*!\n' +

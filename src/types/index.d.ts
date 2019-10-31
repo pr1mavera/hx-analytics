@@ -189,6 +189,8 @@ interface Service {
             type: number;
         }[]
     }) => Promise<any>,
+
+    getPresetPointsAPI: (data?: Obj) => Promise<any>,
 }
 
 interface EventSubscriber<T extends { [x: string]: any, modeType: string }, S extends { unsubscribe(): void }> {
