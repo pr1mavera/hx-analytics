@@ -25,6 +25,7 @@ export class Point implements Point {
         return this;
     }
     private createByPointBase(origin: PointBase) {
+        const { pid, ...rest } = origin;
         this.pid = origin.pid;
         const elem = this._.getElemByPid(this.pid);
         if (!elem) {
@@ -41,6 +42,8 @@ export class Point implements Point {
             this.tag = '<' + elem.tagName.toLowerCase() + '>';
             // [ x, y, w, h ]
             this.rect = this._.getElemClientRect(elem);
+            // 将若存在额外内容，即为已配置埋点，同样绑定在该对象上
+            Object.assign(this, rest);
         }
     }
     private createByEvent(origin: EventTarget) {

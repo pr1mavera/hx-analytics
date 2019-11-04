@@ -2939,7 +2939,7 @@ var ha = (function () {
 	        },
 	        set: function (modeType) {
 	            if (!this.modeContainer[modeType]) {
-	                throw Error('you are trying to enter an extra mode, please check the version of the jssdk you cited !');
+	                throw Error('Error in change mode: you are trying to enter an extra mode, please check the version of the jssdk you cited !');
 	            }
 	            if (this.mode === modeType)
 	                return;
@@ -2956,7 +2956,7 @@ var ha = (function () {
 	    // 应用初始化入口
 	    HXAnalytics.prototype.init = function (user) {
 	        return __awaiter$1(this, void 0, void 0, function () {
-	            var _a, err, res, _b, name, version, browser, connType;
+	            var _a, err, res, _b, name, version, browser, connType, config;
 	            var _this = this;
 	            return __generator$1(this, function (_c) {
 	                switch (_c.label) {
@@ -2977,16 +2977,27 @@ var ha = (function () {
 	                            // 设备信息
 	                            clientType: browser, sysVersion: name + " " + version, userNetWork: connType }));
 	                        // this.service.setHeader();
-	                        this.mode = this._.inIframe() ? 'browse' : 'report';
-	                        // mode enter
-	                        // this._mode.onEnter();
-	                        // 绑定模式切换事件
-	                        this.events.messageOf('mode').subscribe(function (msg) {
-	                            // Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
-	                            _this.mode = msg.data.mode;
-	                            // mode enter
-	                            // this._mode.onEnter(msg.data.points);
-	                        });
+	                        if (this._.inIframe()) {
+	                            /* **************** 配置模式 **************** */
+	                            // 切换模式
+	                            this.mode = 'browse';
+	                            config = {
+	                                tag: 'appConfig',
+	                                config: this.conf.getSelf()
+	                            };
+	                            window.parent && window.parent.postMessage(JSON.stringify(config), '*');
+	                            // 绑定模式切换事件
+	                            this.events.messageOf('mode').subscribe(function (msg) {
+	                                // Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
+	                                _this.mode = msg.data.mode;
+	                                // mode enter
+	                                // this._mode.onEnter(msg.data.points);
+	                            });
+	                        }
+	                        else {
+	                            /* **************** 埋点上报模式 **************** */
+	                            this.mode = 'report';
+	                        }
 	                        return [2 /*return*/];
 	                }
 	            });
@@ -3021,6 +3032,7 @@ var ha = (function () {
 	    ], HXAnalytics);
 	    return HXAnalytics;
 	}());
+	//# sourceMappingURL=HXAnalytics.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isFunction(x) {
@@ -4613,11 +4625,13 @@ var ha = (function () {
 	            return this.events.click(config).subscribe(function (e) {
 	                e.stopPropagation();
 	                // 包装事件数据，触发事件消费 onTrigger;
+	                var repeatPoint = _this.domMasker.points.filter(function (point) { return point.pid === _this.domMasker.activePoint.pid; });
 	                _this.onTrigger({
 	                    tag: 'selectPoint',
-	                    point: _this.domMasker.activePoint,
+	                    // 若命中的埋点是已配置过的埋点，需要将配置信息一并返回给iframe父层，即返回预埋列表的点
+	                    point: repeatPoint.length ? repeatPoint[0] : _this.domMasker.activePoint,
 	                    // 是否是重复设置的埋点
-	                    isRepeat: _this.domMasker.points.filter(function (point) { return point.pid === _this.domMasker.activePoint.pid; }).length !== 0
+	                    isRepeat: repeatPoint.length !== 0
 	                });
 	            });
 	        }
@@ -4672,36 +4686,20 @@ var ha = (function () {
 	        // this.events = events;
 	        // this.evtSubs = new EventSubscriber<Setting, Subscription>(this);
 	    }
-	    Setting.prototype.initPresetPoints = function () {
-	        return __awaiter$1(this, void 0, void 0, function () {
-	            var points;
-	            return __generator$1(this, function (_a) {
-	                switch (_a.label) {
-	                    case 0: return [4 /*yield*/, this.getPresetPoints()];
-	                    case 1:
-	                        points = _a.sent();
-	                        // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
-	                        points && this.domMasker.preset(points);
-	                        // 手动重置 主绘制canvas
-	                        this.domMasker.reset();
-	                        return [2 /*return*/];
-	                }
-	            });
-	        });
-	    };
 	    Setting.prototype.onEnter = function () {
 	        return __awaiter$1(this, void 0, void 0, function () {
+	            var subs;
 	            var _this = this;
 	            return __generator$1(this, function (_a) {
 	                // 绑定监控事件
 	                this.evtSubs.subscribe();
 	                // 初始化埋点交互遮罩
 	                !this.domMasker._INITED && this.domMasker.init();
+	                // setTimeout(() => {
+	                //     this.initPresetPoints();
+	                // }, 10000);
 	                this.initPresetPoints();
-	                // 单独注册父页面的重置通讯
-	                // 捕捉到元素之后 Setting 模式会将当前绑定的 setting- 监控事件都注销
-	                // 因此在不改变模式的情况下需要依靠父窗口消息推送 reset 指令来重新开启捕捉元素
-	                this.evtSubs.on('reset', this.events.messageOf('reset').subscribe(function (msg) { return __awaiter$1(_this, void 0, void 0, function () {
+	                subs = this.events.messageOf('reset').subscribe(function (msg) { return __awaiter$1(_this, void 0, void 0, function () {
 	                    return __generator$1(this, function (_a) {
 	                        // 绑定监控事件
 	                        this.evtSubs.subscribe();
@@ -4709,7 +4707,8 @@ var ha = (function () {
 	                        this.initPresetPoints();
 	                        return [2 /*return*/];
 	                    });
-	                }); }));
+	                }); });
+	                this.evtSubs.on('reset', subs);
 	                return [2 /*return*/];
 	            });
 	        });
@@ -4719,10 +4718,13 @@ var ha = (function () {
 	        this.evtSubs.unsubscribe();
 	        // 单独注销
 	        this.evtSubs.off('reset');
+	        this.domMasker.activePoint = null;
+	        this.domMasker.points = [];
 	        this.domMasker.clear();
 	    };
 	    Setting.prototype.onTrigger = function (data) {
 	        var conf = this.conf.getSelf();
+	        // 包装额外数据
 	        Object.assign(data, {
 	            ext: {
 	                appId: conf.appId,
@@ -4740,9 +4742,26 @@ var ha = (function () {
 	        // 注销绑定的监听
 	        this.evtSubs.unsubscribe();
 	    };
+	    Setting.prototype.initPresetPoints = function () {
+	        return __awaiter$1(this, void 0, void 0, function () {
+	            var points;
+	            return __generator$1(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getPresetPoints()];
+	                    case 1:
+	                        points = _a.sent();
+	                        // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
+	                        points.length && this.domMasker.preset(points.map(function (point) { return (__assign(__assign({}, point), { pid: point.funcId })); }));
+	                        // 手动重置 主绘制canvas
+	                        this.domMasker.reset();
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
 	    Setting.prototype.getPresetPoints = function () {
 	        return __awaiter$1(this, void 0, void 0, function () {
-	            var rules, _a, err, res;
+	            var rules, parentsQueryStr, version, _a, err, res;
 	            return __generator$1(this, function (_b) {
 	                switch (_b.label) {
 	                    case 0:
@@ -4750,8 +4769,14 @@ var ha = (function () {
 	                            pageId: location.pathname,
 	                            appName: this.conf.get('appName'),
 	                            sysName: this.conf.get('sysName'),
-	                            pageSize: -1,
+	                            pageSize: -1
 	                        };
+	                        parentsQueryStr = document.referrer.split('?')[1];
+	                        version = this._.splitQuery(parentsQueryStr).dots_v;
+	                        version && Object.assign(rules, { version: version });
+	                        console.log('======= queryStr =======', parentsQueryStr);
+	                        console.log('======= version =======', version);
+	                        console.log('======= rules =======', rules);
 	                        return [4 /*yield*/, this._.errorCaptured(this.service.getPresetPointsAPI, null, rules)];
 	                    case 1:
 	                        _a = _b.sent(), err = _a[0], res = _a[1];
@@ -4793,21 +4818,6 @@ var ha = (function () {
 	    ], Setting);
 	    return Setting;
 	}());
-	// {
-	//     appId: 'kzgm',
-	//     appName: 'zhangxu',
-	//     sysId: 'kfxt',
-	//     sysName: 'fangmingwei',
-	//     pageId: '/video/zhike/index.html',
-	//     - pageName: '-',
-	//     funcId: 'div.erweima>img!document.querySelector()!sysId!pageId',
-	//     - funcName: '生成二维码',
-	//     - funcIntention: '-',
-	//     - eventId: 'click',
-	//     - eventName: '点击',
-	//     - eventType: '2'
-	// }
-	//# sourceMappingURL=Setting.js.map
 
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 	var EventListener$1 = {
@@ -5199,6 +5209,16 @@ var ha = (function () {
 	_.inIframe = function () { return window && window.self !== window.top; };
 	_.isType = function (type, staff) { return Object.prototype.toString.call(staff) === "[object " + type + "]"; };
 	_.firstUpperCase = function (str) { return str.toLowerCase().replace(/( |^)[a-z]/g, function (s) { return s.toUpperCase(); }); };
+	_.splitQuery = function (str) {
+	    if (!str)
+	        return {};
+	    var querystrList = str.split('&');
+	    return querystrList.map(function (querystr) { return querystr.split('='); })
+	        .reduce(function (temp, queryItem) {
+	        var _a;
+	        return (__assign(__assign({}, temp), (_a = {}, _a[queryItem[0]] = queryItem[1], _a)));
+	    }, {});
+	};
 	_.createVisitId = function (appId) {
 	    return ''
 	        // 应用id
@@ -5308,7 +5328,7 @@ var ha = (function () {
 	        name = 'iPhone';
 	        version = parseFloat(ver[1].replace(/_/g, '.'));
 	        // 微信内置浏览器否
-	        browser = (ua.match(/MicroMessenger/i)[0] == 'micromessenger') ? 'wx' : 'safari';
+	        browser = (ua.match(/MicroMessenger/i) && ua.match(/MicroMessenger/i)[0] == 'micromessenger') ? 'wx' : 'safari';
 	    }
 	    else if (u.indexOf('Windows Phone') > -1) {
 	        name = 'windowsPhone';
@@ -5531,6 +5551,7 @@ var ha = (function () {
 	        return this;
 	    };
 	    Point.prototype.createByPointBase = function (origin) {
+	        var pid = origin.pid, rest = __rest(origin, ["pid"]);
 	        this.pid = origin.pid;
 	        var elem = this._.getElemByPid(this.pid);
 	        if (!elem) {
@@ -5543,6 +5564,8 @@ var ha = (function () {
 	            this.tag = '<' + elem.tagName.toLowerCase() + '>';
 	            // [ x, y, w, h ]
 	            this.rect = this._.getElemClientRect(elem);
+	            // 将若存在额外内容，即为已配置埋点，同样绑定在该对象上
+	            Object.assign(this, rest);
 	        }
 	    };
 	    Point.prototype.createByEvent = function (origin) {
@@ -5563,7 +5586,7 @@ var ha = (function () {
 	var ReportStrategy = /** @class */ (function () {
 	    function ReportStrategy() {
 	        this.storageKey = 'UserBehaviorCache';
-	        // 策略控制器
+	        // 策略控制器（默认上报至RPC）
 	        this.controller = 'server';
 	    }
 	    Object.defineProperty(ReportStrategy.prototype, "report", {
@@ -5577,9 +5600,19 @@ var ha = (function () {
 	    });
 	    ReportStrategy.prototype.report2Storage = function (data) {
 	        var cache = this._.LocStorage.get(this.storageKey);
-	        cache && (cache = cache.concat(data));
-	        this._.LocStorage.set(this.storageKey, cache);
+	        // 合并之前的缓存
+	        cache = cache ? cache.concat(data) : data;
 	        console.log('report to Storage: ', cache);
+	        try {
+	            // 存入本地
+	            this._.LocStorage.set(this.storageKey, cache);
+	            return true;
+	        }
+	        catch (error) {
+	            var eStr = JSON.stringify(error);
+	            error = null;
+	            throw Error("Error in report2Storage: " + eStr);
+	        }
 	    };
 	    ReportStrategy.prototype.report2Server = function (data, ignoreErr) {
 	        return __awaiter$1(this, void 0, void 0, function () {
@@ -5680,6 +5713,7 @@ var ha = (function () {
 	container.bind(TYPES.CustomCanvas).toFunction(customCanvas);
 	var createPoint = function (origin) { return new Point(_, container.get(TYPES.Conf)).create(origin); };
 	container.bind(TYPES.Point).toFunction(createPoint);
+	//# sourceMappingURL=inversify.config.js.map
 
 	// window.onerror = function (msg, url, row, col, error) {
 	//     console.log('错误 ❌: ', {

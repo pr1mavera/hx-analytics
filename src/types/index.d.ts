@@ -67,6 +67,12 @@ interface Utils {
     firstUpperCase: (str: string) => string;
 
     /**
+     * query 字符串拆箱
+     * @param {String} str query 字符串
+     */
+    splitQuery: (str: string) => Obj;
+
+    /**
      * 生成访问记录唯一标识
      * @param {String} appId 应用id
      */

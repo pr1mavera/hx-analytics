@@ -10,13 +10,15 @@ const EventListener = {
             return this.events.click(config).subscribe((e: Event) => {
                 e.stopPropagation();
                 // 包装事件数据，触发事件消费 onTrigger;
+                const repeatPoint = this.domMasker.points.filter(
+                    (point: Point) => point.pid === this.domMasker.activePoint.pid
+                );
                 this.onTrigger({
                     tag: 'selectPoint',
-                    point: this.domMasker.activePoint,
+                    // 若命中的埋点是已配置过的埋点，需要将配置信息一并返回给iframe父层，即返回预埋列表的点
+                    point: repeatPoint.length ? repeatPoint[0] : this.domMasker.activePoint,
                     // 是否是重复设置的埋点
-                    isRepeat: this.domMasker.points.filter(
-                        (point: Point) => point.pid === this.domMasker.activePoint.pid
-                    ).length !== 0
+                    isRepeat: repeatPoint.length !== 0
                 } as Obj);
             });
         }
@@ -93,15 +95,6 @@ export class Setting implements ModeLifeCycle {
         // this.evtSubs = new EventSubscriber<Setting, Subscription>(this);
     }
 
-    async initPresetPoints() {
-        // 调接口获取当前页预设埋点信息
-        const points = await this.getPresetPoints();
-        // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
-        points && this.domMasker.preset(points);
-        // 手动重置 主绘制canvas
-        this.domMasker.reset();
-    }
-
     async onEnter() {
 
         // 绑定监控事件
@@ -109,17 +102,21 @@ export class Setting implements ModeLifeCycle {
         // 初始化埋点交互遮罩
         !this.domMasker._INITED && this.domMasker.init();
 
+        // setTimeout(() => {
+        //     this.initPresetPoints();
+        // }, 10000);
         this.initPresetPoints();
 
         // 单独注册父页面的重置通讯
         // 捕捉到元素之后 Setting 模式会将当前绑定的 setting- 监控事件都注销
         // 因此在不改变模式的情况下需要依靠父窗口消息推送 reset 指令来重新开启捕捉元素
-        this.evtSubs.on('reset', this.events.messageOf('reset').subscribe(async (msg: { data: { tag: string, points?: PointBase[] } }) => {
+        const subs = this.events.messageOf('reset').subscribe(async (msg: { data: { tag: string, points?: PointBase[] } }) => {
             // 绑定监控事件
             this.evtSubs.subscribe();
             // 初始化埋点交互遮罩
             this.initPresetPoints();
-        }));
+        });
+        this.evtSubs.on('reset', subs);
 
         // todo: 阻止文档滚动
     }
@@ -128,12 +125,15 @@ export class Setting implements ModeLifeCycle {
         this.evtSubs.unsubscribe();
         // 单独注销
         this.evtSubs.off('reset');
+        this.domMasker.activePoint = null;
+        this.domMasker.points = [];
         this.domMasker.clear();
     }
     onTrigger(data: any) {
 
         const conf = this.conf.getSelf();
 
+        // 包装额外数据
         Object.assign(data, {
             ext: {
                 appId: conf.appId,
@@ -154,13 +154,31 @@ export class Setting implements ModeLifeCycle {
         // 注销绑定的监听
         this.evtSubs.unsubscribe();
     }
+
+    async initPresetPoints() {
+        // 调接口获取当前页预设埋点信息
+        const points = await this.getPresetPoints();
+        // 每次绑定预设埋点信息时，都重新缓存并初始化 缓存canvas
+        points.length && this.domMasker.preset(points.map((point: Obj) => ({ ...point, pid: point.funcId })));
+        // 手动重置 主绘制canvas
+        this.domMasker.reset();
+    }
+
     async getPresetPoints() {
         const rules = {
             pageId: location.pathname,
             appName: this.conf.get('appName'),
             sysName: this.conf.get('sysName'),
-            pageSize: -1,
+            pageSize: -1
         };
+        // 这里的埋点版本需要从 iframe 的 父页面 上获取，字段名为 dots_v，每次都获取，即可在配置平台动态修改版本
+        // 拆分 query 字符串
+        const parentsQueryStr = document.referrer.split('?')[1];
+        const version = this._.splitQuery(parentsQueryStr).dots_v;
+        version && Object.assign(rules, { version })
+        console.log('======= queryStr =======', parentsQueryStr);
+        console.log('======= version =======', version);
+        console.log('======= rules =======', rules);
         // const rules = {
         //     pageId: '/video/zhike/index.html',
         //     appId: 'kzgm',
@@ -178,18 +196,3 @@ export class Setting implements ModeLifeCycle {
         return <PointBase[]>res;
     }
 }
-
-// {
-//     appId: 'kzgm',
-//     appName: 'zhangxu',
-//     sysId: 'kfxt',
-//     sysName: 'fangmingwei',
-//     pageId: '/video/zhike/index.html',
-//     - pageName: '-',
-//     funcId: 'div.erweima>img!document.querySelector()!sysId!pageId',
-//     - funcName: '生成二维码',
-//     - funcIntention: '-',
-//     - eventId: 'click',
-//     - eventName: '点击',
-//     - eventType: '2'
-// }

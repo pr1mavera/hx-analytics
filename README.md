@@ -26,6 +26,9 @@ npm run jssdk:prod
 
     <!-- 调试版本，带 source map ，建议调试阶段尽量使用该版本 -->
     <script src="https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js"></script>
+
+    <!-- or -->
+
     <!-- 生产版本 -->
     <script src="https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.umd.min.js"></script>
     ...
@@ -35,15 +38,16 @@ npm run jssdk:prod
 
     在引入脚本之后的任意位置，初始化行为数据收集模块，需传入应用码及 openId
     ``` js
-    ... Do something ...
-
+    // ... Do something ...
+    // 从某个API拿到 jssdk 初始化相关依赖: appId / sysId / openId
     getDataFromSomeAPI().then(data => {
         ha.init({
             appId: data.appId,
+            sysId: data.sysId,
             openId: data.openId
         })
     })
-    ... Do something ...
+    // ... Do something ...
     ```
 
     初始化完成之后，收集模块将自动收集用户行为的全量日志

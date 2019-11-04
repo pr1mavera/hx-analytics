@@ -52,7 +52,7 @@ export class HXAnalytics implements HXAnalytics {
 
     set mode(modeType: string) {
         if (!this.modeContainer[modeType]) {
-            throw Error('you are trying to enter an extra mode, please check the version of the jssdk you cited !')
+            throw Error('Error in change mode: you are trying to enter an extra mode, please check the version of the jssdk you cited !');
         };
         if (this.mode === modeType) return;
         // last mode exit
@@ -119,18 +119,39 @@ export class HXAnalytics implements HXAnalytics {
         });
 
         // this.service.setHeader();
+
+        if (this._.inIframe()) {
+
+            /* **************** 配置模式 **************** */
+
+            // 切换模式
+            this.mode = 'browse';
+            // 将sdk初始化数据传递给父级Iframe
+            const config = {
+                tag: 'appConfig',
+                config: this.conf.getSelf()
+            }
+            window.parent && window.parent.postMessage(JSON.stringify(config), '*');
+
+            // 绑定模式切换事件
+            this.events.messageOf('mode').subscribe((msg: Obj) => {
+                // Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
+                this.mode = msg.data.mode;
+                // mode enter
+                // this._mode.onEnter(msg.data.points);
+            });
+
+        } else {
+
+            /* **************** 埋点上报模式 **************** */
+
+            this.mode = 'report';
+        }
         
-        this.mode = this._.inIframe() ? 'browse' : 'report';
+        // this.mode = this._.inIframe() ? 'browse' : 'report';
         // mode enter
         // this._mode.onEnter();
 
-        // 绑定模式切换事件
-        this.events.messageOf('mode').subscribe((msg: Obj) => {
-            // Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
-            this.mode = msg.data.mode;
-            // mode enter
-            // this._mode.onEnter(msg.data.points);
-        });
     }
 
     // 提供应用开发人员主动埋点能力

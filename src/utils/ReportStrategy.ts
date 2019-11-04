@@ -16,17 +16,27 @@ export class ReportStrategy implements ReportStrategy {
     get report() {
         // 根据策略（本地缓存 / 远程接口），返回对应的回调
         const strategy: string = `report2${this._.firstUpperCase(this.controller)}`;
-        return <(data: Obj) => void>this[strategy];
+        return <(data: Obj) => Boolean | null>this[strategy];
     }
     
-    // 策略控制器
+    // 策略控制器（默认上报至RPC）
     controller: 'server' | 'Storage' = 'server';
 
     report2Storage(data: Obj[]) {
         let cache = this._.LocStorage.get(this.storageKey);
-        cache && (cache = <Array<Obj>>cache.concat(data));
-        this._.LocStorage.set(this.storageKey, cache);
+        // 合并之前的缓存
+        cache = cache ? <Array<Obj>>cache.concat(data) : data;
         console.log('report to Storage: ', cache);
+
+        try {
+            // 存入本地
+            this._.LocStorage.set(this.storageKey, cache);
+            return true;
+        } catch (error) {
+            const eStr = JSON.stringify(error);
+            error = null;
+            throw Error(`Error in report2Storage: ${eStr}`);
+        }
     }
     async report2Server(data: Obj[], ignoreErr?: 'ignoreErr') {
         // 日志上报

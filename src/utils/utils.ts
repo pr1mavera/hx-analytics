@@ -49,6 +49,15 @@ _.isType = (type, staff) => Object.prototype.toString.call(staff) === `[object $
 
 _.firstUpperCase = str => str.toLowerCase().replace(/( |^)[a-z]/g, (s: string) => s.toUpperCase());
 
+_.splitQuery = str => {
+    if (!str) return {};
+    const querystrList = str.split('&');
+    return querystrList.map((querystr: string) => querystr.split('='))
+                        .reduce((temp: Obj, queryItem: Array<string>) => ({
+                            ...temp, [queryItem[0]]: queryItem[1]
+                        }), {});
+};
+
 _.createVisitId = function (appId) {
     return ''
         // 应用id
