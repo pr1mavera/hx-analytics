@@ -4,35 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>~你不要过来啊~</title>
 </head>
 <body>
-    <a href="https://www.baidu.com">baidu</a>
-    <div id="aaa">
-        <ul>
-            <li>1</li>
-            <li>2</li>
-            <li>3</li>
-        </ul>
-        <iframe src="./test.html?dots_v=1" frameborder="0"></iframe>
-    </div>
-    <!-- <script src="http://logike.cn/whats-element/dist/whatsElement.js"></script> -->
     <script>
-        // var whats = new whatsElement();
-        // document.addEventListener('mousedown', (event) => {
-        //     const result = whats.getUniqueId(event.target)//当 getUniqueId()参数为空时候，默认计算鼠标点击到的最后一个HTML元素。
-        //     debugger;
-        // })
-        // window.addEventListener('beforeunload', e => {
-        //     try {
-        //         sessionStorage.setItem('======= 1234 ======', JSON.stringify({ a: 1234 }))
-        //         document.domain = 'www.baidu.com'
-        //     } catch (error) {
-        //         debugger
-        //     }
-            
-        //     sessionStorage.setItem('======= 1234 ======', JSON.stringify({ a: 1234 }))
-        // })
+        window.addEventListener('message', e => {
+            const event = e || window.event;
+            const data = JSON.parse(event.data);
+            const [ key, val ] = data.data;
+            if (data.tag === 'set') {
+                localStorage.setItem(key, val);
+            } else if (data.tag === 'get') {
+                const res = localStorage.getItem(key);
+                window.parent.postMessage(JSON.stringify({ tag: 'insert-iframe', data: res }));
+            }
+        });
+        window.onbeforeunload = () => {
+            debugger;
+            window.name = window.location.href
+        }
     </script>
 </body>
 </html>

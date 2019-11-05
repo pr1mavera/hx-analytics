@@ -43,6 +43,21 @@ const [SessStorage, LocStorage] = _.map(
 _.SessStorage = SessStorage;
 _.LocStorage = LocStorage;
 
+_.windowName = {
+    get() {
+        let data = undefined;
+        try {
+            data = window.name ? JSON.parse(window.name) : '';
+        } catch {
+            data = '';
+        }
+        return data;
+    },
+    set(val) {
+        window.name = JSON.stringify(val);
+    }
+};
+
 _.inIframe = () => window && window.self !== window.top;
 
 _.isType = (type, staff) => Object.prototype.toString.call(staff) === `[object ${type}]`;

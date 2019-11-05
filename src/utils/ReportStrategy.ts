@@ -9,8 +9,10 @@ export class ReportStrategy implements ReportStrategy {
     @inject(TYPES.Utils) private _: Utils;
     // 容器注入 | API
     @inject(TYPES.Service) private service: Service;
-
+    // 缓存的 key
     storageKey: string = 'UserBehaviorCache';
+    // 策略控制器（默认上报至RPC）
+    controller: 'server' | 'Storage' = 'server';
 
     _report: (data: Obj) => void;
     get report() {
@@ -18,9 +20,6 @@ export class ReportStrategy implements ReportStrategy {
         const strategy: string = `report2${this._.firstUpperCase(this.controller)}`;
         return <(data: Obj) => Boolean | null>this[strategy];
     }
-    
-    // 策略控制器（默认上报至RPC）
-    controller: 'server' | 'Storage' = 'server';
 
     report2Storage(data: Obj[]) {
         let cache = this._.LocStorage.get(this.storageKey);
@@ -31,11 +30,20 @@ export class ReportStrategy implements ReportStrategy {
         try {
             // 存入本地
             this._.LocStorage.set(this.storageKey, cache);
+
+            const customData = this._.windowName.get();
+            // 缓存的当前行为数据与请求成功的最后一条数据相同，则更新缓存的当前行为数据的已消费标识
+            if (data[data.length - 1].funcId === customData.funcId) {
+                customData._consumed = true;
+                this._.windowName.set(customData);
+            }
+
             return true;
         } catch (error) {
             const eStr = JSON.stringify(error);
             error = null;
-            throw Error(`Error in report2Storage: ${eStr}`);
+            console.warn(`Warn in report2Storage: ${eStr}`);
+            return false;
         }
     }
     async report2Server(data: Obj[], ignoreErr?: 'ignoreErr') {
@@ -55,6 +63,14 @@ export class ReportStrategy implements ReportStrategy {
             return false;
         } else {
             console.log('report to Server: ', data);
+
+            const customData = this._.windowName.get();
+            // 缓存的当前行为数据与请求成功的最后一条数据相同，则更新缓存的当前行为数据的已消费标识
+            if (data[data.length - 1].funcId === customData.funcId) {
+                customData._consumed = true;
+                this._.windowName.set(customData);
+            }
+
             return true;
         }
     }

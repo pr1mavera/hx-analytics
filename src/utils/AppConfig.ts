@@ -23,9 +23,11 @@ export class AppConfig implements AppConfig {
             'sysId',
             'pageId',
             'pageName',
+            'pageUrl',
             'funcId',
             'funcName',
             'funcIntention',
+            'preFuncId',
             'eventId',
             'eventName',
             'eventType',
@@ -34,7 +36,9 @@ export class AppConfig implements AppConfig {
             'pageDwellTime',
             'enterTime',
             'leaveTime'
-        ]
+        ],
+        // 三方跨域数据存贮 iframe 地址
+        insertIframeSrc: 'https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/index.html'
     };
     set(data: Obj) {
         this.container = { ...this.container, ...data };

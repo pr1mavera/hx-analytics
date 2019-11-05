@@ -72,6 +72,10 @@ export class Report implements ModeLifeCycle {
         // 在第一次进入的时候推送系统加载事件
         if (!this._INITED) {
             this._INITED = true;
+
+            // 检查最后一次行为数据是否已消费完全，若未消费完全则将其合并至本地缓存
+            const customData = this._.windowName.get();
+            customData && !customData._consumed && this.reportStrategy.report2Storage([ customData ]);
             // 上报访问记录
             this.onSystemLoaded();
             // 上报上次访问未上报的行为数据
@@ -103,7 +107,10 @@ export class Report implements ModeLifeCycle {
         // 埋点相关信息
         const extendsData = {
             pageId: location.pathname,
+            pageUrl: location.href,
             funcId: point.pid,
+            // 上一次行为事件唯一标识
+            preFuncId: this._.windowName.get().funcId || '-',
             eventId: eventType,
             eventTime: Date.now()
         };
@@ -116,6 +123,10 @@ export class Report implements ModeLifeCycle {
             sysId: this.conf.get('sysId'),
             msg: this.formatDatagram(2, extendsData)
         };
+
+        // 上一次行为事件，作为 window.name ，在下一次上报时使用
+        this._.windowName.set(reqData);
+
         // 根据当前事件消费者消费数据
         this.reportStrategy.report([ reqData ]);
     }

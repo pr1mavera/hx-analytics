@@ -48,6 +48,11 @@ interface Utils {
     SessStorage: CustomStorage;
     LocStorage: CustomStorage;
 
+    windowName: {
+        get(): Obj;
+        set(val: Obj): void;
+    }
+
     /**
      * 判断应用是否在 iframe 内
      */

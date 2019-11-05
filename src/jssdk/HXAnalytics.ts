@@ -91,17 +91,6 @@ export class HXAnalytics implements HXAnalytics {
             this._.inIframe() && alert('jssdk 初始化失败');
             throw Error(`jssdk login error: ${JSON.stringify(err)}`)
         };
-
-        // const res = {
-        //     sysInfo: {
-        //         appId: 'appId',
-        //         appName: 'appName',
-        //         sysId: 'sysId',
-        //         sysName: 'sysName',
-        //         origin: 'WE',
-        //     },
-        //     sysConfig: {}
-        // }
         
         const { name, version, browser, connType } = this._.deviceInfo();
 

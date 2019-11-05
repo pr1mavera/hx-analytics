@@ -108,7 +108,7 @@
         }
     </style>
     <!-- <script src="http://10.3.36.38:3001/jssdk/hx-analytics-jssdk.iife.min.js"></script> -->
-    <!-- <script src="http://10.3.36.38:3001/jssdk/hx-analytics.js"></script> -->
+    <!-- <script src="https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js"></script> -->
     <script src="http://localhost:3001/jssdk/hx-analytics.js"></script>
     <script>
         ha.init({
@@ -120,7 +120,8 @@
 </head>
 <body>
     <div class="list">
-        <!-- <a class="link" href="./index">去别</a> -->
+        <button id="button">点我存地址到第三方iframe</button>
+        <a class="link" href="https://sales-int.ihxlife.com/video/zhike/index.html#/zkmain?agentNo=110003995">去下一个项目</a>
         <ul>
             <li class="li">1</li>
             <li class="li">2</li>
@@ -150,5 +151,23 @@
         <span class="corner right"></span>
         <span class="corner bottom"></span>
     </div>
+    <script>
+        // window.addEventListener('message', e => {
+        //     const event = e || window.event;
+        //     const data = JSON.parse(event.data);
+        //     if (data.tag !== 'insert-iframe') return void 0;
+        //     alert('jssdk alert: ' + data.data);
+        // });
+        // let iframe = document.createElement('iframe');
+        // iframe.src = 'https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/index.html';
+        // document.body.appendChild(iframe);
+        // window.addEventListener('click', () => {
+        //     iframe.contentWindow.postMessage(JSON.stringify({ tag: 'set', data: [ 'lastpage', window.location.href ] }), '*');
+        // });
+        // window.addEventListener('beforeunload', () => {
+        //     debugger;
+        //     window.name = window.location.href
+        // });
+    </script>
 </body>
 </html>
