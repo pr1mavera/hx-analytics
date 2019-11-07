@@ -4,6 +4,10 @@ import { injectable } from 'inversify';
 export class AppConfig implements AppConfig {
     // private container: Map<string, any> = new Map();
     private container: Obj = {
+        /**
+         * 行为数据上报特征值集合
+         * 确定了字段名、顺序
+         */
         reportType1: [
             'batchId',
             'appId',
@@ -38,7 +42,7 @@ export class AppConfig implements AppConfig {
             'leaveTime'
         ],
         // 三方跨域数据存贮 iframe 地址
-        insertIframeSrc: 'https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/index.html'
+        // insertIframeSrc: 'https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/index.html'
     };
     set(data: Obj) {
         this.container = { ...this.container, ...data };

@@ -74,7 +74,7 @@ export class Report implements ModeLifeCycle {
             this._INITED = true;
 
             // 检查最后一次行为数据是否已消费完全，若未消费完全则将其合并至本地缓存
-            const customData = this._.windowName.get();
+            const customData = this._.windowData.get('customData');
             customData && !customData._consumed && this.reportStrategy.report2Storage([ customData ]);
             // 上报访问记录
             this.onSystemLoaded();
@@ -102,30 +102,31 @@ export class Report implements ModeLifeCycle {
         const [ eventType, target ] = data;
 
         // 格式化埋点信息
-        const point = this.createPoint(target);
+        let point = this.createPoint(target);
+        // 上一次行为事件唯一标识
+        // 首次打开窗口加载页面的时候 get('customData') 为空字符串，需要错误处理
+        const customData = this._.windowData.get('customData');
+        const preFuncId = customData && customData.funcId || '-';
 
         // 埋点相关信息
-        const extendsData = {
+        let extendsData = {
             pageId: location.pathname,
             pageUrl: location.href,
             funcId: point.pid,
-            // 上一次行为事件唯一标识
-            preFuncId: this._.windowName.get().funcId || '-',
+            preFuncId,
             eventId: eventType,
             eventTime: Date.now()
         };
         
         // 单条上报数据
-        const reqData = {
+        let reqData = {
             type: 2,
             funcId: extendsData.funcId,
             pageId: extendsData.pageId,
             sysId: this.conf.get('sysId'),
-            msg: this.formatDatagram(2, extendsData)
+            msg: this.formatDatagram(2, extendsData),
+            _consumed: false
         };
-
-        // 上一次行为事件，作为 window.name ，在下一次上报时使用
-        this._.windowName.set(reqData);
 
         // 根据当前事件消费者消费数据
         this.reportStrategy.report([ reqData ]);

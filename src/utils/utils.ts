@@ -43,18 +43,26 @@ const [SessStorage, LocStorage] = _.map(
 _.SessStorage = SessStorage;
 _.LocStorage = LocStorage;
 
-_.windowName = {
-    get() {
-        let data = undefined;
+_.windowData = {
+    get(key) {
+        // 格式化 window.name，保证 window.name 一定是JSON字符串
+        !window.name && (window.name = JSON.stringify({}));
+
+        // 获取安全的 window.name 数据
+        let safeData = undefined;
         try {
-            data = window.name ? JSON.parse(window.name) : '';
-        } catch {
-            data = '';
+            safeData = JSON.parse(window.name);
+        } catch (error) {
+            safeData = {};
         }
-        return data;
+
+        // 若传入了 key ，表示需要获取某个字段的值: any ，若不传表示获取完整的 window.name: Object
+        return key ? (safeData[key] ? safeData[key] : '') : safeData;
     },
-    set(val) {
-        window.name = JSON.stringify(val);
+    set(key, val) {
+        // window.name = JSON.stringify(val);
+        const wData = this.get() || {};
+        window.name = JSON.stringify({ ...wData, [key]: val });
     }
 };
 

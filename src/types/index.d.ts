@@ -48,9 +48,12 @@ interface Utils {
     SessStorage: CustomStorage;
     LocStorage: CustomStorage;
 
-    windowName: {
-        get(): Obj;
-        set(val: Obj): void;
+    /**
+     * tab 页上保存的数据，实际保存在 window.data，提供存取操作
+     */
+    windowData: {
+        get(key?: string): any;
+        set(key: string, val: any): void;
     }
 
     /**
@@ -263,8 +266,8 @@ type ClientInfo = {
 interface ReportStrategy {
     info: ClientInfo;
     controller: 'storage' | 'server';
-    report: (data: Obj) => void;
-    report2Storage(msgs: Obj[]): void;
+    report: (data: Obj) => Promise<boolean>;
+    report2Storage(msgs: Obj[]): Promise<boolean>;
     report2Server(msgs: Obj[], ignoreErr?: boolean): Promise<boolean>;
     resend(): void;
 }

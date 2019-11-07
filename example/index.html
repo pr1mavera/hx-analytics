@@ -7,7 +7,15 @@
     <title>~你不要过来啊~</title>
 </head>
 <body>
+    <script src="http://localhost:3001/jssdk/hx-analytics.js"></script>
     <script>
+        ha.init({
+            appId: 'kzgm',
+            sysId: 'kfxt',
+            openId: 'oKXX7wKQhDf0sixuV0z-gEB8Y8is'
+        })
+    </script>
+    <!-- <script>
         window.addEventListener('message', e => {
             const event = e || window.event;
             const data = JSON.parse(event.data);
@@ -23,6 +31,6 @@
             debugger;
             window.name = window.location.href
         }
-    </script>
+    </script> -->
 </body>
 </html>
