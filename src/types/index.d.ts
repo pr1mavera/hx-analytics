@@ -1,5 +1,6 @@
-declare module 'rx';
+// declare module 'rx';
 declare module 'whats-element/src/whatsElementPure';
+declare var ha: any;
 
 type Obj = { [ x: string ]: any };
 type Fn = (...args: any[]) => any;
@@ -67,6 +68,11 @@ interface Utils {
      * @param {Any} _staff 待判断的内容
      */
     isType: (type: string, staff: any) => boolean;
+
+    /**
+     * 深拷贝（JSON）
+     */
+    deepCopy: <T>(obj: any) => T;
 
     /**
      * 字符串首字母大写
@@ -253,6 +259,7 @@ interface AppConfig extends Obj {
 
 type UserInfo = {
     appId: string;
+    sysId: string;
     openId: string;
 }
 type ClientInfo = {

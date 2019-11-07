@@ -70,6 +70,8 @@ _.inIframe = () => window && window.self !== window.top;
 
 _.isType = (type, staff) => Object.prototype.toString.call(staff) === `[object ${type}]`;
 
+_.deepCopy = obj => JSON.parse(JSON.stringify(obj));
+
 _.firstUpperCase = str => str.toLowerCase().replace(/( |^)[a-z]/g, (s: string) => s.toUpperCase());
 
 _.splitQuery = str => {

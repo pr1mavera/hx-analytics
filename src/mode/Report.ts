@@ -124,8 +124,7 @@ export class Report implements ModeLifeCycle {
             funcId: extendsData.funcId,
             pageId: extendsData.pageId,
             sysId: this.conf.get('sysId'),
-            msg: this.formatDatagram(2, extendsData),
-            _consumed: false
+            msg: this.formatDatagram(2, extendsData)
         };
 
         // 根据当前事件消费者消费数据

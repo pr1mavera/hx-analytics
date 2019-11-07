@@ -89,16 +89,24 @@ export class HXAnalytics implements HXAnalytics {
         if (err) {
             // this._.inIframe() && this.message.error('jssdk 初始化失败', 5000);
             this._.inIframe() && alert('jssdk 初始化失败');
-            throw Error(`jssdk login error: ${JSON.stringify(err)}`)
+            throw Error(`jssdk login error: ${JSON.stringify(err)}`);
         };
         
         const { name, version, browser, connType } = this._.deviceInfo();
+
+        // 初始化访问流水号
+        let batchId = this._.windowData.get('batchId');
+
+        if (!batchId) {
+            batchId = this._.createVisitId(res.sysInfo.appId);
+            this._.windowData.set('batchId', batchId);
+        }
 
         // 通过：保存签名，登录等信息至容器 初始化当前模式
         this.conf.set({
             ...res.sysInfo,
             openId: user.openId,
-            batchId: this._.createVisitId(res.sysInfo.appId),
+            batchId,
             // 网络层系统配置
             sysConfig: res.sysConfig,
             // 设备信息
@@ -144,7 +152,9 @@ export class HXAnalytics implements HXAnalytics {
     }
 
     // 提供应用开发人员主动埋点能力
-    push(data: Obj) {
-        this._mode.onTrigger(data);
+    push(data: Array<any>) {
+        const [ directive, appId, sysId, openId ] = data;
+        this.init({ appId, sysId, openId });
+        // this._mode.onTrigger(data);
     }
 }

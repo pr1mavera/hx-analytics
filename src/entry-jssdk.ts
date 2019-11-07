@@ -14,7 +14,15 @@ import TYPES from './jssdk/types';
 //     console.log('错误 ❌: ', e.reason);
 // }, true);
 
-const ha = container.get<HXAnalytics>(TYPES.HXAnalytics);
+const _ = container.get<Utils>(TYPES.Utils);
+
+var haTemp: any = _.deepCopy<Array<any>>(ha) || [];
+
+const hxAnalytics = container.get<HXAnalytics>(TYPES.HXAnalytics);
+
+hxAnalytics.push(haTemp);
+
+ha = hxAnalytics;
 
 export default ha;
 
