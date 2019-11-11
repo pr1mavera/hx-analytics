@@ -70,6 +70,11 @@ interface Utils {
     isType: (type: string, staff: any) => boolean;
 
     /**
+     * 检测客户端是否支持 Beacon 发送数据
+     */
+    isSupportBeacon: () => boolean;
+
+    /**
      * 深拷贝（JSON）
      */
     deepCopy: <T>(obj: any) => T;
@@ -199,16 +204,9 @@ interface Service {
     /**
      * 日志上报
      */
-    reportAPI: (data: {
-        [x: string]: any;
-        msgs: {
-            msg: string;
-            sysId: string;
-            pageId: string;
-            funcId: string;
-            type: number;
-        }[]
-    }) => Promise<any>,
+    reportAPI: (data: FormData) => Promise<any>,
+
+    reportBeaconAPI: (data: FormData) => boolean,
 
     getPresetPointsAPI: (data?: Obj) => Promise<any>,
 }
@@ -304,6 +302,7 @@ interface RequestOptions {
 }
 // 请求
 type SafeRequest = {
+    splitUrl: (host: string, path: string, data?: Obj) => string;
     setHeader: (newHeader: Obj) => Obj;
     get: (host: string, url: string, data: Obj | null, options?: RequestOptions) => Promise<any>;
     post: (host: string, url: string, data: Obj | null, options?: RequestOptions) => Promise<any>;

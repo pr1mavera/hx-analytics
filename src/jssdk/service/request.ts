@@ -72,6 +72,8 @@ export default (() => {
     // 构造request方法
     return {
 
+        splitUrl,
+
         /**
          * 增量设置请求头
          */

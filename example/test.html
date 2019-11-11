@@ -134,18 +134,22 @@
             var ha = document.createElement('script');
             ha.type = 'text/javascript';
             ha.async = true;
-            ha.src = 'https://sales.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js';
+            // ha.src = 'https://sales.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js';
+            // ha.src = 'https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js';
+            ha.src = 'http://192.168.8.108:3001/jssdk/hx-analytics.js';
             var s = document.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(ha, s);
         })();
-    </script>
-    <script>
         ha.push([ 'init', 'kzgm', 'kfxt', 'oKXX7wKQhDf0sixuV0z-gEB8Y8is' ]);
     </script>
+    <!-- <script>
+        ha.push([ 'init', 'kzgm', 'kfxt', 'oKXX7wKQhDf0sixuV0z-gEB8Y8is' ]);
+    </script> -->
 </head>
 <body>
     <div class="list">
-        <button id="button">点我存地址到第三方iframe</button>
+        <!-- <button id="button">点我存window.name</button> -->
+        <button id="button">点我获取ls</button>
         <a class="link" href="./index.html">去下一个项目</a>
         <ul>
             <li class="li">1</li>
@@ -193,6 +197,17 @@
         //     debugger;
         //     window.name = window.location.href
         // });
+        var iushd = JSON.parse(localStorage.getItem('iushd'));
+        !iushd && localStorage.setItem('iushd', JSON.stringify([]));
+        document.getElementById('button').addEventListener('click', e => {
+            alert(localStorage.getItem('iushd'));
+        });
+        window.addEventListener('pagehide', () => {
+            window.name = '临时存的name';
+            var iushd = JSON.parse(localStorage.getItem('iushd'));
+            iushd.push(iushd.length);
+            localStorage.setItem('iushd', JSON.stringify(iushd));
+        });
     </script>
 </body>
 </html>

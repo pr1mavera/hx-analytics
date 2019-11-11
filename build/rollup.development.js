@@ -23,7 +23,7 @@ module.exports = {
                 port: dev.port,
                 contentBase: [ resolveFile('dist') ]
             }),
-            livereload(resolveFile('dist'))
+            // livereload(resolveFile('dist'))
         ]
     ]
 };

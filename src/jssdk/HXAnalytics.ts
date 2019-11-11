@@ -153,7 +153,7 @@ export class HXAnalytics implements HXAnalytics {
 
     // 提供应用开发人员主动埋点能力
     push(data: Array<any>) {
-        const [ directive, appId, sysId, openId ] = data;
+        const [ directive, appId, sysId, openId ] = data[0];
         this.init({ appId, sysId, openId });
         // this._mode.onTrigger(data);
     }

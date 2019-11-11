@@ -5,14 +5,16 @@ import { inject, injectable } from 'inversify';
 export class ReportStrategy implements ReportStrategy {
     [x: string]: any;
 
-    // 容器注入 | 工具
-    @inject(TYPES.Utils) private _: Utils;
     // 容器注入 | API
-    @inject(TYPES.Service) private service: Service;
+    private service: Service;
+    // 容器注入 | 工具
+    private _: Utils;
     // 缓存的 key
     storageKey: string = 'UserBehaviorCache';
     // 策略控制器（默认上报至RPC）
     controller: 'server' | 'Storage' = 'server';
+    // 数据上报 API
+    sendAPI: (data: FormData) => Promise<any[]> | any[];
 
     _report: (data: Obj, ignoreErr?: 'ignoreErr') => Promise<boolean>;
     get report() {
@@ -53,6 +55,31 @@ export class ReportStrategy implements ReportStrategy {
         }
     }
 
+    constructor(
+        @inject(TYPES.Utils) _: Utils,
+        @inject(TYPES.Service) service: Service
+    ) {
+
+        this._ = _;
+        this.service = service;
+
+        const safeReportBeaconAPI = (data: FormData) => {
+            console.log('我是 Beacon API');
+            try {
+                const res = this.service.reportBeaconAPI(data);
+                return [ res ? null : 'Something wrong in reportBeaconAPI', res ];
+            } catch (error) {
+                return [ error, false ]
+            }
+        }
+        const safeReportAPI = async (data: FormData) => {
+            console.log('我是 fetch API');
+            return await this._.errorCaptured(this.service.reportAPI, null, data);
+        }
+
+        this.sendAPI = this._.isSupportBeacon() ? safeReportBeaconAPI : safeReportAPI;
+    }
+
     report2Storage(data: Obj[]) {
         let cache = this._.LocStorage.get(this.storageKey);
         // 合并之前的缓存
@@ -71,8 +98,11 @@ export class ReportStrategy implements ReportStrategy {
         }
     }
     async report2Server(data: Obj[], ignoreErr?: 'ignoreErr') {
+
+        let formData = new FormData();
+        formData.append('msgs', JSON.stringify(data));
         // 日志上报
-        const [ err ] = await this._.errorCaptured(this.service.reportAPI, null, { msgs: data });
+        const [ err ] = await this.sendAPI(formData);
 
         if (err) {
             console.warn(

@@ -14,9 +14,9 @@ import TYPES from './jssdk/types';
 //     console.log('错误 ❌: ', e.reason);
 // }, true);
 
-const _ = container.get<Utils>(TYPES.Utils);
+// const _ = container.get<Utils>(TYPES.Utils);
 
-var haTemp: any = _.deepCopy<Array<any>>(ha) || [];
+var haTemp: any = JSON.parse(JSON.stringify(ha)) || [];
 
 const hxAnalytics = container.get<HXAnalytics>(TYPES.HXAnalytics);
 
