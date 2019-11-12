@@ -77,7 +77,7 @@ export class ReportStrategy implements ReportStrategy {
             return await this._.errorCaptured(this.service.reportAPI, null, data);
         }
 
-        this.sendAPI = !this._.isSupportBeacon() ? safeReportBeaconAPI : safeReportAPI;
+        this.sendAPI = this._.isSupportBeacon() ? safeReportBeaconAPI : safeReportAPI;
     }
 
     report2Storage(data: Obj[]) {
