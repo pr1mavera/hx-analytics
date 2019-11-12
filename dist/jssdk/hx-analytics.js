@@ -4547,9 +4547,7 @@ var ha = (function () {
 	};
 	var http = (function () {
 	    // 全局请求头暂存
-	    var _header = {
-	        'content-type': 'application/json'
-	    };
+	    var _header = {};
 	    /**
 	     * 统一http请求入口
 	     * @param {String} method http请求方式
@@ -4567,7 +4565,7 @@ var ha = (function () {
 	            headers: __assign(__assign({}, _header), headers) }, rest);
 	        // 当前是 POST | PUT ，则合并请求体
 	        (method === 'POST' || method === 'PUT') && Object.assign(safeOptions, {
-	            body: JSON.stringify(data)
+	            body: body || (data ? JSON.stringify(data) : null)
 	        });
 	        return fetch(url, safeOptions)
 	            .then(function (response) { return response.json(); })
@@ -4601,11 +4599,10 @@ var ha = (function () {
 	     */
 	    setHeader: http.setHeader,
 	    appLoginAPI: function (data) { return http.get('public', '/sys/login', data); },
-	    reportAPI: function (data) { return http.post('public', '/log', data, { headers: { type: 'application/x-www-form-urlencoded' } }); },
+	    reportAPI: function (body) { return http.post('public', '/log', null, { body: body }); },
 	    reportBeaconAPI: function (data) { return window.navigator.sendBeacon(http.splitUrl('public', '/log'), data); },
 	    getPresetPointsAPI: function (data) { return http.get('public', '/config/query/list', data); }
 	};
-	//# sourceMappingURL=index.js.map
 
 	var Browse = /** @class */ (function () {
 	    function Browse() {
@@ -5391,7 +5388,6 @@ var ha = (function () {
 	        return ReloadConstructor;
 	    }(constructor));
 	};
-	//# sourceMappingURL=utils.js.map
 
 	var AppConfig = /** @class */ (function () {
 	    function AppConfig() {
@@ -5659,7 +5655,7 @@ var ha = (function () {
 	                }
 	            });
 	        }); };
-	        this.sendAPI = this._.isSupportBeacon() ? safeReportBeaconAPI : safeReportAPI;
+	        this.sendAPI = !this._.isSupportBeacon() ? safeReportBeaconAPI : safeReportAPI;
 	    }
 	    Object.defineProperty(ReportStrategy.prototype, "report", {
 	        get: function () {
@@ -5684,7 +5680,6 @@ var ha = (function () {
 	                                customData._consumed = true;
 	                                this._.windowData.set('customData', customData);
 	                            }
-	                            // alert(`我能走到存完缓存这儿来，现在的 window.name: ${JSON.stringify({customState, customData})}`);
 	                            return [2 /*return*/, customData];
 	                    }
 	                });
@@ -5780,6 +5775,7 @@ var ha = (function () {
 	    ], ReportStrategy);
 	    return ReportStrategy;
 	}());
+	//# sourceMappingURL=ReportStrategy.js.map
 
 	var container = new Container();
 	container.bind(TYPES.HXAnalytics).to(HXAnalytics).inSingletonScope();
@@ -5810,7 +5806,6 @@ var ha = (function () {
 	container.bind(TYPES.CustomCanvas).toFunction(customCanvas);
 	var createPoint = function (origin) { return new Point(_, container.get(TYPES.Conf)).create(origin); };
 	container.bind(TYPES.Point).toFunction(createPoint);
-	//# sourceMappingURL=inversify.config.js.map
 
 	// window.onerror = function (msg, url, row, col, error) {
 	//     console.log('错误 ❌: ', {

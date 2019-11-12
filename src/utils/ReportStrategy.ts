@@ -50,7 +50,7 @@ export class ReportStrategy implements ReportStrategy {
                 customData._consumed = true;
                 this._.windowData.set('customData', customData);
             }
-            // alert(`我能走到存完缓存这儿来，现在的 window.name: ${JSON.stringify({customState, customData})}`);
+
             return customData;
         }
     }
@@ -77,7 +77,7 @@ export class ReportStrategy implements ReportStrategy {
             return await this._.errorCaptured(this.service.reportAPI, null, data);
         }
 
-        this.sendAPI = this._.isSupportBeacon() ? safeReportBeaconAPI : safeReportAPI;
+        this.sendAPI = !this._.isSupportBeacon() ? safeReportBeaconAPI : safeReportAPI;
     }
 
     report2Storage(data: Obj[]) {

@@ -11,7 +11,7 @@ export const Service: Service = {
 
     appLoginAPI: data => http.get('public', '/sys/login', data),
 
-    reportAPI: data => http.post('public', '/log', data, { headers: { type : 'application/x-www-form-urlencoded' } }),
+    reportAPI: body => http.post('public', '/log', null, { body }),
 
     reportBeaconAPI: data => window.navigator.sendBeacon(http.splitUrl('public', '/log'), data),
 

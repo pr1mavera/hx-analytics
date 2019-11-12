@@ -24,9 +24,7 @@ const splitUrl: (host: string, path: string, data?: Obj) => string
 
 export default (() => {
     // 全局请求头暂存
-    let _header = {
-        'content-type': 'application/json'
-    };
+    let _header = {};
 
     /**
      * 统一http请求入口
@@ -59,7 +57,7 @@ export default (() => {
 
         // 当前是 POST | PUT ，则合并请求体
         (method === 'POST' || method === 'PUT') && Object.assign(safeOptions, {
-            body: JSON.stringify(data)
+            body: body || (data ? JSON.stringify(data) : null)
         });
 
         return fetch(url, safeOptions)
