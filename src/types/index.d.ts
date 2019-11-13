@@ -55,6 +55,7 @@ interface Utils {
     windowData: {
         get(key?: string): any;
         set(key: string, val: any): void;
+        remove(key: string): void;
     }
 
     /**
@@ -68,6 +69,12 @@ interface Utils {
      * @param {Any} _staff 待判断的内容
      */
     isType: (type: string, staff: any) => boolean;
+
+    /**
+     * 判断字符串是否为json
+     * @param {String} str 待判断的字符串
+     */
+    isJson: (str: string) => boolean;
 
     /**
      * 检测客户端是否支持 Beacon 发送数据
@@ -96,6 +103,11 @@ interface Utils {
      * @param {String} appId 应用id
      */
     createVisitId: (this: Utils, appId: string) => string;
+
+    /**
+     * 生成缓存索引（带 chunk ）
+     */
+    createCacheKey: () => string
 
     /**
      * 日期格式化
@@ -170,7 +182,7 @@ interface Utils {
     // reloadConstructor: <T extends { new(...args:any[]): {} }>(constructor: T) => 
 }
 interface CustomStorage {
-    get: (key: string) => any;
+    get: (key?: string) => any;
     set: (key: string, val: any) => void,
     remove: (key: string) => void,
     clear: () => void;
@@ -181,6 +193,8 @@ interface AppEvent {
     mousemove: (config: Obj) => any;
     load: () => any;
     beforeUnload: () => any;
+    pageShow: () => any;
+    pageHide: () => any;
     hashchange: () => any;
     popstate: () => any;
     visibilitychange: () => any;
@@ -197,7 +211,7 @@ interface Service {
     setHeader: (newHeader: Obj) => Obj;
 
     /**
-     * 
+     * 登录接口
      */
     appLoginAPI: (data?: any) => Promise<any>,
 
@@ -206,6 +220,9 @@ interface Service {
      */
     reportAPI: (data: FormData) => Promise<any>,
 
+    /**
+     * 日志上报 useBeacon
+     */
     reportBeaconAPI: (data: FormData) => boolean,
 
     getPresetPointsAPI: (data?: Obj) => Promise<any>,
@@ -268,12 +285,29 @@ type ClientInfo = {
     userNetWork: string;
 };
 
+type Msg = {
+    type: number,
+    funcId: string,
+    pageId: string,
+    sysId: string,
+    msg: string
+}
+
+interface MsgsQueue {
+    _queue: Msg[];
+    bindCustomer(cstm: { notify: Function }): void;
+    getQueue(): Msg[];
+    push(data: Msg | Msg[]): void;
+    pull(): Msg[];
+}
+
 interface ReportStrategy {
     info: ClientInfo;
     controller: 'storage' | 'server';
-    report: (data: Obj) => Promise<boolean>;
-    report2Storage(msgs: Obj[]): Promise<boolean>;
-    report2Server(msgs: Obj[], ignoreErr?: boolean): Promise<boolean>;
+    // notify(data: Msg[]): (data: Msg[]) => Promise<boolean>;
+    report: (data: Msg[], opt: Obj) => Promise<boolean>;
+    report2Storage(msgs: Msg[]): Promise<boolean>;
+    report2Server(msgs: Msg[], opt: Obj): Promise<boolean> | boolean;
     resend(): void;
 }
 

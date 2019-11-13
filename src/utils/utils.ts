@@ -34,7 +34,11 @@ _.map = _.unboundMethod('map', 2);
 const { sessionStorage, localStorage } = <Window>window;
 const [SessStorage, LocStorage] = _.map(
     (storage: Storage) => ({
-        get: key => JSON.parse(storage.getItem(key)),
+        get: (key = '') => {
+            return key ?
+                JSON.parse(storage.getItem(key)) :
+                storage;
+        },
         set: (key, val) => storage.setItem(key, JSON.stringify(val)),
         remove: key => storage.removeItem(key),
         clear: () => storage.clear()
@@ -63,12 +67,27 @@ _.windowData = {
         // window.name = JSON.stringify(val);
         const wData = this.get() || {};
         window.name = JSON.stringify({ ...wData, [key]: val });
+    },
+    remove(key) {
+        const wData = this.get() || {};
+        wData.hasOwnProperty(key) && delete wData[key];
+        window.name = JSON.stringify(wData);
     }
 };
 
 _.inIframe = () => window && window.self !== window.top;
 
 _.isType = (type, staff) => Object.prototype.toString.call(staff) === `[object ${type}]`;
+
+_.isJson = function(str) {
+    if (!this.isType('String', str)) return false;
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
 
 _.isSupportBeacon = () => 'object' == typeof window.navigator && 'function' == typeof window.navigator.sendBeacon;
 
@@ -93,6 +112,10 @@ _.createVisitId = function (appId) {
         + this.formatDate('yyyy-MM-dd-hh-mm-ss').split(/-/g).join('')
         // 6位随机数
         + this.randomInRange(100000, 999999);
+};
+
+_.createCacheKey = function() {
+    return `report_temp_${this.randomInRange(100000, 999999)}`;
 };
 
 _.formatDate = (format, date = new Date()) => {
@@ -168,7 +191,12 @@ _.deviceInfo = () => {
     let name: string;
     let version: number;
     let browser: string = 'wx';
-    let connType: string = /nettype/.test(ua) ? ua.match(/NetType\/(\S*)/)[1] : 'unknown';
+    let connType: string = '';
+    try {
+        connType = /NetType/.test(ua) ? ua.match(/NetType\/(\S*)$/)[1] : 'unknown';
+    } catch {
+        connType = 'unknown';
+    }
 
     if (u.indexOf('Android') > -1 || u.indexOf('Linux') > -1) {
         // Android

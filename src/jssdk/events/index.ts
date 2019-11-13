@@ -40,6 +40,10 @@ export const AppEvent: AppEvent = {
 
     beforeUnload: () => fromEvent(document, 'beforeunload'),
 
+    pageShow: () => fromEvent(window, 'pageshow'),
+
+    pageHide: () => fromEvent(window, 'pagehide'),
+
     hashchange: () => fromEvent(document, 'hashchange'),
 
     popstate: () => fromEvent(document, 'popstate'),

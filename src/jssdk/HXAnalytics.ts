@@ -91,7 +91,7 @@ export class HXAnalytics implements HXAnalytics {
             this._.inIframe() && alert('jssdk 初始化失败');
             throw Error(`jssdk login error: ${JSON.stringify(err)}`);
         };
-        
+
         const { name, version, browser, connType } = this._.deviceInfo();
 
         // 初始化访问流水号

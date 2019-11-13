@@ -1,4 +1,5 @@
-import { injectable } from 'inversify';
+import TYPES from '../jssdk/types';
+import { inject, injectable } from 'inversify';
 
 @injectable()
 export class AppConfig implements AppConfig {
@@ -44,6 +45,7 @@ export class AppConfig implements AppConfig {
         // 三方跨域数据存贮 iframe 地址
         // insertIframeSrc: 'https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/index.html'
     };
+
     set(data: Obj) {
         this.container = { ...this.container, ...data };
     }

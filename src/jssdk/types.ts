@@ -21,6 +21,8 @@ const TYPES = {
 
     // 上报策略（远程服务 / 本地缓存）
     ReportStrategy: Symbol.for('ReportStrategy'),
+    // 消息队列
+    MsgsQueue: Symbol.for('MsgsQueue'),
 
     // 埋点配置相关类型
     DomMasker: Symbol.for('DomMasker'),

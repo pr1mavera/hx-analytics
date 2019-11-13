@@ -41,12 +41,12 @@ export default (() => {
     ) => Promise<any>
     = (method, url, data, options = {}) => {
         let { headers, body, ...rest } = options;
-        // 存在 body ，则警告并忽略
-        body && console.warn(
-            'Warn in http request: You are trying to set a request body in args:options, and it will be ignore. Please set it in args:data !  \n',
-            `url: ${url} \n`,
-            `body: ${JSON.stringify(body)}`,
-        );
+        // // 存在 body ，则警告并忽略
+        // body && console.warn(
+        //     'Warn in http request: You are trying to set a request body in args:options, and it will be ignore. Please set it in args:data !  \n',
+        //     `url: ${url} \n`,
+        //     `body: ${JSON.stringify(body)}`,
+        // );
 
         const safeOptions = {
             method,

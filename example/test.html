@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <script src="https://cdn.bootcss.com/vConsole/3.3.4/vconsole.min.js"></script>
+    <script>
+        // 初始化
+        var vConsole = new VConsole();
+        // console.log('Hello world');
+    </script>
     <style>
         /* http://meyerweb.com/eric/tools/css/reset/ 
            v2.0 | 20110126
@@ -135,8 +141,8 @@
             ha.type = 'text/javascript';
             ha.async = true;
             // ha.src = 'https://sales.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js';
-            // ha.src = 'https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js';
-            ha.src = 'http://192.168.8.107:3001/jssdk/hx-analytics.js';
+            ha.src = 'https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js';
+            // ha.src = 'http://192.168.8.106:3001/jssdk/hx-analytics.js';
             var s = document.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(ha, s);
         })();
@@ -203,6 +209,9 @@
             alert(localStorage.getItem('iushd'));
         });
         window.addEventListener('pagehide', () => {
+            // let formData = new FormData();
+            // formData.append('msgs', JSON.stringify({ msg: 'GGGGGGGGGGG' }));
+            // window.navigator.sendBeacon('https://video-uat.ihxlife.com:8085/api/v1/log', formData)
             window.name = '临时存的name';
             var iushd = JSON.parse(localStorage.getItem('iushd'));
             iushd.push(iushd.length);

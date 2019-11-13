@@ -18,6 +18,7 @@ import {
     customCanvas,
     DomMasker,
     EventSubscriber,
+    MsgsQueue,
     Point,
     ReportStrategy
 } from '../utils';
@@ -51,6 +52,8 @@ container.bind<EventSubscriber<ModeLifeCycle, Subscription>>(TYPES.EventSubscrib
 
 // 上报策略（远程服务 / 本地缓存）
 container.bind<ReportStrategy>(TYPES.ReportStrategy).to(ReportStrategy);
+// 消息队列
+container.bind<MsgsQueue>(TYPES.MsgsQueue).to(MsgsQueue);
 
 // 埋点配置相关类型
 container.bind<DomMasker>(TYPES.DomMasker).to(DomMasker).inSingletonScope();
