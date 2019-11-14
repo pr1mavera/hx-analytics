@@ -186,37 +186,5 @@
         <span class="corner right"></span>
         <span class="corner bottom"></span>
     </div>
-    <script>
-        // window.addEventListener('message', e => {
-        //     const event = e || window.event;
-        //     const data = JSON.parse(event.data);
-        //     if (data.tag !== 'insert-iframe') return void 0;
-        //     alert('jssdk alert: ' + data.data);
-        // });
-        // let iframe = document.createElement('iframe');
-        // iframe.src = 'https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/index.html';
-        // document.body.appendChild(iframe);
-        // window.addEventListener('click', () => {
-        //     iframe.contentWindow.postMessage(JSON.stringify({ tag: 'set', data: [ 'lastpage', window.location.href ] }), '*');
-        // });
-        // window.addEventListener('beforeunload', () => {
-        //     debugger;
-        //     window.name = window.location.href
-        // });
-        var iushd = JSON.parse(localStorage.getItem('iushd'));
-        !iushd && localStorage.setItem('iushd', JSON.stringify([]));
-        document.getElementById('button').addEventListener('click', e => {
-            alert(localStorage.getItem('iushd'));
-        });
-        window.addEventListener('pagehide', () => {
-            // let formData = new FormData();
-            // formData.append('msgs', JSON.stringify({ msg: 'GGGGGGGGGGG' }));
-            // window.navigator.sendBeacon('https://video-uat.ihxlife.com:8085/api/v1/log', formData)
-            window.name = '临时存的name';
-            var iushd = JSON.parse(localStorage.getItem('iushd'));
-            iushd.push(iushd.length);
-            localStorage.setItem('iushd', JSON.stringify(iushd));
-        });
-    </script>
 </body>
 </html>

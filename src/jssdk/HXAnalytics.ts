@@ -82,38 +82,48 @@ export class HXAnalytics implements HXAnalytics {
     // 应用初始化入口
     async init(user: UserInfo) {
 
-        // 接口校验用户信息
-        const [ err, res ] = await this._.errorCaptured(this.service.appLoginAPI, null, user);
-
-        // 未通过：警告
-        if (err) {
-            // this._.inIframe() && this.message.error('jssdk 初始化失败', 5000);
-            this._.inIframe() && alert('jssdk 初始化失败');
-            throw Error(`jssdk login error: ${JSON.stringify(err)}`);
-        };
-
-        const { name, version, browser, connType } = this._.deviceInfo();
+        // 初始化用户基本信息
+        let user_temp = this._.windowData.get('user');
+        if (
+            !user_temp ||
+            user_temp.appId != user.appId ||
+            user_temp.sysId != user.sysId
+        ) {
+            // 接口校验用户信息
+            const [ err, res ] = await this._.errorCaptured(this.service.appLoginAPI, null, user);
+            // 未通过：警告
+            if (err) {
+                // this._.inIframe() && this.message.error('jssdk 初始化失败', 5000);
+                this._.inIframe() && alert('jssdk 初始化失败');
+                throw Error(`jssdk login error: ${JSON.stringify(err)}`);
+            };
+            user_temp = res;
+        }
 
         // 初始化访问流水号
         let batchId = this._.windowData.get('batchId');
-
         if (!batchId) {
-            batchId = this._.createVisitId(res.sysInfo.appId);
+            batchId = this._.createVisitId(user_temp.sysInfo.appId);
             this._.windowData.set('batchId', batchId);
         }
 
+        // 初始化设备信息
+        const { name, version, browser, connType } = this._.deviceInfo();
+
         // 通过：保存签名，登录等信息至容器 初始化当前模式
-        this.conf.set({
-            ...res.sysInfo,
+        const newUser = {
+            ...user_temp.sysInfo,
             openId: user.openId,
             batchId,
             // 网络层系统配置
-            sysConfig: res.sysConfig,
+            sysConfig: user_temp.sysConfig,
             // 设备信息
             clientType: browser,
             sysVersion: `${name} ${version}`,
             userNetWork: connType
-        });
+        };
+        this.conf.set(newUser);
+        this._.windowData.set('user', newUser);
 
         // this.service.setHeader();
 
@@ -148,13 +158,12 @@ export class HXAnalytics implements HXAnalytics {
         // this.mode = this._.inIframe() ? 'browse' : 'report';
         // mode enter
         // this._mode.onEnter();
-
     }
 
     // 提供应用开发人员主动埋点能力
-    push(data: Array<any>) {
+    async push(data: Array<any>) {
         const [ directive, appId, sysId, openId ] = data[0];
+
         this.init({ appId, sysId, openId });
-        // this._mode.onTrigger(data);
     }
 }
