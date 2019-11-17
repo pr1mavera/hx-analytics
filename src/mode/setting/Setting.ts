@@ -1,4 +1,4 @@
-import TYPES from '../jssdk/types';
+import TYPES from '../../jssdk/types';
 import { inject, injectable } from 'inversify';
 import { Subscription } from 'rxjs';
 
@@ -131,7 +131,7 @@ export class Setting implements ModeLifeCycle {
     }
     onTrigger(data: any) {
 
-        const conf = this.conf.getSelf();
+        const conf = this.conf.get();
 
         // 包装额外数据
         Object.assign(data, {

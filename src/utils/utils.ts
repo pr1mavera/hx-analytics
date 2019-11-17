@@ -3,52 +3,32 @@ import { Service } from '../jssdk/service';
 
 export const _ = <Utils>function () { }
 
-_.unboundMethod = function (methodName: string, argCount: number = 2) {
-    return this.curry(
-        (...args: any[]) => {
-            const obj = args.pop();
-            return obj[methodName](...args);
-        },
-        argCount
-    );
-}
-
-_.curry = (fn: Fn, arity: number = fn.length) => {
-    // 1. 构造一个这样的函数：
-    //    即：接收前一部分参数，返回一个 接收后一部分参数 的函数，返回的那个函数需在内部判断是否执行原函数
-    const nextCurried = (...prev: any[]) =>
-        (...next: any[]) => {
-            const args = [...prev, ...next];
-
-            return args.length >= arity
-                ? fn(...args)
-                : nextCurried(...args)
-        };
-
-    // 2. 将构造的这个函数执行并返回，初始入参为空
-    return nextCurried();
-};
-
-_.map = _.unboundMethod('map', 2);
+_.compose = (...fns) => fns.reduce((f: Function, g: Function) => (...args: any[]) => g(f(...args)));
 
 const { sessionStorage, localStorage } = <Window>window;
-const [SessStorage, LocStorage] = _.map(
+const [ SessStorage, LocStorage ] = [ sessionStorage, localStorage ].map(
     (storage: Storage) => ({
         get: (key = '') => {
             return key ?
                 JSON.parse(storage.getItem(key)) :
                 storage;
         },
-        set: (key, val) => storage.setItem(key, JSON.stringify(val)),
-        remove: key => storage.removeItem(key),
-        clear: () => storage.clear()
+        set: (key, val) => {
+            storage.setItem(key, JSON.stringify(val));
+        },
+        remove: key => {
+            storage.removeItem(key);
+        },
+        clear: () => {
+            storage.clear();
+        }
     } as CustomStorage)
-)([sessionStorage, localStorage]);
+);
 _.SessStorage = SessStorage;
 _.LocStorage = LocStorage;
 
 _.windowData = {
-    get(key) {
+    get(key = '') {
         // 格式化 window.name，保证 window.name 一定是JSON字符串
         !window.name && (window.name = JSON.stringify({}));
 
@@ -72,6 +52,9 @@ _.windowData = {
         const wData = this.get() || {};
         wData.hasOwnProperty(key) && delete wData[key];
         window.name = JSON.stringify(wData);
+    },
+    clear() {
+        window.name = JSON.stringify({});
     }
 };
 
@@ -222,8 +205,3 @@ _.deviceInfo = () => {
     };
 };
 
-_.reloadConstructor = function <T extends { new(...args: any[]): {} }>(constructor: T) {
-    return class ReloadConstructor extends constructor {
-        // console.log('装饰重载');
-    }
-}

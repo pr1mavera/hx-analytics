@@ -1,4 +1,4 @@
-import TYPES from '../jssdk/types';
+import TYPES from '../../jssdk/types';
 import { inject, injectable } from 'inversify';
 
 @injectable()

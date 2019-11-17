@@ -1,6 +1,7 @@
-import TYPES from '../jssdk/types';
+import TYPES from '../../jssdk/types';
 import { inject, injectable } from 'inversify';
 import { Subscription } from 'rxjs';
+import { loggerMiddleware, initMiddleware, clickMiddleware, preFuncIdMiddleware } from './middleware';
 
 // report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 const EventListener = {
@@ -9,7 +10,9 @@ const EventListener = {
         function(config: Obj): Subscription {
             return this.events.click(config).subscribe((e: Event) => {
                 // 包装事件数据，触发事件消费 onTrigger
-                this.onTrigger([ 'click', e.target ]);
+                // this.onTrigger([ 'click', e.target ]);
+                let point = this.createPoint(e.target);
+                this.onTrigger([ 'click', point.pid ]);
             });
         }
     ],
@@ -62,29 +65,38 @@ export class Report implements ModeLifeCycle {
     // 容器注入 | 应用配置相关信息
     @inject(TYPES.Conf) private conf: AppConfig;
     // 注入上报策略控制器
-    private reportStrategy: ReportStrategy;
+    @inject(TYPES.ReportStrategy) private reportStrategy: ReportStrategy;
     // 消息队列
-    private mq: MsgsQueue;
+    @inject(TYPES.MsgsQueue) private mq: MsgsQueue;
+
+    reportConfigs: Obj = {
+        init: {
+            params: [ 'appId', 'sysId', 'openId' ],
+            middlewares: [
+                loggerMiddleware,
+                initMiddleware
+            ]
+        },
+        click: {
+            params: [ 'funcId', 'preFuncId' ],
+            middlewares: [
+                loggerMiddleware,
+                clickMiddleware,
+                preFuncIdMiddleware
+            ]
+        }
+    }
 
     constructor(
         @inject(TYPES.Point) createPoint: (origin: PointBase | EventTarget) => Point,
         @inject(TYPES.EventSubscriber) eventSubscriber: EventSubscriber<Report, Subscription>,
-        @inject(TYPES.ReportStrategy) reportStrategy: ReportStrategy,
-        @inject(TYPES.MsgsQueue) mq: MsgsQueue
+        // @inject(TYPES.ReportStrategy) reportStrategy: ReportStrategy,
+        // @inject(TYPES.MsgsQueue) mq: MsgsQueue
     ) {
         // this.events = events;
         this.evtSubs = eventSubscriber.init(this);
         // 初始化单个埋点构造器
         this.createPoint = createPoint;
-        // 上报策略控制器
-        this.reportStrategy = reportStrategy;
-        // 消息队列
-        this.mq = mq;
-        this.mq.bindCustomer({
-            // 模拟消费者，提供 notify 接口
-            // 这里由于 this.reportStrategy.report 是动态获取的，因此不可用使用 bind 将 report 直接传递出去
-            notify: (...rest: any[]) => this.reportStrategy.report.apply(this.reportStrategy, rest)
-        });
     }
 
     onEnter() {
@@ -96,68 +108,88 @@ export class Report implements ModeLifeCycle {
         if (!this._INITED) {
             this._INITED = true;
 
-            // 检查最后一次行为数据是否已消费完全，若未消费完全则将其合并至本地缓存
-            // const customData = this._.windowData.get('customData');
-            // customData && !customData._consumed && this.reportStrategy.report2Storage([ customData ]);
-            // 上报访问记录
-            this.onSystemLoaded();
-            // 上报上次访问未上报的行为数据
-            // this.reportStrategy.resend();
+            // 绑定消息队列消费者
+            this.mq.bindCustomer({
+                // 模拟消费者，提供 notify 接口
+                // 这里由于 this.reportStrategy.report 是动态获取的，因此不可用使用 bind 将 report 直接传递出去
+                notify: (...rest: any[]) => this.reportStrategy.report.apply(this.reportStrategy, rest)
+            });
+
+            // 根据事件上报配置，在这旮沓挨个注册数据上报中间件
+            Object.keys(this.reportConfigs).forEach((key: string) => {
+                const config = this.reportConfigs[key];
+                config.middlewares && (config.rebuildWithMiddlewares = this.applyMiddlewares(config.middlewares)(this));
+            });
         }
     }
 
-    onSystemLoaded() {
+    applyMiddlewares(middlewares: Function[]) {
+        return (ctx: Report) => {
+            const originTrigger = ctx._onTrigger.bind(ctx);
+            // chains: ((next: Function) => (opt: any) => Obj)[]
+            const chains = middlewares.map((middleware: Function) => middleware(ctx));
 
-        const reqData: Msg = {
-            type: 1,
-            funcId: '',
-            pageId: '',
-            sysId: this.conf.get('sysId') as string,
-            msg: this.formatDatagram(1)
+            return this._.compose(...chains.reverse())(originTrigger);
         }
-        // this.reportStrategy.report([ reqData ]);
-        this.mq.push(reqData);
     }
+
     onExit() {
         // 注销事件监听
         this.evtSubs.unsubscribe();
     }
-    onTrigger(data: [ string , EventTarget ]) {
 
-        const [ eventType, target ] = data;
+    /**
+     * 重写数据上报触发入口
+     */
+    get onTrigger() {
+        return (reportOptList: any[]) => {
 
-        // 格式化埋点信息
-        let point = this.createPoint(target);
-        // 上一次行为事件唯一标识
-        // 首次打开窗口加载页面的时候 get('customData') 为空字符串，需要错误处理
-        const lastCustomData = this._.windowData.get('lastCustomData');
-        const preFuncId = lastCustomData && lastCustomData.funcId || '-';
+            // 参数不合法
+            if (reportOptList.length < 2 || typeof reportOptList[0] != 'string') {
+                console.warn('Warning in reportTrigger: illegal parames', reportOptList[0]);
+                return void 0;
+            }
 
-        // 埋点相关信息
-        let extendsData = {
+            const [ directive, ...rest ] = reportOptList;
+            // 根据指令，抽取对应上报配置
+            const sendConfig = this.reportConfigs[directive.toLowerCase()];
+
+            // 找不到对应的上报配置
+            if (!sendConfig) {
+                console.warn('Warning in reportTrigger: illegal directive', directive);
+                return void 0;
+            }
+
+            const { params, rebuildWithMiddlewares } = sendConfig;
+            // 若存在数据上报重构函数，使用重构的上报函数，否则直接调用 this._onTrigger
+            return rebuildWithMiddlewares ?
+                rebuildWithMiddlewares(rest) :
+                this._onTrigger(rest[0]);
+        }
+    }
+    // 数据上报触发入口
+    _onTrigger(data: Obj) {
+
+        let extendsData: Obj = {
             pageId: location.pathname,
             pageUrl: location.href,
-            funcId: point.pid,
-            preFuncId,
-            eventId: eventType,
-            eventTime: Date.now()
+            eventTime: Date.now(),
+            ...data
         };
         
         // 单条上报数据
         let reqData: Msg = {
-            type: 2,
-            funcId: extendsData.funcId,
-            pageId: extendsData.pageId,
+            type: extendsData.type,
+            funcId: extendsData.funcId || '-',
+            pageId: extendsData.pageId || '-',
             sysId: this.conf.get('sysId') as string,
-            msg: this.formatDatagram(2, extendsData)
+            msg: this.formatDatagram(extendsData.type, extendsData)
         };
 
-        // 缓存进 window.name ，在下一次上报时使用
-        this._.windowData.set('lastCustomData', reqData);
-
-        // 根据当前事件消费者消费数据
-        // this.reportStrategy.report([ reqData ]);
+        // 推送至消息队列
         this.mq.push(reqData);
+
+        return reqData;
     }
 
     formatDatagram(type: 1 | 2, extendsData: Obj = {}): string {
@@ -168,7 +200,7 @@ export class Report implements ModeLifeCycle {
             const val = this.conf.get(key) ||
                         extendsData[key] ||
                         '$' + '{' + key + '}';
-            const str = `${key}=${val}`
+            const str = `${key}=${val}`;
             return temp += '|' + str;
         }, `type=${type}`);
     }

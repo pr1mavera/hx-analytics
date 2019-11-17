@@ -4,14 +4,6 @@ declare var ha: any;
 
 type Obj = { [ x: string ]: any };
 type Fn = (...args: any[]) => any;
-// type Cast<X, Y> = X extends Y ? X : Y;
-type Length<T extends any[]> = T['length'];
-// type Drop<N extends number, T extends any[], I extends any[] = []> = {
-//     0: Drop<N, Tail<T>, Prepend<any, I>>
-//     1: T
-//   }[Length<I> extends N ? 1 : 0];
-// type Currying<F extends ((...arg: any) => R), R> = <T extends any[]>(...args: T) => ;
-// type Curry<P extends any[], R> = (fn: ((...args) => R), arity?: number) => <T extends any[]>(...args: T) => ;
 
 // 工具类
 interface Utils {
@@ -21,27 +13,9 @@ interface Utils {
     [x: string]: any;
 
     /**
-     * map 原生对象方法柯里化
-     * @param {Function} mapper 映射过程
-     * @param {Array} obj 原生对象
+     * compose 原生对象方法柯里化
      */
-    map: (...arg: any[]) => any;
-
-    /**
-     * 原生对象方法柯里化，将原生对象后置传递
-     * @param {String} methodName 方法名
-     * @param {Number} argCount 柯里化函数传递的参数个数，默认为2
-     */
-    // unboundMethod: <T>(methodName: string, argCount?: number) => Curry<T>;
-    unboundMethod: (...arg: any[]) => any;
-
-    /**
-     * 柯里化
-     * @param {Function} fn 待柯里化的函数
-     * @param {Number} arity 柯里化函数传递的参数个数，默认为形参个数
-     */
-    // curry: Curry;
-    curry: (...arg: any[]) => any;
+    compose: (...fn: Function[]) => Function;
 
     /**
      * 本地缓存封装
@@ -56,6 +30,7 @@ interface Utils {
         get(key?: string): any;
         set(key: string, val: any): void;
         remove(key: string): void;
+        clear(): void;
     }
 
     /**
@@ -173,13 +148,6 @@ interface Utils {
      */
     deviceInfo: () => { name: string, version: number, browser: string, connType: string };
 
-    // /**
-    //  * 装饰器 | 混合属性
-    //  * @param {Array} ...list 待混合属性的数组
-    //  */
-    // mixins: (...list: Obj[]) => (...x: any[]) => void;
-
-    // reloadConstructor: <T extends { new(...args:any[]): {} }>(constructor: T) => 
 }
 interface CustomStorage {
     get: (key?: string) => any;
@@ -267,9 +235,10 @@ interface DomMasker {
 }
 
 interface AppConfig extends Obj {
-    set(data: Obj): void;
-    get(key: string): any;
-    getSelf(): Obj;
+    get(key?: string): any;
+    set(key: string, data: Obj): void;
+    merge(data: Obj): void;
+    // getSelf(): Obj;
 }
 
 type UserInfo = {

@@ -2955,18 +2955,18 @@ var ha = (function () {
 	    // 应用初始化入口
 	    HXAnalytics.prototype.init = function (user) {
 	        return __awaiter$1(this, void 0, void 0, function () {
-	            var user_temp, _a, err, res, batchId, _b, name, version, browser, connType, newUser, config;
+	            var user_temp, _a, err, res, newUser, config;
 	            var _this = this;
-	            return __generator$1(this, function (_c) {
-	                switch (_c.label) {
+	            return __generator$1(this, function (_b) {
+	                switch (_b.label) {
 	                    case 0:
 	                        user_temp = this._.windowData.get('user');
 	                        if (!(!user_temp ||
 	                            user_temp.appId != user.appId ||
 	                            user_temp.sysId != user.sysId)) return [3 /*break*/, 2];
-	                        return [4 /*yield*/, this._.errorCaptured(this.service.appLoginAPI, null, user)];
+	                        return [4 /*yield*/, this._.errorCaptured(this.service.appLoginAPI, function (data) { return (__assign({ sysConfig: data.sysConfig }, data.sysInfo)); }, user)];
 	                    case 1:
-	                        _a = _c.sent(), err = _a[0], res = _a[1];
+	                        _a = _b.sent(), err = _a[0], res = _a[1];
 	                        // 未通过：警告
 	                        if (err) {
 	                            // this._.inIframe() && this.message.error('jssdk 初始化失败', 5000);
@@ -2974,29 +2974,20 @@ var ha = (function () {
 	                            throw Error("jssdk login error: " + JSON.stringify(err));
 	                        }
 	                        user_temp = res;
-	                        _c.label = 2;
+	                        _b.label = 2;
 	                    case 2:
-	                        batchId = this._.windowData.get('batchId');
-	                        if (!batchId) {
-	                            batchId = this._.createVisitId(user_temp.sysInfo.appId);
-	                            this._.windowData.set('batchId', batchId);
-	                        }
-	                        _b = this._.deviceInfo(), name = _b.name, version = _b.version, browser = _b.browser, connType = _b.connType;
-	                        newUser = __assign(__assign({}, user_temp.sysInfo), { openId: user.openId, batchId: batchId, 
-	                            // 网络层系统配置
-	                            sysConfig: user_temp.sysConfig, 
-	                            // 设备信息
-	                            clientType: browser, sysVersion: name + " " + version, userNetWork: connType });
-	                        this.conf.set(newUser);
+	                        newUser = __assign(__assign({}, user_temp), { openId: user.openId, sysConfig: user_temp.sysConfig });
+	                        this.conf.merge(newUser);
 	                        this._.windowData.set('user', newUser);
 	                        // this.service.setHeader();
+	                        // 初始化当前模式
 	                        if (this._.inIframe()) {
 	                            /* **************** 配置模式 **************** */
 	                            // 切换模式
 	                            this.mode = 'browse';
 	                            config = {
 	                                tag: 'appConfig',
-	                                config: this.conf.getSelf()
+	                                config: this.conf.get()
 	                            };
 	                            window.parent && window.parent.postMessage(JSON.stringify(config), '*');
 	                            // 绑定模式切换事件
@@ -3011,6 +3002,8 @@ var ha = (function () {
 	                            /* **************** 埋点上报模式 **************** */
 	                            this.mode = 'report';
 	                        }
+	                        // 添加访问记录
+	                        this._mode.onTrigger(['init', newUser.appId, newUser.sysId, newUser.openId]);
 	                        return [2 /*return*/];
 	                }
 	            });
@@ -4602,8 +4595,501 @@ var ha = (function () {
 	    return Browse;
 	}());
 
+	var loggerMiddleware = function (ctx) { return function (next) { return function (opt) {
+	    console.log('-----------------------------');
+	    console.log('loggerMiddleware ', ctx.mq.getQueue());
+	    var res = next(opt);
+	    console.log('loggerMiddleware ', ctx.mq.getQueue());
+	    console.log('-----------------------------');
+	    return res;
+	}; }; };
+
+	var initMiddleware = function (ctx) { return function (next) { return function (opt) {
+	    // console.log('initMiddleware');
+	    var conf = ctx.conf.get();
+	    // 初始化访问流水号
+	    var batchId = ctx._.windowData.get('batchId');
+	    if (!batchId) {
+	        batchId = ctx._.createVisitId(conf.appId);
+	        ctx._.windowData.set('batchId', batchId);
+	    }
+	    // 初始化设备信息
+	    var _a = ctx._.deviceInfo(), name = _a.name, version = _a.version, browser = _a.browser, connType = _a.connType;
+	    // 保存签名，登录等信息至容器
+	    var newUser = __assign(__assign({}, conf), { batchId: batchId, 
+	        // 设备信息
+	        clientType: browser, sysVersion: name + " " + version, userNetWork: connType });
+	    ctx.conf.merge(newUser);
+	    ctx._.windowData.set('user', newUser);
+	    var initData = { type: 1 };
+	    // 推送至消息队列
+	    var res = next(initData);
+	    console.log('initMiddleware');
+	    return res;
+	}; }; };
+
+	var clickMiddleware = function (ctx) { return function (next) { return function (opt) {
+	    // console.log('clickMiddleware');
+	    var funcId = opt[0];
+	    var reqData = next({ type: 2, funcId: funcId });
+	    console.log('clickMiddleware');
+	    return reqData;
+	}; }; };
+
+	var preFuncIdMiddleware = function (ctx) { return function (next) { return function (opt) {
+	    // 上一次行为事件唯一标识
+	    // 首次打开窗口加载页面的时候上一次行为数据为空字符串，即第一次行为数据没有 preFuncId ，默认为 '-'
+	    var lastCustomData = ctx._.windowData.get('lastCustomData');
+	    var preFuncId = lastCustomData && lastCustomData.funcId || '-';
+	    var reqData = next(__assign({ preFuncId: preFuncId }, opt));
+	    // 缓存进 window.name ，在下一次上报时使用
+	    ctx._.windowData.set('lastCustomData', reqData);
+	    console.log('preFuncIdMiddleware');
+	    return reqData;
+	}; }; };
+
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 	var EventListener = {
+	    'report-click': [
+	        { capture: false },
+	        function (config) {
+	            var _this = this;
+	            return this.events.click(config).subscribe(function (e) {
+	                // 包装事件数据，触发事件消费 onTrigger
+	                // this.onTrigger([ 'click', e.target ]);
+	                var point = _this.createPoint(e.target);
+	                _this.onTrigger(['click', point.pid]);
+	            });
+	        }
+	    ],
+	    'report-change-strategy': [
+	        {},
+	        function () {
+	            var _this = this;
+	            return this.events.netStatusChange().subscribe(function (type) {
+	                console.log('Change report strategy by network fluctuation, current strategy: ', type);
+	                if (type === 'online') {
+	                    // 联网
+	                    // 切换当前行为数据消费策略
+	                    _this.reportStrategy.controller = 'server';
+	                    // 上报上次访问未上报的行为数据
+	                    _this.reportStrategy.resend();
+	                }
+	                else if (type === 'offline') {
+	                    // 断网
+	                    // 切换当前行为数据消费策略
+	                    _this.reportStrategy.controller = 'storage';
+	                }
+	            });
+	        }
+	    ],
+	};
+	function mixins() {
+	    var list = [];
+	    for (var _i = 0; _i < arguments.length; _i++) {
+	        list[_i] = arguments[_i];
+	    }
+	    return function (constructor) {
+	        Object.assign.apply(Object, __spreadArrays([constructor.prototype], list));
+	    };
+	}
+	var Report = /** @class */ (function () {
+	    function Report(createPoint, eventSubscriber) {
+	        // 模式类型
+	        this.modeType = 'report';
+	        // 是否进入过该模式
+	        this._INITED = false;
+	        this.reportConfigs = {
+	            init: {
+	                params: ['appId', 'sysId', 'openId'],
+	                middlewares: [
+	                    loggerMiddleware,
+	                    initMiddleware
+	                ]
+	            },
+	            click: {
+	                params: ['funcId', 'preFuncId'],
+	                middlewares: [
+	                    loggerMiddleware,
+	                    clickMiddleware,
+	                    preFuncIdMiddleware
+	                ]
+	            }
+	        };
+	        // this.events = events;
+	        this.evtSubs = eventSubscriber.init(this);
+	        // 初始化单个埋点构造器
+	        this.createPoint = createPoint;
+	    }
+	    Report.prototype.onEnter = function () {
+	        var _this = this;
+	        // 注册事件监听
+	        console.log(this);
+	        // 绑定监控事件
+	        this.evtSubs.subscribe();
+	        // 在第一次进入的时候推送系统加载事件
+	        if (!this._INITED) {
+	            this._INITED = true;
+	            // 绑定消息队列消费者
+	            this.mq.bindCustomer({
+	                // 模拟消费者，提供 notify 接口
+	                // 这里由于 this.reportStrategy.report 是动态获取的，因此不可用使用 bind 将 report 直接传递出去
+	                notify: function () {
+	                    var rest = [];
+	                    for (var _i = 0; _i < arguments.length; _i++) {
+	                        rest[_i] = arguments[_i];
+	                    }
+	                    return _this.reportStrategy.report.apply(_this.reportStrategy, rest);
+	                }
+	            });
+	            // 根据事件上报配置，在这旮沓挨个注册数据上报中间件
+	            Object.keys(this.reportConfigs).forEach(function (key) {
+	                var config = _this.reportConfigs[key];
+	                config.middlewares && (config.rebuildWithMiddlewares = _this.applyMiddlewares(config.middlewares)(_this));
+	            });
+	        }
+	    };
+	    Report.prototype.applyMiddlewares = function (middlewares) {
+	        var _this = this;
+	        return function (ctx) {
+	            var _a;
+	            var originTrigger = ctx._onTrigger.bind(ctx);
+	            // chains: ((next: Function) => (opt: any) => Obj)[]
+	            var chains = middlewares.map(function (middleware) { return middleware(ctx); });
+	            return (_a = _this._).compose.apply(_a, chains.reverse())(originTrigger);
+	        };
+	    };
+	    Report.prototype.onExit = function () {
+	        // 注销事件监听
+	        this.evtSubs.unsubscribe();
+	    };
+	    Object.defineProperty(Report.prototype, "onTrigger", {
+	        /**
+	         * 重写数据上报触发入口
+	         */
+	        get: function () {
+	            var _this = this;
+	            return function (reportOptList) {
+	                // 参数不合法
+	                if (reportOptList.length < 2 || typeof reportOptList[0] != 'string') {
+	                    console.warn('Warning in reportTrigger: illegal parames', reportOptList[0]);
+	                    return void 0;
+	                }
+	                var directive = reportOptList[0], rest = reportOptList.slice(1);
+	                // 根据指令，抽取对应上报配置
+	                var sendConfig = _this.reportConfigs[directive.toLowerCase()];
+	                // 找不到对应的上报配置
+	                if (!sendConfig) {
+	                    console.warn('Warning in reportTrigger: illegal directive', directive);
+	                    return void 0;
+	                }
+	                var params = sendConfig.params, rebuildWithMiddlewares = sendConfig.rebuildWithMiddlewares;
+	                // 若存在数据上报重构函数，使用重构的上报函数，否则直接调用 this._onTrigger
+	                return rebuildWithMiddlewares ?
+	                    rebuildWithMiddlewares(rest) :
+	                    _this._onTrigger(rest[0]);
+	            };
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    // 数据上报触发入口
+	    Report.prototype._onTrigger = function (data) {
+	        var extendsData = __assign({ pageId: location.pathname, pageUrl: location.href, eventTime: Date.now() }, data);
+	        // 单条上报数据
+	        var reqData = {
+	            type: extendsData.type,
+	            funcId: extendsData.funcId || '-',
+	            pageId: extendsData.pageId || '-',
+	            sysId: this.conf.get('sysId'),
+	            msg: this.formatDatagram(extendsData.type, extendsData)
+	        };
+	        // 推送至消息队列
+	        this.mq.push(reqData);
+	        return reqData;
+	    };
+	    Report.prototype.formatDatagram = function (type, extendsData) {
+	        var _this = this;
+	        if (extendsData === void 0) { extendsData = {}; }
+	        // 根据事件类型获取对应字段模板
+	        // 对模板中的内容进行映射
+	        return this.conf.get("reportType" + type).reduce(function (temp, key) {
+	            // 映射策略：全局系统配置 -> 传入的额外配置（一般包含当前触发的埋点信息） -> 占位
+	            var val = _this.conf.get(key) ||
+	                extendsData[key] ||
+	                '$' + '{' + key + '}';
+	            var str = key + "=" + val;
+	            return temp += '|' + str;
+	        }, "type=" + type);
+	    };
+	    __decorate([
+	        inject(TYPES.AppEvent),
+	        __metadata("design:type", Object)
+	    ], Report.prototype, "events", void 0);
+	    __decorate([
+	        inject(TYPES.Utils),
+	        __metadata("design:type", Function)
+	    ], Report.prototype, "_", void 0);
+	    __decorate([
+	        inject(TYPES.Conf),
+	        __metadata("design:type", Object)
+	    ], Report.prototype, "conf", void 0);
+	    __decorate([
+	        inject(TYPES.ReportStrategy),
+	        __metadata("design:type", Object)
+	    ], Report.prototype, "reportStrategy", void 0);
+	    __decorate([
+	        inject(TYPES.MsgsQueue),
+	        __metadata("design:type", Object)
+	    ], Report.prototype, "mq", void 0);
+	    Report = __decorate([
+	        mixins(EventListener),
+	        injectable(),
+	        __param(0, inject(TYPES.Point)),
+	        __param(1, inject(TYPES.EventSubscriber)),
+	        __metadata("design:paramtypes", [Function, Object])
+	    ], Report);
+	    return Report;
+	}());
+
+	var MsgsQueue = /** @class */ (function () {
+	    function MsgsQueue(_, events) {
+	        this.queue = [];
+	        this.timer = null;
+	        this.delay = 2000;
+	        this.customer = null;
+	        this._ = _;
+	        this.events = events;
+	        this.onload();
+	        window.addEventListener('pagehide', this.onUnload.bind(this));
+	    }
+	    MsgsQueue.prototype.onload = function () {
+	        /**
+	         * 载入时，比较缓存数据，重载消息队列
+	         */
+	        var _this = this;
+	        this.timer = null;
+	        // 合并 window.name & localStorage
+	        var cacheSet = Object.assign({}, this._.LocStorage.get(), this._.windowData.get());
+	        // 过滤合法消息队列缓存
+	        var filterLegalCacheKey = function (key) { return /report_temp_(\d{6}$)/g.test(key); };
+	        // 过滤出所有合法消息队列缓存索引
+	        var msgsKeys = Object.keys(cacheSet).filter(filterLegalCacheKey);
+	        // 映射成消息，需要判断是否是 json
+	        var msgs = msgsKeys.reduce(function (temp, key) {
+	            var listItem = _this._.isJson(cacheSet[key]) ? JSON.parse(cacheSet[key]) : cacheSet[key];
+	            return __spreadArrays(temp, listItem);
+	        }, []);
+	        // 重载消息队列
+	        this.push(msgs);
+	        // 清理缓存
+	        msgsKeys.forEach(function (key) {
+	            _this._.LocStorage.remove(key);
+	            _this._.windowData.remove(key);
+	        });
+	    };
+	    MsgsQueue.prototype.onUnload = function () {
+	        /**
+	         * 卸载页面时
+	         * 尝试消费消息队列中的数据
+	         * 若消费失败，将消息缓存进 window.name & localStorage，使用相同的 chunk 关联
+	         * 在下次重载页面时，比较缓存的 chunk ，重新发送
+	         */
+	        // 终止进行中的消费任务
+	        this.timer && (clearTimeout(this.timer), this.timer = null);
+	        // 尝试通过 sendBeacon API 将消息队列中的所有数据同步消费
+	        var msgs = this.pull();
+	        // 若满足一下情况，则将数据缓存
+	        if (msgs.length && /*                                       当前队列存在数据，且 */
+	            !this._.isSupportBeacon() || /*                         设备本身不支持 sendBeacon API，或 */
+	            !this.customer || /*                                    当前未绑定消费者，或 */
+	            !this.customer.notify(msgs, { useBeacon: true }) /*     同步消费失败 */) {
+	            var cache_chunk = this._.createCacheKey();
+	            this._.LocStorage.set(cache_chunk, msgs);
+	            this._.windowData.set(cache_chunk, msgs);
+	        }
+	    };
+	    MsgsQueue.prototype.bindCustomer = function (cstm) {
+	        // 暂时支持单一消费者
+	        this.customer = cstm;
+	    };
+	    // 获取消息队列的一份拷贝
+	    MsgsQueue.prototype.getQueue = function () {
+	        return this._.deepCopy(this.queue);
+	    };
+	    // 推送数据
+	    MsgsQueue.prototype.push = function (data) {
+	        var _this = this;
+	        this.queue = this.queue.concat(data);
+	        // 节流
+	        // 若绑定了消费者，则尝试通知消费者消费数据，且当前不存在上报任务
+	        if (this.customer && !this.timer) {
+	            // 通知消费者消费数据
+	            this.timer = setTimeout(function () {
+	                var msgs = _this.pull();
+	                msgs.length && _this.customer.notify(msgs);
+	                _this.timer = null;
+	            }, this.delay);
+	        }
+	    };
+	    // 拉取数据唯一入口
+	    MsgsQueue.prototype.pull = function () {
+	        var msgs = this.getQueue();
+	        this.queue = [];
+	        return msgs;
+	    };
+	    MsgsQueue = __decorate([
+	        injectable(),
+	        __param(0, inject(TYPES.Utils)),
+	        __param(1, inject(TYPES.AppEvent)),
+	        __metadata("design:paramtypes", [Function, Object])
+	    ], MsgsQueue);
+	    return MsgsQueue;
+	}());
+
+	var ReportStrategy = /** @class */ (function () {
+	    function ReportStrategy(_, service) {
+	        // 策略控制器（默认上报至RPC）
+	        this.controller = 'server';
+	        this._ = _;
+	        this.service = service;
+	        this.storageKey = this._.createCacheKey();
+	    }
+	    Object.defineProperty(ReportStrategy.prototype, "report", {
+	        get: function () {
+	            var _this = this;
+	            // 根据策略（本地缓存 / 远程接口）
+	            var strategy = "report2" + this._.firstUpperCase(this.controller);
+	            // 返回对应的回调
+	            return function (data, opt) { return _this[strategy](data, opt); };
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    ReportStrategy.prototype.safeReportBeaconAPI = function (data) {
+	        console.log('我是 Beacon API');
+	        try {
+	            var res = this.service.reportBeaconAPI(data);
+	            return [res ? null : 'Something wrong in reportBeaconAPI', res];
+	        }
+	        catch (error) {
+	            return [error, false];
+	        }
+	    };
+	    ReportStrategy.prototype.safeReportAPI = function (data) {
+	        return __awaiter$1(this, void 0, void 0, function () {
+	            return __generator$1(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0:
+	                        console.log('我是 fetch API');
+	                        return [4 /*yield*/, this._.errorCaptured(this.service.reportAPI, null, data)];
+	                    case 1: return [2 /*return*/, _a.sent()];
+	                }
+	            });
+	        });
+	    };
+	    // // 接收消息队列的消费通知
+	    // notify(data: Msg[]) {
+	    //     return this.report(data);
+	    // }
+	    ReportStrategy.prototype.report2Storage = function (data) {
+	        var cache = this._.LocStorage.get(this.storageKey);
+	        // 合并之前的缓存
+	        cache = cache ? cache.concat(data) : data;
+	        console.log('report to Storage: ', cache);
+	        try {
+	            // 存入本地
+	            this._.LocStorage.set(this.storageKey, cache);
+	            return true;
+	        }
+	        catch (error) {
+	            var eStr = JSON.stringify(error);
+	            error = null;
+	            console.warn("Warn in report2Storage: " + eStr);
+	            return false;
+	        }
+	    };
+	    ReportStrategy.prototype.report2Server = function (data, opt) {
+	        var _this = this;
+	        if (opt === void 0) { opt = {}; }
+	        console.log('report to Server: ', data);
+	        // 数据包装
+	        var formData = new FormData();
+	        formData.append('msgs', JSON.stringify(data));
+	        // 选项
+	        var ignoreErr = opt.ignoreErr, useBeacon = opt.useBeacon;
+	        // 处理发送结果
+	        var handleRes = function (res) {
+	            var err = res[0];
+	            if (err) {
+	                console.warn('Warn in report2Server: ', err);
+	                // 是否将未成功上报的数据缓存进本地，若指定为 'ignoreErr' 则不缓存
+	                if (!ignoreErr) {
+	                    console.warn('this report data will be cached into LocalStorage, and will be resend on next time you visit this website ! ');
+	                    return _this.report2Storage(data);
+	                }
+	                // 传递消费结果
+	                return false;
+	            }
+	            else {
+	                // 传递消费结果
+	                return true;
+	            }
+	        };
+	        // 日志上报
+	        if (useBeacon) {
+	            // 使用 sendBeacon API
+	            var res = this.safeReportBeaconAPI(formData);
+	            return handleRes(res);
+	        }
+	        else {
+	            // 使用 fetch API
+	            return this.safeReportAPI(formData).then(function (res) { return handleRes(res); });
+	        }
+	    };
+	    ReportStrategy.prototype.resend = function () {
+	        return __awaiter$1(this, void 0, void 0, function () {
+	            var cache, _a;
+	            return __generator$1(this, function (_b) {
+	                switch (_b.label) {
+	                    case 0:
+	                        cache = this._.LocStorage.get(this.storageKey);
+	                        // alert(`resend: 上从的缓存数据：${JSON.stringify(cache, null, 2)}`);
+	                        // 若存在缓存
+	                        _a = cache;
+	                        if (!_a) 
+	                        // alert(`resend: 上从的缓存数据：${JSON.stringify(cache, null, 2)}`);
+	                        // 若存在缓存
+	                        return [3 /*break*/, 2];
+	                        // 则尝试重新发送
+	                        return [4 /*yield*/, this.report(cache, { ignoreErr: true })];
+	                    case 1:
+	                        _a = (
+	                        // 则尝试重新发送
+	                        _b.sent());
+	                        _b.label = 2;
+	                    case 2:
+	                        // alert(`resend: 上从的缓存数据：${JSON.stringify(cache, null, 2)}`);
+	                        // 若存在缓存
+	                        _a &&
+	                            // 若成功将数据重新发送，则将缓存数据清空
+	                            this._.LocStorage.remove(this.storageKey);
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    ReportStrategy = __decorate([
+	        injectable(),
+	        __param(0, inject(TYPES.Utils)),
+	        __param(1, inject(TYPES.Service)),
+	        __metadata("design:paramtypes", [Function, Object])
+	    ], ReportStrategy);
+	    return ReportStrategy;
+	}());
+
+	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
+	var EventListener$1 = {
 	    'setting-click': [
 	        { capture: true },
 	        function (config) {
@@ -4654,7 +5140,7 @@ var ha = (function () {
 	        }
 	    ],
 	};
-	function mixins() {
+	function mixins$1() {
 	    var list = [];
 	    for (var _i = 0; _i < arguments.length; _i++) {
 	        list[_i] = arguments[_i];
@@ -4709,7 +5195,7 @@ var ha = (function () {
 	        this.domMasker.clear();
 	    };
 	    Setting.prototype.onTrigger = function (data) {
-	        var conf = this.conf.getSelf();
+	        var conf = this.conf.get();
 	        // 包装额外数据
 	        Object.assign(data, {
 	            ext: {
@@ -4796,7 +5282,7 @@ var ha = (function () {
 	        __metadata("design:type", Object)
 	    ], Setting.prototype, "conf", void 0);
 	    Setting = __decorate([
-	        mixins(EventListener),
+	        mixins$1(EventListener$1),
 	        injectable(),
 	        __param(0, inject(TYPES.Point)),
 	        __param(1, inject(TYPES.EventSubscriber)),
@@ -4805,176 +5291,91 @@ var ha = (function () {
 	    return Setting;
 	}());
 
-	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
-	var EventListener$1 = {
-	    'report-click': [
-	        { capture: false },
-	        function (config) {
-	            var _this = this;
-	            return this.events.click(config).subscribe(function (e) {
-	                // 包装事件数据，触发事件消费 onTrigger
-	                _this.onTrigger(['click', e.target]);
-	            });
-	        }
-	    ],
-	    'report-change-strategy': [
-	        {},
-	        function () {
-	            var _this = this;
-	            return this.events.netStatusChange().subscribe(function (type) {
-	                console.log('Change report strategy by network fluctuation, current strategy: ', type);
-	                if (type === 'online') {
-	                    // 联网
-	                    // 切换当前行为数据消费策略
-	                    _this.reportStrategy.controller = 'server';
-	                    // 上报上次访问未上报的行为数据
-	                    _this.reportStrategy.resend();
-	                }
-	                else if (type === 'offline') {
-	                    // 断网
-	                    // 切换当前行为数据消费策略
-	                    _this.reportStrategy.controller = 'storage';
-	                }
-	            });
-	        }
-	    ],
-	};
-	function mixins$1() {
-	    var list = [];
-	    for (var _i = 0; _i < arguments.length; _i++) {
-	        list[_i] = arguments[_i];
-	    }
-	    return function (constructor) {
-	        Object.assign.apply(Object, __spreadArrays([constructor.prototype], list));
-	    };
-	}
-	var Report = /** @class */ (function () {
-	    function Report(createPoint, eventSubscriber, reportStrategy, mq) {
-	        var _this = this;
-	        // 模式类型
-	        this.modeType = 'report';
-	        // 是否进入过该模式
+	var DomMasker = /** @class */ (function () {
+	    function DomMasker(createPoint, customCanvas) {
 	        this._INITED = false;
-	        // this.events = events;
-	        this.evtSubs = eventSubscriber.init(this);
+	        // _active: boolean;
+	        // 预设埋点
+	        this.points = [];
+	        // points: [{ pid:'span.corner.top!document.querySelector()!sysId!pageId' }]
 	        // 初始化单个埋点构造器
 	        this.createPoint = createPoint;
-	        // 上报策略控制器
-	        this.reportStrategy = reportStrategy;
-	        // 消息队列
-	        this.mq = mq;
-	        this.mq.bindCustomer({
-	            // 模拟消费者，提供 notify 接口
-	            // 这里由于 this.reportStrategy.report 是动态获取的，因此不可用使用 bind 将 report 直接传递出去
-	            notify: function () {
-	                var rest = [];
-	                for (var _i = 0; _i < arguments.length; _i++) {
-	                    rest[_i] = arguments[_i];
-	                }
-	                return _this.reportStrategy.report.apply(_this.reportStrategy, rest);
-	            }
-	        });
+	        this.customCanvas = customCanvas;
 	    }
-	    Report.prototype.onEnter = function () {
-	        // 注册事件监听
-	        console.log(this);
-	        // 绑定监控事件
-	        this.evtSubs.subscribe();
-	        // 在第一次进入的时候推送系统加载事件
-	        if (!this._INITED) {
-	            this._INITED = true;
-	            // 检查最后一次行为数据是否已消费完全，若未消费完全则将其合并至本地缓存
-	            // const customData = this._.windowData.get('customData');
-	            // customData && !customData._consumed && this.reportStrategy.report2Storage([ customData ]);
-	            // 上报访问记录
-	            this.onSystemLoaded();
-	            // 上报上次访问未上报的行为数据
-	            // this.reportStrategy.resend();
+	    DomMasker_1 = DomMasker;
+	    DomMasker.prototype.init = function () {
+	        this._INITED = true;
+	        // 初始化 主绘制canvas / 缓存canvas
+	        this.canvas = this.customCanvas(DomMasker_1.w, DomMasker_1.h);
+	        this.tempCanvas = this.customCanvas(DomMasker_1.w, DomMasker_1.h, 'rgba(200, 100, 50, 0.6)');
+	        // 插入页面根节点
+	        document.body.appendChild(this.canvas);
+	    };
+	    // 将预设埋点信息标准化，并将信息对应的绘制到 缓存canvas 上
+	    // 注意：此API不会造成页面 主绘制canvas 的绘制
+	    // 幂等操作
+	    DomMasker.prototype.preset = function (points) {
+	        var _this = this;
+	        // 清空缓存canvas
+	        this.tempCanvas.getContext('2d').clearRect(0, 0, DomMasker_1.w, DomMasker_1.h);
+	        // 绑定预设埋点
+	        this.points = points.map(function (p) { return _this.createPoint(p); });
+	        var ctx = this.tempCanvas.getContext('2d');
+	        // 绘制预设埋点蒙版，保存在内存中
+	        this.points.forEach(function (point) {
+	            _this.render(ctx, point);
+	        });
+	    };
+	    DomMasker.prototype.clear = function () {
+	        this.canvas.getContext('2d').clearRect(0, 0, DomMasker_1.w, DomMasker_1.h);
+	    };
+	    DomMasker.prototype.reset = function () {
+	        this.clear();
+	        if (this.points.length) {
+	            // 将缓存信息当做背景绘制到 主绘制canvas
+	            var ctx = this.canvas.getContext('2d');
+	            ctx.drawImage(this.tempCanvas, 0, 0);
 	        }
 	    };
-	    Report.prototype.onSystemLoaded = function () {
-	        var reqData = {
-	            type: 1,
-	            funcId: '',
-	            pageId: '',
-	            sysId: this.conf.get('sysId'),
-	            msg: this.formatDatagram(1)
-	        };
-	        // this.reportStrategy.report([ reqData ]);
-	        this.mq.push(reqData);
+	    DomMasker.prototype.render = function (ctx, point) {
+	        var tag = point.tag, _a = point.rect, x = _a[0], y = _a[1], width = _a[2], height = _a[3];
+	        ctx.fillRect(x, y, width, height);
+	        ctx.fillText(tag, x, y);
+	        // ctx.save();
+	        // ctx.strokeStyle = '#fff';
+	        // ctx.lineWidth = 1;
+	        // ctx.strokeText(tag, x, y);
+	        // ctx.restore();
 	    };
-	    Report.prototype.onExit = function () {
-	        // 注销事件监听
-	        this.evtSubs.unsubscribe();
-	    };
-	    Report.prototype.onTrigger = function (data) {
-	        var eventType = data[0], target = data[1];
-	        // 格式化埋点信息
-	        var point = this.createPoint(target);
-	        // 上一次行为事件唯一标识
-	        // 首次打开窗口加载页面的时候 get('customData') 为空字符串，需要错误处理
-	        var lastCustomData = this._.windowData.get('lastCustomData');
-	        var preFuncId = lastCustomData && lastCustomData.funcId || '-';
-	        // 埋点相关信息
-	        var extendsData = {
-	            pageId: location.pathname,
-	            pageUrl: location.href,
-	            funcId: point.pid,
-	            preFuncId: preFuncId,
-	            eventId: eventType,
-	            eventTime: Date.now()
-	        };
-	        // 单条上报数据
-	        var reqData = {
-	            type: 2,
-	            funcId: extendsData.funcId,
-	            pageId: extendsData.pageId,
-	            sysId: this.conf.get('sysId'),
-	            msg: this.formatDatagram(2, extendsData)
-	        };
-	        // 缓存进 window.name ，在下一次上报时使用
-	        this._.windowData.set('lastCustomData', reqData);
-	        // 根据当前事件消费者消费数据
-	        // this.reportStrategy.report([ reqData ]);
-	        this.mq.push(reqData);
-	    };
-	    Report.prototype.formatDatagram = function (type, extendsData) {
-	        var _this = this;
-	        if (extendsData === void 0) { extendsData = {}; }
-	        // 根据事件类型获取对应字段模板
-	        // 对模板中的内容进行映射
-	        return this.conf.get("reportType" + type).reduce(function (temp, key) {
-	            // 映射策略：全局系统配置 -> 传入的额外配置（一般包含当前触发的埋点信息） -> 占位
-	            var val = _this.conf.get(key) ||
-	                extendsData[key] ||
-	                '$' + '{' + key + '}';
-	            var str = key + "=" + val;
-	            return temp += '|' + str;
-	        }, "type=" + type);
-	    };
-	    __decorate([
-	        inject(TYPES.AppEvent),
-	        __metadata("design:type", Object)
-	    ], Report.prototype, "events", void 0);
-	    __decorate([
-	        inject(TYPES.Utils),
-	        __metadata("design:type", Function)
-	    ], Report.prototype, "_", void 0);
-	    __decorate([
-	        inject(TYPES.Conf),
-	        __metadata("design:type", Object)
-	    ], Report.prototype, "conf", void 0);
-	    Report = __decorate([
-	        mixins$1(EventListener$1),
+	    var DomMasker_1;
+	    // private static instance: DomMasker;
+	    DomMasker.w = window.innerWidth;
+	    DomMasker.h = window.innerHeight;
+	    DomMasker = DomMasker_1 = __decorate([
 	        injectable(),
 	        __param(0, inject(TYPES.Point)),
-	        __param(1, inject(TYPES.EventSubscriber)),
-	        __param(2, inject(TYPES.ReportStrategy)),
-	        __param(3, inject(TYPES.MsgsQueue)),
-	        __metadata("design:paramtypes", [Function, Object, Object, Object])
-	    ], Report);
-	    return Report;
+	        __param(1, inject(TYPES.CustomCanvas)),
+	        __metadata("design:paramtypes", [Function, Function])
+	    ], DomMasker);
+	    return DomMasker;
 	}());
+
+	var customCanvas = function (width, height, color) {
+	    if (color === void 0) { color = 'rgba(77, 131, 202, 0.5)'; }
+	    var canvas = document.createElement('canvas');
+	    canvas.width = width;
+	    canvas.height = height;
+	    canvas.style.position = 'fixed';
+	    canvas.style.top = '0';
+	    canvas.style.left = '0';
+	    canvas.style.zIndex = '9999';
+	    canvas.style.pointerEvents = 'none';
+	    var ctx = canvas.getContext('2d');
+	    ctx.fillStyle = color;
+	    ctx.font = '18px serif';
+	    ctx.textBaseline = 'ideographic';
+	    return canvas;
+	};
 
 	function getCoords(elem) {
 	    var box = elem.getBoundingClientRect();
@@ -5184,56 +5585,42 @@ var ha = (function () {
 	window.whatsElement = whatsElementPure;
 
 	var _ = function () { };
-	_.unboundMethod = function (methodName, argCount) {
-	    if (argCount === void 0) { argCount = 2; }
-	    return this.curry(function () {
+	_.compose = function () {
+	    var fns = [];
+	    for (var _i = 0; _i < arguments.length; _i++) {
+	        fns[_i] = arguments[_i];
+	    }
+	    return fns.reduce(function (f, g) { return function () {
 	        var args = [];
 	        for (var _i = 0; _i < arguments.length; _i++) {
 	            args[_i] = arguments[_i];
 	        }
-	        var obj = args.pop();
-	        return obj[methodName].apply(obj, args);
-	    }, argCount);
+	        return g(f.apply(void 0, args));
+	    }; });
 	};
-	_.curry = function (fn, arity) {
-	    if (arity === void 0) { arity = fn.length; }
-	    // 1. 构造一个这样的函数：
-	    //    即：接收前一部分参数，返回一个 接收后一部分参数 的函数，返回的那个函数需在内部判断是否执行原函数
-	    var nextCurried = function () {
-	        var prev = [];
-	        for (var _i = 0; _i < arguments.length; _i++) {
-	            prev[_i] = arguments[_i];
-	        }
-	        return function () {
-	            var next = [];
-	            for (var _i = 0; _i < arguments.length; _i++) {
-	                next[_i] = arguments[_i];
-	            }
-	            var args = __spreadArrays(prev, next);
-	            return args.length >= arity
-	                ? fn.apply(void 0, args) : nextCurried.apply(void 0, args);
-	        };
-	    };
-	    // 2. 将构造的这个函数执行并返回，初始入参为空
-	    return nextCurried();
-	};
-	_.map = _.unboundMethod('map', 2);
 	var _a = window, sessionStorage = _a.sessionStorage, localStorage = _a.localStorage;
-	var _b = _.map(function (storage) { return ({
+	var _b = [sessionStorage, localStorage].map(function (storage) { return ({
 	    get: function (key) {
 	        if (key === void 0) { key = ''; }
 	        return key ?
 	            JSON.parse(storage.getItem(key)) :
 	            storage;
 	    },
-	    set: function (key, val) { return storage.setItem(key, JSON.stringify(val)); },
-	    remove: function (key) { return storage.removeItem(key); },
-	    clear: function () { return storage.clear(); }
-	}); })([sessionStorage, localStorage]), SessStorage = _b[0], LocStorage = _b[1];
+	    set: function (key, val) {
+	        storage.setItem(key, JSON.stringify(val));
+	    },
+	    remove: function (key) {
+	        storage.removeItem(key);
+	    },
+	    clear: function () {
+	        storage.clear();
+	    }
+	}); }), SessStorage = _b[0], LocStorage = _b[1];
 	_.SessStorage = SessStorage;
 	_.LocStorage = LocStorage;
 	_.windowData = {
 	    get: function (key) {
+	        if (key === void 0) { key = ''; }
 	        // 格式化 window.name，保证 window.name 一定是JSON字符串
 	        !window.name && (window.name = JSON.stringify({}));
 	        // 获取安全的 window.name 数据
@@ -5257,6 +5644,9 @@ var ha = (function () {
 	        var wData = this.get() || {};
 	        wData.hasOwnProperty(key) && delete wData[key];
 	        window.name = JSON.stringify(wData);
+	    },
+	    clear: function () {
+	        window.name = JSON.stringify({});
 	    }
 	};
 	_.inIframe = function () { return window && window.self !== window.top; };
@@ -5416,19 +5806,9 @@ var ha = (function () {
 	        connType: connType
 	    };
 	};
-	_.reloadConstructor = function (constructor) {
-	    return /** @class */ (function (_super) {
-	        __extends(ReloadConstructor, _super);
-	        function ReloadConstructor() {
-	            return _super !== null && _super.apply(this, arguments) || this;
-	        }
-	        return ReloadConstructor;
-	    }(constructor));
-	};
 
 	var AppConfig = /** @class */ (function () {
 	    function AppConfig() {
-	        // private container: Map<string, any> = new Map();
 	        this.container = {
 	            /**
 	             * 行为数据上报特征值集合
@@ -5446,7 +5826,7 @@ var ha = (function () {
 	                'sysVersion',
 	                'ip',
 	                'userNetWork',
-	                'createTime'
+	                'createTime' /*         服务端事件时间 */
 	            ],
 	            reportType2: [
 	                'batchId',
@@ -5465,109 +5845,33 @@ var ha = (function () {
 	                'createTime',
 	                'pageDwellTime',
 	                'enterTime',
-	                'leaveTime'
+	                'leaveTime' /*          客户端页面离开时间 */
 	            ],
 	        };
+	        // getSelf() {
+	        //     return JSON.parse(JSON.stringify(this.container));
+	        // }
 	    }
-	    AppConfig.prototype.set = function (data) {
-	        this.container = __assign(__assign({}, this.container), data);
+	    AppConfig.prototype.set = function (key, data) {
+	        this.container[key] = data;
 	    };
 	    AppConfig.prototype.get = function (key) {
-	        return this.container[key];
+	        if (key === void 0) { key = ''; }
+	        return key ?
+	            this.container[key] :
+	            JSON.parse(JSON.stringify(this.container));
 	    };
-	    AppConfig.prototype.getSelf = function () {
-	        return JSON.parse(JSON.stringify(this.container));
+	    AppConfig.prototype.merge = function (data) {
+	        this.container = __assign(__assign({}, this.container), data);
 	    };
+	    __decorate([
+	        inject(TYPES.Utils),
+	        __metadata("design:type", Function)
+	    ], AppConfig.prototype, "_", void 0);
 	    AppConfig = __decorate([
 	        injectable()
 	    ], AppConfig);
 	    return AppConfig;
-	}());
-
-	var customCanvas = function (width, height, color) {
-	    if (color === void 0) { color = 'rgba(77, 131, 202, 0.5)'; }
-	    var canvas = document.createElement('canvas');
-	    canvas.width = width;
-	    canvas.height = height;
-	    canvas.style.position = 'fixed';
-	    canvas.style.top = '0';
-	    canvas.style.left = '0';
-	    canvas.style.zIndex = '9999';
-	    canvas.style.pointerEvents = 'none';
-	    var ctx = canvas.getContext('2d');
-	    ctx.fillStyle = color;
-	    ctx.font = '18px serif';
-	    ctx.textBaseline = 'ideographic';
-	    return canvas;
-	};
-
-	var DomMasker = /** @class */ (function () {
-	    function DomMasker(createPoint, customCanvas) {
-	        this._INITED = false;
-	        // _active: boolean;
-	        // 预设埋点
-	        this.points = [];
-	        // points: [{ pid:'span.corner.top!document.querySelector()!sysId!pageId' }]
-	        // 初始化单个埋点构造器
-	        this.createPoint = createPoint;
-	        this.customCanvas = customCanvas;
-	    }
-	    DomMasker_1 = DomMasker;
-	    DomMasker.prototype.init = function () {
-	        this._INITED = true;
-	        // 初始化 主绘制canvas / 缓存canvas
-	        this.canvas = this.customCanvas(DomMasker_1.w, DomMasker_1.h);
-	        this.tempCanvas = this.customCanvas(DomMasker_1.w, DomMasker_1.h, 'rgba(200, 100, 50, 0.6)');
-	        // 插入页面根节点
-	        document.body.appendChild(this.canvas);
-	    };
-	    // 将预设埋点信息标准化，并将信息对应的绘制到 缓存canvas 上
-	    // 注意：此API不会造成页面 主绘制canvas 的绘制
-	    // 幂等操作
-	    DomMasker.prototype.preset = function (points) {
-	        var _this = this;
-	        // 清空缓存canvas
-	        this.tempCanvas.getContext('2d').clearRect(0, 0, DomMasker_1.w, DomMasker_1.h);
-	        // 绑定预设埋点
-	        this.points = points.map(function (p) { return _this.createPoint(p); });
-	        var ctx = this.tempCanvas.getContext('2d');
-	        // 绘制预设埋点蒙版，保存在内存中
-	        this.points.forEach(function (point) {
-	            _this.render(ctx, point);
-	        });
-	    };
-	    DomMasker.prototype.clear = function () {
-	        this.canvas.getContext('2d').clearRect(0, 0, DomMasker_1.w, DomMasker_1.h);
-	    };
-	    DomMasker.prototype.reset = function () {
-	        this.clear();
-	        if (this.points.length) {
-	            // 将缓存信息当做背景绘制到 主绘制canvas
-	            var ctx = this.canvas.getContext('2d');
-	            ctx.drawImage(this.tempCanvas, 0, 0);
-	        }
-	    };
-	    DomMasker.prototype.render = function (ctx, point) {
-	        var tag = point.tag, _a = point.rect, x = _a[0], y = _a[1], width = _a[2], height = _a[3];
-	        ctx.fillRect(x, y, width, height);
-	        ctx.fillText(tag, x, y);
-	        // ctx.save();
-	        // ctx.strokeStyle = '#fff';
-	        // ctx.lineWidth = 1;
-	        // ctx.strokeText(tag, x, y);
-	        // ctx.restore();
-	    };
-	    var DomMasker_1;
-	    // private static instance: DomMasker;
-	    DomMasker.w = window.innerWidth;
-	    DomMasker.h = window.innerHeight;
-	    DomMasker = DomMasker_1 = __decorate([
-	        injectable(),
-	        __param(0, inject(TYPES.Point)),
-	        __param(1, inject(TYPES.CustomCanvas)),
-	        __metadata("design:paramtypes", [Function, Function])
-	    ], DomMasker);
-	    return DomMasker;
 	}());
 
 	var EventSubscriber = /** @class */ (function () {
@@ -5610,101 +5914,6 @@ var ha = (function () {
 	        injectable()
 	    ], EventSubscriber);
 	    return EventSubscriber;
-	}());
-
-	var MsgsQueue = /** @class */ (function () {
-	    function MsgsQueue(_, events) {
-	        this.queue = [];
-	        this.timer = null;
-	        this.delay = 2000;
-	        this.customer = null;
-	        this._ = _;
-	        this.events = events;
-	        this.onload();
-	        window.addEventListener('pagehide', this.onUnload.bind(this));
-	    }
-	    MsgsQueue.prototype.onload = function () {
-	        /**
-	         * 载入时，比较缓存数据，重载消息队列
-	         */
-	        var _this = this;
-	        this.timer = null;
-	        // 合并 window.name & localStorage
-	        var cacheSet = Object.assign({}, this._.LocStorage.get(), this._.windowData.get());
-	        // 过滤合法消息队列缓存
-	        var filterLegalCacheKey = function (key) { return /report_temp_(\d{6}$)/g.test(key); };
-	        // 过滤出所有合法消息队列缓存索引
-	        var msgsKeys = Object.keys(cacheSet).filter(filterLegalCacheKey);
-	        // 映射成消息，需要判断是否是 json
-	        var msgs = msgsKeys.reduce(function (temp, key) {
-	            var listItem = _this._.isJson(cacheSet[key]) ? JSON.parse(cacheSet[key]) : cacheSet[key];
-	            return __spreadArrays(temp, listItem);
-	        }, []);
-	        // 重载消息队列
-	        this.push(msgs);
-	        // 清理缓存
-	        msgsKeys.forEach(function (key) {
-	            _this._.LocStorage.remove(key);
-	            _this._.windowData.remove(key);
-	        });
-	    };
-	    MsgsQueue.prototype.onUnload = function () {
-	        /**
-	         * 卸载页面时
-	         * 尝试消费消息队列中的数据
-	         * 若消费失败，将消息缓存进 window.name & localStorage，使用相同的 chunk 关联
-	         * 在下次重载页面时，比较缓存的 chunk ，重新发送
-	         */
-	        // 终止进行中的消费任务
-	        this.timer && (clearTimeout(this.timer), this.timer = null);
-	        // 尝试通过 sendBeacon API 将消息队列中的所有数据同步消费
-	        var msgs = this.pull();
-	        // 若满足一下情况，则将数据缓存
-	        if (msgs.length && /*                                       当前队列存在数据，且 */
-	            !this._.isSupportBeacon() || /*                         设备本身不支持 sendBeacon API，或 */
-	            !this.customer || /*                                    当前未绑定消费者，或 */
-	            !this.customer.notify(msgs, { useBeacon: true }) /*     同步消费失败 */) {
-	            var cache_chunk = this._.createCacheKey();
-	            this._.LocStorage.set(cache_chunk, msgs);
-	            this._.windowData.set(cache_chunk, msgs);
-	        }
-	    };
-	    MsgsQueue.prototype.bindCustomer = function (cstm) {
-	        // 暂时支持单一消费者
-	        this.customer = cstm;
-	    };
-	    // 获取消息队列的一份拷贝
-	    MsgsQueue.prototype.getQueue = function () {
-	        return this._.deepCopy(this.queue);
-	    };
-	    // 推送数据
-	    MsgsQueue.prototype.push = function (data) {
-	        var _this = this;
-	        this.queue = this.queue.concat(data);
-	        // 节流
-	        // 若绑定了消费者，则尝试通知消费者消费数据，且当前不存在上报任务
-	        if (this.customer && !this.timer) {
-	            // 通知消费者消费数据
-	            this.timer = setTimeout(function () {
-	                var msgs = _this.pull();
-	                msgs.length && _this.customer.notify(msgs);
-	                _this.timer = null;
-	            }, this.delay);
-	        }
-	    };
-	    // 拉取数据唯一入口
-	    MsgsQueue.prototype.pull = function () {
-	        var msgs = this.getQueue();
-	        this.queue = [];
-	        return msgs;
-	    };
-	    MsgsQueue = __decorate([
-	        injectable(),
-	        __param(0, inject(TYPES.Utils)),
-	        __param(1, inject(TYPES.AppEvent)),
-	        __metadata("design:paramtypes", [Function, Object])
-	    ], MsgsQueue);
-	    return MsgsQueue;
 	}());
 
 	var Point = /** @class */ (function () {
@@ -5751,147 +5960,6 @@ var ha = (function () {
 	        __metadata("design:paramtypes", [Function, Object])
 	    ], Point);
 	    return Point;
-	}());
-
-	var ReportStrategy = /** @class */ (function () {
-	    function ReportStrategy(_, service) {
-	        // 策略控制器（默认上报至RPC）
-	        this.controller = 'server';
-	        this._ = _;
-	        this.service = service;
-	        this.storageKey = this._.createCacheKey();
-	    }
-	    Object.defineProperty(ReportStrategy.prototype, "report", {
-	        get: function () {
-	            var _this = this;
-	            // 根据策略（本地缓存 / 远程接口）
-	            var strategy = "report2" + this._.firstUpperCase(this.controller);
-	            // 返回对应的回调
-	            return function (data, opt) { return _this[strategy](data, opt); };
-	        },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ReportStrategy.prototype.safeReportBeaconAPI = function (data) {
-	        console.log('我是 Beacon API');
-	        try {
-	            var res = this.service.reportBeaconAPI(data);
-	            return [res ? null : 'Something wrong in reportBeaconAPI', res];
-	        }
-	        catch (error) {
-	            return [error, false];
-	        }
-	    };
-	    ReportStrategy.prototype.safeReportAPI = function (data) {
-	        return __awaiter$1(this, void 0, void 0, function () {
-	            return __generator$1(this, function (_a) {
-	                switch (_a.label) {
-	                    case 0:
-	                        console.log('我是 fetch API');
-	                        return [4 /*yield*/, this._.errorCaptured(this.service.reportAPI, null, data)];
-	                    case 1: return [2 /*return*/, _a.sent()];
-	                }
-	            });
-	        });
-	    };
-	    // // 接收消息队列的消费通知
-	    // notify(data: Msg[]) {
-	    //     return this.report(data);
-	    // }
-	    ReportStrategy.prototype.report2Storage = function (data) {
-	        var cache = this._.LocStorage.get(this.storageKey);
-	        // 合并之前的缓存
-	        cache = cache ? cache.concat(data) : data;
-	        console.log('report to Storage: ', cache);
-	        try {
-	            // 存入本地
-	            this._.LocStorage.set(this.storageKey, cache);
-	            return true;
-	        }
-	        catch (error) {
-	            var eStr = JSON.stringify(error);
-	            error = null;
-	            console.warn("Warn in report2Storage: " + eStr);
-	            return false;
-	        }
-	    };
-	    ReportStrategy.prototype.report2Server = function (data, opt) {
-	        var _this = this;
-	        if (opt === void 0) { opt = {}; }
-	        console.log('report to Server: ', data);
-	        // 数据包装
-	        var formData = new FormData();
-	        formData.append('msgs', JSON.stringify(data));
-	        // 选项
-	        var ignoreErr = opt.ignoreErr, useBeacon = opt.useBeacon;
-	        // 处理发送结果
-	        var handleRes = function (res) {
-	            var err = res[0];
-	            if (err) {
-	                console.warn('Warn in report2Server: ', err);
-	                // 是否将未成功上报的数据缓存进本地，若指定为 'ignoreErr' 则不缓存
-	                if (!ignoreErr) {
-	                    console.warn('this report data will be cached into LocalStorage, and will be resend on next time you visit this website ! ');
-	                    return _this.report2Storage(data);
-	                }
-	                // 传递消费结果
-	                return false;
-	            }
-	            else {
-	                // 传递消费结果
-	                return true;
-	            }
-	        };
-	        // 日志上报
-	        if (useBeacon) {
-	            // 使用 sendBeacon API
-	            var res = this.safeReportBeaconAPI(formData);
-	            return handleRes(res);
-	        }
-	        else {
-	            // 使用 fetch API
-	            return this.safeReportAPI(formData).then(function (res) { return handleRes(res); });
-	        }
-	    };
-	    ReportStrategy.prototype.resend = function () {
-	        return __awaiter$1(this, void 0, void 0, function () {
-	            var cache, _a;
-	            return __generator$1(this, function (_b) {
-	                switch (_b.label) {
-	                    case 0:
-	                        cache = this._.LocStorage.get(this.storageKey);
-	                        // alert(`resend: 上从的缓存数据：${JSON.stringify(cache, null, 2)}`);
-	                        // 若存在缓存
-	                        _a = cache;
-	                        if (!_a) 
-	                        // alert(`resend: 上从的缓存数据：${JSON.stringify(cache, null, 2)}`);
-	                        // 若存在缓存
-	                        return [3 /*break*/, 2];
-	                        // 则尝试重新发送
-	                        return [4 /*yield*/, this.report(cache, { ignoreErr: true })];
-	                    case 1:
-	                        _a = (
-	                        // 则尝试重新发送
-	                        _b.sent());
-	                        _b.label = 2;
-	                    case 2:
-	                        // alert(`resend: 上从的缓存数据：${JSON.stringify(cache, null, 2)}`);
-	                        // 若存在缓存
-	                        _a &&
-	                            // 若成功将数据重新发送，则将缓存数据清空
-	                            this._.LocStorage.remove(this.storageKey);
-	                        return [2 /*return*/];
-	                }
-	            });
-	        });
-	    };
-	    ReportStrategy = __decorate([
-	        injectable(),
-	        __param(0, inject(TYPES.Utils)),
-	        __param(1, inject(TYPES.Service)),
-	        __metadata("design:paramtypes", [Function, Object])
-	    ], ReportStrategy);
-	    return ReportStrategy;
 	}());
 
 	var container = new Container();

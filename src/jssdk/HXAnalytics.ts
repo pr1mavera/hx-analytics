@@ -90,7 +90,11 @@ export class HXAnalytics implements HXAnalytics {
             user_temp.sysId != user.sysId
         ) {
             // 接口校验用户信息
-            const [ err, res ] = await this._.errorCaptured(this.service.appLoginAPI, null, user);
+            const [ err, res ] = await this._.errorCaptured(
+                this.service.appLoginAPI,
+                (data: Obj) => ({ sysConfig: data.sysConfig, ...data.sysInfo }),
+                user
+            );
             // 未通过：警告
             if (err) {
                 // this._.inIframe() && this.message.error('jssdk 初始化失败', 5000);
@@ -100,33 +104,18 @@ export class HXAnalytics implements HXAnalytics {
             user_temp = res;
         }
 
-        // 初始化访问流水号
-        let batchId = this._.windowData.get('batchId');
-        if (!batchId) {
-            batchId = this._.createVisitId(user_temp.sysInfo.appId);
-            this._.windowData.set('batchId', batchId);
-        }
-
-        // 初始化设备信息
-        const { name, version, browser, connType } = this._.deviceInfo();
-
-        // 通过：保存签名，登录等信息至容器 初始化当前模式
+        // 保存签名，登录等信息至容器
         const newUser = {
-            ...user_temp.sysInfo,
+            ...user_temp,
             openId: user.openId,
-            batchId,
-            // 网络层系统配置
-            sysConfig: user_temp.sysConfig,
-            // 设备信息
-            clientType: browser,
-            sysVersion: `${name} ${version}`,
-            userNetWork: connType
+            sysConfig: user_temp.sysConfig
         };
-        this.conf.set(newUser);
+        this.conf.merge(newUser);
         this._.windowData.set('user', newUser);
 
         // this.service.setHeader();
 
+        // 初始化当前模式
         if (this._.inIframe()) {
 
             /* **************** 配置模式 **************** */
@@ -136,7 +125,7 @@ export class HXAnalytics implements HXAnalytics {
             // 将sdk初始化数据传递给父级Iframe
             const config = {
                 tag: 'appConfig',
-                config: this.conf.getSelf()
+                config: this.conf.get()
             }
             window.parent && window.parent.postMessage(JSON.stringify(config), '*');
 
@@ -154,10 +143,9 @@ export class HXAnalytics implements HXAnalytics {
 
             this.mode = 'report';
         }
-        
-        // this.mode = this._.inIframe() ? 'browse' : 'report';
-        // mode enter
-        // this._mode.onEnter();
+
+        // 添加访问记录
+        this._mode.onTrigger([ 'init', newUser.appId, newUser.sysId, newUser.openId ]);
     }
 
     // 提供应用开发人员主动埋点能力

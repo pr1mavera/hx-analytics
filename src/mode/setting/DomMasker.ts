@@ -1,6 +1,4 @@
-// import { customCanvas } from './CustomCanvas';
-// import { Point } from './Point';
-import TYPES from '../jssdk/types';
+import TYPES from '../../jssdk/types';
 import { inject, injectable } from 'inversify';
 
 @injectable()

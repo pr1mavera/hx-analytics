@@ -7,21 +7,15 @@ import {
 } from './HXAnalytics';
 import { AppEvent } from './events';
 import { Service } from './service';
-import {
-    Browse,
-    Setting,
-    Report
-} from '../mode';
-import {
-    _,
-    AppConfig,
-    customCanvas,
-    DomMasker,
-    EventSubscriber,
-    MsgsQueue,
-    Point,
-    ReportStrategy
-} from '../utils';
+
+// 浏览模式
+import { Browse } from '../mode/browse/Browse';
+// 上报模式
+import { Report, MsgsQueue, ReportStrategy } from '../mode/report';
+// 配置模式
+import { Setting, customCanvas, DomMasker } from '../mode/setting';
+
+import { _, AppConfig, EventSubscriber, Point, } from '../utils';
 
 const container = new Container();
 
