@@ -11,7 +11,7 @@ import { Service } from './service';
 // 浏览模式
 import { Browse } from '../mode/browse/Browse';
 // 上报模式
-import { Report, MsgsQueue, ReportStrategy } from '../mode/report';
+import { Report, MsgsQueue, ReportStrategy, PageTracer } from '../mode/report';
 // 配置模式
 import { Setting, customCanvas, DomMasker } from '../mode/setting';
 
@@ -48,6 +48,8 @@ container.bind<EventSubscriber<ModeLifeCycle, Subscription>>(TYPES.EventSubscrib
 container.bind<ReportStrategy>(TYPES.ReportStrategy).to(ReportStrategy);
 // 消息队列
 container.bind<MsgsQueue>(TYPES.MsgsQueue).to(MsgsQueue);
+// 页面记录跟踪
+container.bind<PageTracer>(TYPES.PageTracer).to(PageTracer);
 
 // 埋点配置相关类型
 container.bind<DomMasker>(TYPES.DomMasker).to(DomMasker).inSingletonScope();

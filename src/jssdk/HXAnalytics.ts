@@ -32,6 +32,7 @@ import { inject, injectable } from 'inversify';
 
 @injectable()
 export class HXAnalytics implements HXAnalytics {
+    [x: string]: any;
 
     private _mode: ModeLifeCycle;
 
@@ -80,15 +81,16 @@ export class HXAnalytics implements HXAnalytics {
     }
 
     // 应用初始化入口
-    async init(user: UserInfo) {
+    async init([ appId, sysId, openId ]: [ string, string, string ]) {
 
         // 初始化用户基本信息
         let user_temp = this._.windowData.get('user');
         if (
             !user_temp ||
-            user_temp.appId != user.appId ||
-            user_temp.sysId != user.sysId
+            user_temp.appId != appId ||
+            user_temp.sysId != sysId
         ) {
+            const user = { appId, sysId, openId };
             // 接口校验用户信息
             const [ err, res ] = await this._.errorCaptured(
                 this.service.appLoginAPI,
@@ -107,7 +109,7 @@ export class HXAnalytics implements HXAnalytics {
         // 保存签名，登录等信息至容器
         const newUser = {
             ...user_temp,
-            openId: user.openId,
+            openId: openId,
             sysConfig: user_temp.sysConfig
         };
         this.conf.merge(newUser);
@@ -149,9 +151,14 @@ export class HXAnalytics implements HXAnalytics {
     }
 
     // 提供应用开发人员主动埋点能力
-    async push(data: Array<any>) {
-        const [ directive, appId, sysId, openId ] = data[0];
-
-        this.init({ appId, sysId, openId });
+    async push(cmds: Array<any>[]) {
+        cmds.forEach((cmd: any[]) => {
+            const [ directive, ...params ] = cmd;
+            // 当前实例上是否存在该命令
+            // 是，执行（实际上基本是需要当前实例进过包装，再执行当前模块上的onTrigger）
+            // 否，则执行当前模块上的onTrigger
+            const _this: HXAnalytics = this;
+            _this[directive] ? _this[directive](params) : _this._mode.onTrigger(cmd);
+        });
     }
 }

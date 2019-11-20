@@ -5,7 +5,7 @@ export class Browse implements ModeLifeCycle {
     readonly modeType: string = 'browse';
     onEnter() {}
     onExit() {}
-    onTrigger() {
+    onTrigger(data: Obj) {
         console.warn('No data will upload with browse mode!');
     }
 }

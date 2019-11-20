@@ -68,6 +68,7 @@ function mixins <T>(...list: Obj[]) {
 @injectable()
 export class Setting implements ModeLifeCycle {
     [x: string]: any;
+
     readonly modeType: string = 'setting';
     // 单个埋点构造器
     createPoint: (origin: PointBase | EventTarget) => Point;
@@ -111,6 +112,8 @@ export class Setting implements ModeLifeCycle {
         // 捕捉到元素之后 Setting 模式会将当前绑定的 setting- 监控事件都注销
         // 因此在不改变模式的情况下需要依靠父窗口消息推送 reset 指令来重新开启捕捉元素
         const subs = this.events.messageOf('reset').subscribe(async (msg: { data: { tag: string, points?: PointBase[] } }) => {
+            // 注销事件监听
+            this.evtSubs.unsubscribe();
             // 绑定监控事件
             this.evtSubs.subscribe();
             // 初始化埋点交互遮罩
@@ -129,7 +132,7 @@ export class Setting implements ModeLifeCycle {
         this.domMasker.points = [];
         this.domMasker.clear();
     }
-    onTrigger(data: any) {
+    onTrigger(data: Obj) {
 
         const conf = this.conf.get();
 
@@ -164,6 +167,7 @@ export class Setting implements ModeLifeCycle {
         this.domMasker.reset();
     }
 
+    // 请求服务获取对应页面的已埋的埋点配置
     async getPresetPoints() {
         const rules = {
             pageId: location.pathname,
@@ -175,16 +179,10 @@ export class Setting implements ModeLifeCycle {
         // 拆分 query 字符串
         const parentsQueryStr = document.referrer.split('?')[1];
         const version = this._.splitQuery(parentsQueryStr).dots_v;
-        version && Object.assign(rules, { version })
+        version && Object.assign(rules, { version });
         console.log('======= queryStr =======', parentsQueryStr);
         console.log('======= version =======', version);
         console.log('======= rules =======', rules);
-        // const rules = {
-        //     pageId: '/video/zhike/index.html',
-        //     appId: 'kzgm',
-        //     sysId: 'kfxt',
-        //     pageSize: -1,
-        // };
 
         const [ err, res ] = await this._.errorCaptured(this.service.getPresetPointsAPI, null, rules);
 

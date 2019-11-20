@@ -23,6 +23,8 @@ const TYPES = {
     ReportStrategy: Symbol.for('ReportStrategy'),
     // 消息队列
     MsgsQueue: Symbol.for('MsgsQueue'),
+    // 页面记录跟踪
+    PageTracer: Symbol.for('PageTracer'),
 
     // 埋点配置相关类型
     DomMasker: Symbol.for('DomMasker'),

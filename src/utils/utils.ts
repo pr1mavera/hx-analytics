@@ -3,7 +3,19 @@ import { Service } from '../jssdk/service';
 
 export const _ = <Utils>function () { }
 
-_.compose = (...fns) => fns.reduce((f: Function, g: Function) => (...args: any[]) => g(f(...args)));
+_.compose = (...fns) => fns.reduce((f: Function, g: Function) => (...args: any[]) => f(g(...args)));
+
+_.pipe = (...fns) => _.compose(...fns.reverse());
+
+_.pack = (arity) => arr => arr.reduce((temp: Array<Array<any>>, tar: any, i: number) => {
+    const key = Math.floor(i / arity);
+    temp[key] ? temp[key].push(tar) : temp[key] = [ tar ];
+    return temp;
+}, []);
+
+_.first = arr => arr[0] || null;
+
+_.last = arr => arr.length ? arr[arr.length - 1] : null;
 
 const { sessionStorage, localStorage } = <Window>window;
 const [ SessStorage, LocStorage ] = [ sessionStorage, localStorage ].map(
@@ -56,6 +68,11 @@ _.windowData = {
     clear() {
         window.name = JSON.stringify({});
     }
+};
+
+_.getPagePath = function() {
+    const { pathname, hash } = window.location;
+    return pathname + this.first(hash.split('?'));
 };
 
 _.inIframe = () => window && window.self !== window.top;
@@ -205,3 +222,15 @@ _.deviceInfo = () => {
     };
 };
 
+_.nativeCodeEventPatch = (obj, type) => {
+    // 这里提前缓存住原始的原生方法
+    let orig = obj[type];
+    return  function() {
+        let rv = orig.apply(this, arguments);
+        let e = new Event(type.toLowerCase());
+        Object.assign(e, { arguments });
+        window.dispatchEvent(e);
+    
+        return rv;
+    }
+};

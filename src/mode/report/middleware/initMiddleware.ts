@@ -1,4 +1,4 @@
-export const initMiddleware = (ctx: any) => (next: Function) => (opt: any) => {
+export const initMiddleware = (ctx: any) => (next: Function) => (...opt: any) => {
 
     // console.log('initMiddleware');
 

@@ -2782,11 +2782,14 @@ var ha = (function () {
 	    ReportStrategy: Symbol.for('ReportStrategy'),
 	    // 消息队列
 	    MsgsQueue: Symbol.for('MsgsQueue'),
+	    // 页面记录跟踪
+	    PageTracer: Symbol.for('PageTracer'),
 	    // 埋点配置相关类型
 	    DomMasker: Symbol.for('DomMasker'),
 	    CustomCanvas: Symbol.for('CustomCanvas'),
 	    Point: Symbol.for('Point')
 	};
+	//# sourceMappingURL=types.js.map
 
 	/*! *****************************************************************************
 	Copyright (c) Microsoft Corporation. All rights reserved.
@@ -2953,20 +2956,22 @@ var ha = (function () {
 	        configurable: true
 	    });
 	    // 应用初始化入口
-	    HXAnalytics.prototype.init = function (user) {
+	    HXAnalytics.prototype.init = function (_a) {
+	        var appId = _a[0], sysId = _a[1], openId = _a[2];
 	        return __awaiter$1(this, void 0, void 0, function () {
-	            var user_temp, _a, err, res, newUser, config;
-	            var _this = this;
-	            return __generator$1(this, function (_b) {
-	                switch (_b.label) {
+	            var user_temp, user, _b, err, res, newUser, config;
+	            var _this_1 = this;
+	            return __generator$1(this, function (_c) {
+	                switch (_c.label) {
 	                    case 0:
 	                        user_temp = this._.windowData.get('user');
 	                        if (!(!user_temp ||
-	                            user_temp.appId != user.appId ||
-	                            user_temp.sysId != user.sysId)) return [3 /*break*/, 2];
+	                            user_temp.appId != appId ||
+	                            user_temp.sysId != sysId)) return [3 /*break*/, 2];
+	                        user = { appId: appId, sysId: sysId, openId: openId };
 	                        return [4 /*yield*/, this._.errorCaptured(this.service.appLoginAPI, function (data) { return (__assign({ sysConfig: data.sysConfig }, data.sysInfo)); }, user)];
 	                    case 1:
-	                        _a = _b.sent(), err = _a[0], res = _a[1];
+	                        _b = _c.sent(), err = _b[0], res = _b[1];
 	                        // 未通过：警告
 	                        if (err) {
 	                            // this._.inIframe() && this.message.error('jssdk 初始化失败', 5000);
@@ -2974,9 +2979,9 @@ var ha = (function () {
 	                            throw Error("jssdk login error: " + JSON.stringify(err));
 	                        }
 	                        user_temp = res;
-	                        _b.label = 2;
+	                        _c.label = 2;
 	                    case 2:
-	                        newUser = __assign(__assign({}, user_temp), { openId: user.openId, sysConfig: user_temp.sysConfig });
+	                        newUser = __assign(__assign({}, user_temp), { openId: openId, sysConfig: user_temp.sysConfig });
 	                        this.conf.merge(newUser);
 	                        this._.windowData.set('user', newUser);
 	                        // this.service.setHeader();
@@ -2993,7 +2998,7 @@ var ha = (function () {
 	                            // 绑定模式切换事件
 	                            this.events.messageOf('mode').subscribe(function (msg) {
 	                                // Reflect.defineMetadata('onMessageSetModeWithPoint', msg.data.points, this);
-	                                _this.mode = msg.data.mode;
+	                                _this_1.mode = msg.data.mode;
 	                                // mode enter
 	                                // this._mode.onEnter(msg.data.points);
 	                            });
@@ -3010,12 +3015,18 @@ var ha = (function () {
 	        });
 	    };
 	    // 提供应用开发人员主动埋点能力
-	    HXAnalytics.prototype.push = function (data) {
+	    HXAnalytics.prototype.push = function (cmds) {
 	        return __awaiter$1(this, void 0, void 0, function () {
-	            var _a, directive, appId, sysId, openId;
-	            return __generator$1(this, function (_b) {
-	                _a = data[0], directive = _a[0], appId = _a[1], sysId = _a[2], openId = _a[3];
-	                this.init({ appId: appId, sysId: sysId, openId: openId });
+	            var _this_1 = this;
+	            return __generator$1(this, function (_a) {
+	                cmds.forEach(function (cmd) {
+	                    var directive = cmd[0], params = cmd.slice(1);
+	                    // 当前实例上是否存在该命令
+	                    // 是，执行（实际上基本是需要当前实例进过包装，再执行当前模块上的onTrigger）
+	                    // 否，则执行当前模块上的onTrigger
+	                    var _this = _this_1;
+	                    _this[directive] ? _this[directive](params) : _this._mode.onTrigger(cmd);
+	                });
 	                return [2 /*return*/];
 	            });
 	        });
@@ -3045,11 +3056,13 @@ var ha = (function () {
 	    ], HXAnalytics);
 	    return HXAnalytics;
 	}());
+	//# sourceMappingURL=HXAnalytics.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isFunction(x) {
 	    return typeof x === 'function';
 	}
+	//# sourceMappingURL=isFunction.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var _enable_super_gross_mode_that_will_cause_bad_things = false;
@@ -3066,11 +3079,13 @@ var ha = (function () {
 	        return _enable_super_gross_mode_that_will_cause_bad_things;
 	    },
 	};
+	//# sourceMappingURL=config.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function hostReportError(err) {
 	    setTimeout(function () { throw err; }, 0);
 	}
+	//# sourceMappingURL=hostReportError.js.map
 
 	/** PURE_IMPORTS_START _config,_util_hostReportError PURE_IMPORTS_END */
 	var empty = {
@@ -3086,14 +3101,17 @@ var ha = (function () {
 	    },
 	    complete: function () { }
 	};
+	//# sourceMappingURL=Observer.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var isArray = /*@__PURE__*/ (function () { return Array.isArray || (function (x) { return x && typeof x.length === 'number'; }); })();
+	//# sourceMappingURL=isArray.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isObject(x) {
 	    return x !== null && typeof x === 'object';
 	}
+	//# sourceMappingURL=isObject.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var UnsubscriptionErrorImpl = /*@__PURE__*/ (function () {
@@ -3109,6 +3127,7 @@ var ha = (function () {
 	    return UnsubscriptionErrorImpl;
 	})();
 	var UnsubscriptionError = UnsubscriptionErrorImpl;
+	//# sourceMappingURL=UnsubscriptionError.js.map
 
 	/** PURE_IMPORTS_START _util_isArray,_util_isObject,_util_isFunction,_util_UnsubscriptionError PURE_IMPORTS_END */
 	var Subscription = /*@__PURE__*/ (function () {
@@ -3240,6 +3259,7 @@ var ha = (function () {
 	function flattenUnsubscriptionErrors(errors) {
 	    return errors.reduce(function (errs, err) { return errs.concat((err instanceof UnsubscriptionError) ? err.errors : err); }, []);
 	}
+	//# sourceMappingURL=Subscription.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var rxSubscriber = /*@__PURE__*/ (function () {
@@ -3247,6 +3267,7 @@ var ha = (function () {
 	        ? /*@__PURE__*/ Symbol('rxSubscriber')
 	        : '@@rxSubscriber_' + /*@__PURE__*/ Math.random();
 	})();
+	//# sourceMappingURL=rxSubscriber.js.map
 
 	/** PURE_IMPORTS_START tslib,_util_isFunction,_Observer,_Subscription,_internal_symbol_rxSubscriber,_config,_util_hostReportError PURE_IMPORTS_END */
 	var Subscriber = /*@__PURE__*/ (function (_super) {
@@ -3471,6 +3492,7 @@ var ha = (function () {
 	    };
 	    return SafeSubscriber;
 	}(Subscriber));
+	//# sourceMappingURL=Subscriber.js.map
 
 	/** PURE_IMPORTS_START _Subscriber PURE_IMPORTS_END */
 	function canReportError(observer) {
@@ -3488,6 +3510,7 @@ var ha = (function () {
 	    }
 	    return true;
 	}
+	//# sourceMappingURL=canReportError.js.map
 
 	/** PURE_IMPORTS_START _Subscriber,_symbol_rxSubscriber,_Observer PURE_IMPORTS_END */
 	function toSubscriber(nextOrObserver, error, complete) {
@@ -3504,12 +3527,15 @@ var ha = (function () {
 	    }
 	    return new Subscriber(nextOrObserver, error, complete);
 	}
+	//# sourceMappingURL=toSubscriber.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var observable = /*@__PURE__*/ (function () { return typeof Symbol === 'function' && Symbol.observable || '@@observable'; })();
+	//# sourceMappingURL=observable.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function noop() { }
+	//# sourceMappingURL=noop.js.map
 
 	/** PURE_IMPORTS_START _noop PURE_IMPORTS_END */
 	function pipeFromArray(fns) {
@@ -3523,6 +3549,7 @@ var ha = (function () {
 	        return fns.reduce(function (prev, fn) { return fn(prev); }, input);
 	    };
 	}
+	//# sourceMappingURL=pipe.js.map
 
 	/** PURE_IMPORTS_START _util_canReportError,_util_toSubscriber,_symbol_observable,_util_pipe,_config PURE_IMPORTS_END */
 	var Observable = /*@__PURE__*/ (function () {
@@ -3633,6 +3660,7 @@ var ha = (function () {
 	    }
 	    return promiseCtor;
 	}
+	//# sourceMappingURL=Observable.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscription PURE_IMPORTS_END */
 	var Action = /*@__PURE__*/ (function (_super) {
@@ -3645,6 +3673,7 @@ var ha = (function () {
 	    };
 	    return Action;
 	}(Subscription));
+	//# sourceMappingURL=Action.js.map
 
 	/** PURE_IMPORTS_START tslib,_Action PURE_IMPORTS_END */
 	var AsyncAction = /*@__PURE__*/ (function (_super) {
@@ -3737,6 +3766,7 @@ var ha = (function () {
 	    };
 	    return AsyncAction;
 	}(Action));
+	//# sourceMappingURL=AsyncAction.js.map
 
 	var Scheduler = /*@__PURE__*/ (function () {
 	    function Scheduler(SchedulerAction, now) {
@@ -3755,6 +3785,7 @@ var ha = (function () {
 	    Scheduler.now = function () { return Date.now(); };
 	    return Scheduler;
 	}());
+	//# sourceMappingURL=Scheduler.js.map
 
 	/** PURE_IMPORTS_START tslib,_Scheduler PURE_IMPORTS_END */
 	var AsyncScheduler = /*@__PURE__*/ (function (_super) {
@@ -3810,11 +3841,13 @@ var ha = (function () {
 	    };
 	    return AsyncScheduler;
 	}(Scheduler));
+	//# sourceMappingURL=AsyncScheduler.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isScheduler(value) {
 	    return value && typeof value.schedule === 'function';
 	}
+	//# sourceMappingURL=isScheduler.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var subscribeToArray = function (array) {
@@ -3825,6 +3858,7 @@ var ha = (function () {
 	        subscriber.complete();
 	    };
 	};
+	//# sourceMappingURL=subscribeToArray.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription PURE_IMPORTS_END */
 	function scheduleArray(input, scheduler) {
@@ -3844,6 +3878,7 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
+	//# sourceMappingURL=scheduleArray.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_subscribeToArray,_scheduled_scheduleArray PURE_IMPORTS_END */
 	function fromArray(input, scheduler) {
@@ -3854,14 +3889,17 @@ var ha = (function () {
 	        return scheduleArray(input, scheduler);
 	    }
 	}
+	//# sourceMappingURL=fromArray.js.map
 
 	/** PURE_IMPORTS_START _AsyncAction,_AsyncScheduler PURE_IMPORTS_END */
 	var async = /*@__PURE__*/ new AsyncScheduler(AsyncAction);
+	//# sourceMappingURL=async.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function identity(x) {
 	    return x;
 	}
+	//# sourceMappingURL=identity.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	function map(project, thisArg) {
@@ -3904,6 +3942,7 @@ var ha = (function () {
 	    };
 	    return MapSubscriber;
 	}(Subscriber));
+	//# sourceMappingURL=map.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	var OuterSubscriber = /*@__PURE__*/ (function (_super) {
@@ -3922,6 +3961,7 @@ var ha = (function () {
 	    };
 	    return OuterSubscriber;
 	}(Subscriber));
+	//# sourceMappingURL=OuterSubscriber.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	var InnerSubscriber = /*@__PURE__*/ (function (_super) {
@@ -3947,6 +3987,7 @@ var ha = (function () {
 	    };
 	    return InnerSubscriber;
 	}(Subscriber));
+	//# sourceMappingURL=InnerSubscriber.js.map
 
 	/** PURE_IMPORTS_START _hostReportError PURE_IMPORTS_END */
 	var subscribeToPromise = function (promise) {
@@ -3961,6 +4002,7 @@ var ha = (function () {
 	        return subscriber;
 	    };
 	};
+	//# sourceMappingURL=subscribeToPromise.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function getSymbolIterator() {
@@ -3970,6 +4012,7 @@ var ha = (function () {
 	    return Symbol.iterator;
 	}
 	var iterator = /*@__PURE__*/ getSymbolIterator();
+	//# sourceMappingURL=iterator.js.map
 
 	/** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */
 	var subscribeToIterable = function (iterable) {
@@ -3996,6 +4039,7 @@ var ha = (function () {
 	        return subscriber;
 	    };
 	};
+	//# sourceMappingURL=subscribeToIterable.js.map
 
 	/** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
 	var subscribeToObservable = function (obj) {
@@ -4009,14 +4053,17 @@ var ha = (function () {
 	        }
 	    };
 	};
+	//# sourceMappingURL=subscribeToObservable.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var isArrayLike = (function (x) { return x && typeof x.length === 'number' && typeof x !== 'function'; });
+	//# sourceMappingURL=isArrayLike.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isPromise(value) {
 	    return !!value && typeof value.subscribe !== 'function' && typeof value.then === 'function';
 	}
+	//# sourceMappingURL=isPromise.js.map
 
 	/** PURE_IMPORTS_START _subscribeToArray,_subscribeToPromise,_subscribeToIterable,_subscribeToObservable,_isArrayLike,_isPromise,_isObject,_symbol_iterator,_symbol_observable PURE_IMPORTS_END */
 	var subscribeTo = function (result) {
@@ -4039,6 +4086,7 @@ var ha = (function () {
 	        throw new TypeError(msg);
 	    }
 	};
+	//# sourceMappingURL=subscribeTo.js.map
 
 	/** PURE_IMPORTS_START _InnerSubscriber,_subscribeTo,_Observable PURE_IMPORTS_END */
 	function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, destination) {
@@ -4053,6 +4101,7 @@ var ha = (function () {
 	    }
 	    return subscribeTo(result)(destination);
 	}
+	//# sourceMappingURL=subscribeToResult.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription,_symbol_observable PURE_IMPORTS_END */
 	function scheduleObservable(input, scheduler) {
@@ -4069,6 +4118,7 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
+	//# sourceMappingURL=scheduleObservable.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription PURE_IMPORTS_END */
 	function schedulePromise(input, scheduler) {
@@ -4087,6 +4137,7 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
+	//# sourceMappingURL=schedulePromise.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription,_symbol_iterator PURE_IMPORTS_END */
 	function scheduleIterable(input, scheduler) {
@@ -4130,16 +4181,19 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
+	//# sourceMappingURL=scheduleIterable.js.map
 
 	/** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
 	function isInteropObservable(input) {
 	    return input && typeof input[observable] === 'function';
 	}
+	//# sourceMappingURL=isInteropObservable.js.map
 
 	/** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */
 	function isIterable(input) {
 	    return input && typeof input[iterator] === 'function';
 	}
+	//# sourceMappingURL=isIterable.js.map
 
 	/** PURE_IMPORTS_START _scheduleObservable,_schedulePromise,_scheduleArray,_scheduleIterable,_util_isInteropObservable,_util_isPromise,_util_isArrayLike,_util_isIterable PURE_IMPORTS_END */
 	function scheduled(input, scheduler) {
@@ -4159,6 +4213,7 @@ var ha = (function () {
 	    }
 	    throw new TypeError((input !== null && typeof input || input) + ' is not observable');
 	}
+	//# sourceMappingURL=scheduled.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_subscribeTo,_scheduled_scheduled PURE_IMPORTS_END */
 	function from(input, scheduler) {
@@ -4172,6 +4227,7 @@ var ha = (function () {
 	        return scheduled(input, scheduler);
 	    }
 	}
+	//# sourceMappingURL=from.js.map
 
 	/** PURE_IMPORTS_START tslib,_util_subscribeToResult,_OuterSubscriber,_InnerSubscriber,_map,_observable_from PURE_IMPORTS_END */
 	function mergeMap(project, resultSelector, concurrent) {
@@ -4264,6 +4320,7 @@ var ha = (function () {
 	    };
 	    return MergeMapSubscriber;
 	}(OuterSubscriber));
+	//# sourceMappingURL=mergeMap.js.map
 
 	/** PURE_IMPORTS_START _mergeMap,_util_identity PURE_IMPORTS_END */
 	function mergeAll(concurrent) {
@@ -4272,6 +4329,7 @@ var ha = (function () {
 	    }
 	    return mergeMap(identity, concurrent);
 	}
+	//# sourceMappingURL=mergeAll.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_isArray,_util_isFunction,_operators_map PURE_IMPORTS_END */
 	function fromEvent(target, eventName, options, resultSelector) {
@@ -4330,6 +4388,7 @@ var ha = (function () {
 	function isEventTarget(sourceObj) {
 	    return sourceObj && typeof sourceObj.addEventListener === 'function' && typeof sourceObj.removeEventListener === 'function';
 	}
+	//# sourceMappingURL=fromEvent.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_isScheduler,_operators_mergeAll,_fromArray PURE_IMPORTS_END */
 	function merge() {
@@ -4354,6 +4413,7 @@ var ha = (function () {
 	    }
 	    return mergeAll(concurrent)(fromArray(observables, scheduler));
 	}
+	//# sourceMappingURL=merge.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	function filter(predicate, thisArg) {
@@ -4395,6 +4455,7 @@ var ha = (function () {
 	    };
 	    return FilterSubscriber;
 	}(Subscriber));
+	//# sourceMappingURL=filter.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber,_scheduler_async PURE_IMPORTS_END */
 	function sampleTime(period, scheduler) {
@@ -4440,6 +4501,7 @@ var ha = (function () {
 	    subscriber.notifyNext();
 	    this.schedule(state, period);
 	}
+	//# sourceMappingURL=sampleTime.js.map
 
 	// const DomEvent = (target: HTMLElement, eventName: string, options: EventListenerOptions) => {
 	// }
@@ -4462,15 +4524,17 @@ var ha = (function () {
 	// 事件注册订阅调度机制
 	// 各模式模块只维护当前的事件及其回调的列表，在对应生命周期中订阅及取消订阅
 	var AppEvent = {
-	    click: function (config) { return fromEvent(document, 'click', { capture: config.capture }); },
-	    mousemove: function (config) { return fromEvent(document, 'mousemove', { capture: config.capture }).pipe(sampleTime(config.debounceTime), filter(function (e) { return e.target.tagName !== 'HTML'; })); },
-	    load: function () { return fromEvent(document, 'load'); },
-	    beforeUnload: function () { return fromEvent(document, 'beforeunload'); },
+	    click: function (config) { return fromEvent(window, 'click', { capture: config.capture }); },
+	    mousemove: function (config) { return fromEvent(window, 'mousemove', { capture: config.capture }).pipe(sampleTime(config.debounceTime), filter(function (e) { return e.target.tagName !== 'HTML'; })); },
+	    load: function () { return fromEvent(window, 'load'); },
+	    beforeUnload: function () { return fromEvent(window, 'beforeunload'); },
 	    pageShow: function () { return fromEvent(window, 'pageshow'); },
 	    pageHide: function () { return fromEvent(window, 'pagehide'); },
-	    hashchange: function () { return fromEvent(document, 'hashchange'); },
-	    popstate: function () { return fromEvent(document, 'popstate'); },
-	    visibilitychange: function () { return fromEvent(document, 'visibilitychange'); },
+	    hashchange: function () { return fromEvent(window, 'hashchange').pipe(map(function (e) { return (['hashchange', e.newURL]); })); },
+	    popstate: function () { return fromEvent(window, 'popstate').pipe(map(function () { return (['popstate', location.href]); })); },
+	    pushState: function () { return fromEvent(window, 'pushstate').pipe(map(function () { return (['pushstate', location.href]); })); },
+	    replaceState: function () { return fromEvent(window, 'replacestate').pipe(map(function () { return (['replacestate', location.href]); })); },
+	    visibilitychange: function () { return fromEvent(window, 'visibilitychange'); },
 	    online: function () { return fromEvent(window, 'online'); },
 	    offline: function () { return fromEvent(window, 'offline'); },
 	    message: function () { return fromEvent(window, 'message'); },
@@ -4479,8 +4543,20 @@ var ha = (function () {
 	    },
 	    netStatusChange: function () {
 	        return merge(this.online(), this.offline()).pipe(map(function (e) { return e.type; }));
+	    },
+	    pageChange: function () {
+	        return merge(this.hashchange(), this.popstate(), this.pushState(), this.replaceState());
+	        // const addEvent = handle => {
+	        //     handle
+	        // }
+	        // return {
+	        //     subscribe: (handle) => {
+	        //         window.addEventListener('')
+	        //     }
+	        // }
 	    }
 	};
+	//# sourceMappingURL=index.js.map
 
 	/* eslint-disable no-undef */
 	var development = {
@@ -4567,6 +4643,7 @@ var ha = (function () {
 	        url: function (host, url) { return splitUrl(host, url); },
 	    };
 	})();
+	//# sourceMappingURL=request.js.map
 
 	var Service = {
 	    ERR_OK: '0',
@@ -4579,6 +4656,7 @@ var ha = (function () {
 	    reportBeaconAPI: function (data) { return window.navigator.sendBeacon(http.splitUrl('public', '/log'), data); },
 	    getPresetPointsAPI: function (data) { return http.get('public', '/config/query/list', data); }
 	};
+	//# sourceMappingURL=index.js.map
 
 	var Browse = /** @class */ (function () {
 	    function Browse() {
@@ -4586,7 +4664,7 @@ var ha = (function () {
 	    }
 	    Browse.prototype.onEnter = function () { };
 	    Browse.prototype.onExit = function () { };
-	    Browse.prototype.onTrigger = function () {
+	    Browse.prototype.onTrigger = function (data) {
 	        console.warn('No data will upload with browse mode!');
 	    };
 	    Browse = __decorate([
@@ -4594,18 +4672,28 @@ var ha = (function () {
 	    ], Browse);
 	    return Browse;
 	}());
+	//# sourceMappingURL=Browse.js.map
 
-	var loggerMiddleware = function (ctx) { return function (next) { return function (opt) {
+	var loggerMiddleware = function (ctx) { return function (next) { return function () {
+	    var opt = [];
+	    for (var _i = 0; _i < arguments.length; _i++) {
+	        opt[_i] = arguments[_i];
+	    }
 	    console.log('-----------------------------');
 	    console.log('loggerMiddleware ', ctx.mq.getQueue());
-	    var res = next(opt);
+	    var res = next.apply(void 0, opt);
 	    console.log('loggerMiddleware ', ctx.mq.getQueue());
 	    console.log('-----------------------------');
 	    return res;
 	}; }; };
+	//# sourceMappingURL=loggerMiddleware.js.map
 
-	var initMiddleware = function (ctx) { return function (next) { return function (opt) {
+	var initMiddleware = function (ctx) { return function (next) { return function () {
 	    // console.log('initMiddleware');
+	    var opt = [];
+	    for (var _i = 0; _i < arguments.length; _i++) {
+	        opt[_i] = arguments[_i];
+	    }
 	    var conf = ctx.conf.get();
 	    // 初始化访问流水号
 	    var batchId = ctx._.windowData.get('batchId');
@@ -4627,16 +4715,35 @@ var ha = (function () {
 	    console.log('initMiddleware');
 	    return res;
 	}; }; };
+	//# sourceMappingURL=initMiddleware.js.map
 
-	var clickMiddleware = function (ctx) { return function (next) { return function (opt) {
-	    // console.log('clickMiddleware');
-	    var funcId = opt[0];
-	    var reqData = next({ type: 2, funcId: funcId });
+	var clickMiddleware = function (ctx) { return function (next) { return function () {
+	    var opt = [];
+	    for (var _i = 0; _i < arguments.length; _i++) {
+	        opt[_i] = arguments[_i];
+	    }
 	    console.log('clickMiddleware');
+	    var funcId = opt[0];
+	    var reqData = next({ type: 2, eventId: 'click', funcId: funcId });
 	    return reqData;
 	}; }; };
+	//# sourceMappingURL=clickMiddleware.js.map
+
+	var pageDwellMiddleware = function (ctx) { return function (next) { return function () {
+	    var opt = [];
+	    for (var _i = 0; _i < arguments.length; _i++) {
+	        opt[_i] = arguments[_i];
+	    }
+	    // console.log('clickMiddleware');
+	    var enterTime = opt[0], leaveTime = opt[1], pageDwellTime = opt[2], pageId = opt[3], pageUrl = opt[4];
+	    var reqData = next({ type: 2, eventId: 'pageDwell', enterTime: enterTime, leaveTime: leaveTime, pageDwellTime: pageDwellTime, pageId: pageId, pageUrl: pageUrl });
+	    console.log('pageDwellMiddleware');
+	    return reqData;
+	}; }; };
+	//# sourceMappingURL=pageDwellMiddleware.js.map
 
 	var preFuncIdMiddleware = function (ctx) { return function (next) { return function (opt) {
+	    console.log('preFuncIdMiddleware');
 	    // 上一次行为事件唯一标识
 	    // 首次打开窗口加载页面的时候上一次行为数据为空字符串，即第一次行为数据没有 preFuncId ，默认为 '-'
 	    var lastCustomData = ctx._.windowData.get('lastCustomData');
@@ -4644,9 +4751,9 @@ var ha = (function () {
 	    var reqData = next(__assign({ preFuncId: preFuncId }, opt));
 	    // 缓存进 window.name ，在下一次上报时使用
 	    ctx._.windowData.set('lastCustomData', reqData);
-	    console.log('preFuncIdMiddleware');
 	    return reqData;
 	}; }; };
+	//# sourceMappingURL=preFuncIdMiddleware.js.map
 
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 	var EventListener = {
@@ -4683,6 +4790,21 @@ var ha = (function () {
 	            });
 	        }
 	    ],
+	    'report-page-change': [
+	        {},
+	        function () {
+	            var _this = this;
+	            // 统一单页路由变化
+	            return this.events.pageChange().subscribe(function () {
+	                // pageDwell: [ enterTime, leaveTime, pageDwellTime, pageId, pageUrl ]
+	                var pageDwell = _this.pageTracer.treat();
+	                debugger;
+	                if (!pageDwell)
+	                    return;
+	                _this.onTrigger(__spreadArrays(['pageDwell'], pageDwell));
+	            });
+	        }
+	    ],
 	};
 	function mixins() {
 	    var list = [];
@@ -4699,6 +4821,15 @@ var ha = (function () {
 	        this.modeType = 'report';
 	        // 是否进入过该模式
 	        this._INITED = false;
+	        /**
+	         * 定义的监控事件集合
+	         * 默认为默认事件监控及相关中间件
+	         * 后续考虑将自定义事件作为系统配置信息请求过来，在该模块初始化时合并到一起，再统一使用中间件重写
+	         * 注意中间件的顺序：按书写顺序执行，遵循洋葱模型
+	         * 例如：
+	         * [ loggerMiddleware, clickMiddleware, preFuncIdMiddleware ]
+	         * logger -> click -> preFuncId -> onTrigger(next) -> logger -> click -> preFuncId
+	         */
 	        this.reportConfigs = {
 	            init: {
 	                params: ['appId', 'sysId', 'openId'],
@@ -4714,22 +4845,31 @@ var ha = (function () {
 	                    clickMiddleware,
 	                    preFuncIdMiddleware
 	                ]
+	            },
+	            pageDwell: {
+	                params: ['enterTime', 'leaveTime', 'pageDwellTime'],
+	                middlewares: [
+	                    loggerMiddleware,
+	                    pageDwellMiddleware
+	                ]
 	            }
 	        };
-	        // this.events = events;
 	        this.evtSubs = eventSubscriber.init(this);
 	        // 初始化单个埋点构造器
 	        this.createPoint = createPoint;
 	    }
 	    Report.prototype.onEnter = function () {
 	        var _this = this;
-	        // 注册事件监听
 	        console.log(this);
+	        // MonkeyPatch
+	        this.bindPageTracerPatch();
 	        // 绑定监控事件
 	        this.evtSubs.subscribe();
-	        // 在第一次进入的时候推送系统加载事件
+	        // 在第一次进入的时候初始化一次性相关配置
 	        if (!this._INITED) {
 	            this._INITED = true;
+	            window.addEventListener('pagehide', this.onExit.bind(this));
+	            this.mq.onload();
 	            // 绑定消息队列消费者
 	            this.mq.bindCustomer({
 	                // 模拟消费者，提供 notify 接口
@@ -4745,23 +4885,30 @@ var ha = (function () {
 	            // 根据事件上报配置，在这旮沓挨个注册数据上报中间件
 	            Object.keys(this.reportConfigs).forEach(function (key) {
 	                var config = _this.reportConfigs[key];
-	                config.middlewares && (config.rebuildWithMiddlewares = _this.applyMiddlewares(config.middlewares)(_this));
+	                if (config.middlewares) {
+	                    config.rebuildWithMiddlewares = _this.applyMiddlewares(config.middlewares)(_this);
+	                }
 	            });
 	        }
 	    };
+	    Report.prototype.onExit = function () {
+	        // 消息队列生命周期
+	        this.mq.onUnload();
+	        // 注销事件监听
+	        this.evtSubs.unsubscribe();
+	    };
+	    Report.prototype.bindPageTracerPatch = function () {
+	        window.history.pushState = this._.nativeCodeEventPatch(window.history, 'pushState');
+	        window.history.replaceState = this._.nativeCodeEventPatch(window.history, 'replaceState');
+	    };
 	    Report.prototype.applyMiddlewares = function (middlewares) {
-	        var _this = this;
 	        return function (ctx) {
 	            var _a;
 	            var originTrigger = ctx._onTrigger.bind(ctx);
-	            // chains: ((next: Function) => (opt: any) => Obj)[]
+	            // chains: ((next: Function) => (...opt: any[]) => Obj)[]
 	            var chains = middlewares.map(function (middleware) { return middleware(ctx); });
-	            return (_a = _this._).compose.apply(_a, chains.reverse())(originTrigger);
+	            return (_a = ctx._).compose.apply(_a, chains)(originTrigger);
 	        };
-	    };
-	    Report.prototype.onExit = function () {
-	        // 注销事件监听
-	        this.evtSubs.unsubscribe();
 	    };
 	    Object.defineProperty(Report.prototype, "onTrigger", {
 	        /**
@@ -4777,16 +4924,16 @@ var ha = (function () {
 	                }
 	                var directive = reportOptList[0], rest = reportOptList.slice(1);
 	                // 根据指令，抽取对应上报配置
-	                var sendConfig = _this.reportConfigs[directive.toLowerCase()];
+	                var sendConfig = _this.reportConfigs[directive];
 	                // 找不到对应的上报配置
 	                if (!sendConfig) {
 	                    console.warn('Warning in reportTrigger: illegal directive', directive);
 	                    return void 0;
 	                }
+	                // TODO: 参数合并中间件，系统配置的自定义事件可能会使用得到
 	                var params = sendConfig.params, rebuildWithMiddlewares = sendConfig.rebuildWithMiddlewares;
 	                // 若存在数据上报重构函数，使用重构的上报函数，否则直接调用 this._onTrigger
-	                return rebuildWithMiddlewares ?
-	                    rebuildWithMiddlewares(rest) :
+	                return rebuildWithMiddlewares ? rebuildWithMiddlewares.apply(void 0, rest) :
 	                    _this._onTrigger(rest[0]);
 	            };
 	        },
@@ -4795,7 +4942,7 @@ var ha = (function () {
 	    });
 	    // 数据上报触发入口
 	    Report.prototype._onTrigger = function (data) {
-	        var extendsData = __assign({ pageId: location.pathname, pageUrl: location.href, eventTime: Date.now() }, data);
+	        var extendsData = __assign({ pageId: this._.getPagePath(), pageUrl: window.location.href, eventTime: Date.now() }, data);
 	        // 单条上报数据
 	        var reqData = {
 	            type: extendsData.type,
@@ -4808,6 +4955,11 @@ var ha = (function () {
 	        this.mq.push(reqData);
 	        return reqData;
 	    };
+	    /**
+	     * 构造数据报 msg 字段唯一入口
+	     * @param type 上报类型
+	     * @param extendsData 单条事件上存在的数据
+	     */
 	    Report.prototype.formatDatagram = function (type, extendsData) {
 	        var _this = this;
 	        if (extendsData === void 0) { extendsData = {}; }
@@ -4842,6 +4994,10 @@ var ha = (function () {
 	        inject(TYPES.MsgsQueue),
 	        __metadata("design:type", Object)
 	    ], Report.prototype, "mq", void 0);
+	    __decorate([
+	        inject(TYPES.PageTracer),
+	        __metadata("design:type", Object)
+	    ], Report.prototype, "pageTracer", void 0);
 	    Report = __decorate([
 	        mixins(EventListener),
 	        injectable(),
@@ -4851,17 +5007,14 @@ var ha = (function () {
 	    ], Report);
 	    return Report;
 	}());
+	//# sourceMappingURL=Report.js.map
 
 	var MsgsQueue = /** @class */ (function () {
-	    function MsgsQueue(_, events) {
+	    function MsgsQueue() {
 	        this.queue = [];
 	        this.timer = null;
 	        this.delay = 2000;
 	        this.customer = null;
-	        this._ = _;
-	        this.events = events;
-	        this.onload();
-	        window.addEventListener('pagehide', this.onUnload.bind(this));
 	    }
 	    MsgsQueue.prototype.onload = function () {
 	        /**
@@ -4872,9 +5025,9 @@ var ha = (function () {
 	        // 合并 window.name & localStorage
 	        var cacheSet = Object.assign({}, this._.LocStorage.get(), this._.windowData.get());
 	        // 过滤合法消息队列缓存
-	        var filterLegalCacheKey = function (key) { return /report_temp_(\d{6}$)/g.test(key); };
+	        var legalCacheKeyFilter = function (key) { return /report_temp_(\d{6}$)/g.test(key); };
 	        // 过滤出所有合法消息队列缓存索引
-	        var msgsKeys = Object.keys(cacheSet).filter(filterLegalCacheKey);
+	        var msgsKeys = Object.keys(cacheSet).filter(legalCacheKeyFilter);
 	        // 映射成消息，需要判断是否是 json
 	        var msgs = msgsKeys.reduce(function (temp, key) {
 	            var listItem = _this._.isJson(cacheSet[key]) ? JSON.parse(cacheSet[key]) : cacheSet[key];
@@ -4938,11 +5091,12 @@ var ha = (function () {
 	        this.queue = [];
 	        return msgs;
 	    };
+	    __decorate([
+	        inject(TYPES.Utils),
+	        __metadata("design:type", Function)
+	    ], MsgsQueue.prototype, "_", void 0);
 	    MsgsQueue = __decorate([
-	        injectable(),
-	        __param(0, inject(TYPES.Utils)),
-	        __param(1, inject(TYPES.AppEvent)),
-	        __metadata("design:paramtypes", [Function, Object])
+	        injectable()
 	    ], MsgsQueue);
 	    return MsgsQueue;
 	}());
@@ -5087,6 +5241,100 @@ var ha = (function () {
 	    ], ReportStrategy);
 	    return ReportStrategy;
 	}());
+	//# sourceMappingURL=ReportStrategy.js.map
+
+	var PageTracer = /** @class */ (function () {
+	    function PageTracer(_) {
+	        /**
+	         * 页面路由访问记录
+	         * @example
+	         * [
+	         *  [ '/a/index.html#1234', 'www.baidu.com/a/index.html' ],
+	         *  [ '/a/test.html#abcdefg', 'www.baidu.com/a/test.html' ]
+	         * ]
+	         */
+	        this._pageRecord = [];
+	        /**
+	         * 单个页面活跃点记录
+	         * @example
+	         * [
+	         *  [ 'active', 1574228371756 ],
+	         *  [ 'inactive', 1574228381661 ],
+	         *  [ 'active', 1574228564657 ],
+	         *  [ 'inactive', 1574228572154 ]
+	         * ]
+	         */
+	        this._trace = [];
+	        this._ = _;
+	        this._pageRecord.push(this.getCurrentPageRecord());
+	        // 手动初始化第一次页面活跃节点
+	        this.active();
+	    }
+	    PageTracer.prototype.getCurrentPageRecord = function () {
+	        return [this._.getPagePath(), window.location.href];
+	    };
+	    PageTracer.prototype.active = function (timestamp) {
+	        var _a = this._, first = _a.first, last = _a.last;
+	        // 记录活跃节点
+	        var lastTrace = last(this._trace);
+	        // 当前行为栈内无节点，或者最后一个节点为不活跃节点
+	        (!lastTrace || (lastTrace && first(lastTrace) === 'inactive')) &&
+	            this._trace.push(['active', timestamp || Date.now()]);
+	    };
+	    PageTracer.prototype.inactive = function (timestamp) {
+	        var _a = this._, first = _a.first, last = _a.last;
+	        // 记录不活跃节点
+	        var lastTrace = last(this._trace);
+	        // 当前行为栈内最后一个节点为活跃节点
+	        lastTrace && first(lastTrace) === 'active' &&
+	            this._trace.push(['inactive', timestamp || Date.now()]);
+	    };
+	    PageTracer.prototype.treat = function () {
+	        var last = this._.last;
+	        // 当前新路由
+	        var _a = this.getCurrentPageRecord(), newPath = _a[0], newUrl = _a[1];
+	        // 上一个路由
+	        var _b = last(this._pageRecord), oldPath = _b[0], oldUrl = _b[1];
+	        // 路由发生变化但是并没有发生跳转（pathname 相同）
+	        if (newPath === oldPath)
+	            return null;
+	        // 当前页面路由存在跳转
+	        // 手动记录一次不活跃节点
+	        this.inactive();
+	        // 计算进入、离开、停留时长
+	        var _c = this.calc(), enterTime = _c[0], leaveTime = _c[1], pageDwellTime = _c[2];
+	        // 更新页面访问记录
+	        this._pageRecord.push([newPath, newUrl]);
+	        // 访问记录维护在10个
+	        this._pageRecord.length > 10 && this._pageRecord.shift();
+	        // 手动初始化活跃节点，起始时间为上一个页面的离开时间
+	        this._trace = [];
+	        this.active(leaveTime);
+	        return [enterTime, leaveTime, pageDwellTime, oldPath, oldUrl];
+	    };
+	    /**
+	     * 只计算时长，不改变状态
+	     */
+	    PageTracer.prototype.calc = function () {
+	        var _a = this._, first = _a.first, last = _a.last, pipe = _a.pipe, pack = _a.pack;
+	        debugger;
+	        var enterTime = pipe(first, last)(this._trace);
+	        var leaveTime = pipe(last, last)(this._trace);
+	        var pageDwellTime = pack(2)(this._trace).reduce(function (temp, tar) {
+	            var activeTime = pipe(first, last)(tar);
+	            var inactiveTime = pipe(last, last)(tar);
+	            return temp += (inactiveTime - activeTime);
+	        }, 0);
+	        return [enterTime, leaveTime, pageDwellTime || 0];
+	    };
+	    PageTracer = __decorate([
+	        injectable(),
+	        __param(0, inject(TYPES.Utils)),
+	        __metadata("design:paramtypes", [Function])
+	    ], PageTracer);
+	    return PageTracer;
+	}());
+	//# sourceMappingURL=PageTracer.js.map
 
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 	var EventListener$1 = {
@@ -5173,6 +5421,8 @@ var ha = (function () {
 	                this.initPresetPoints();
 	                subs = this.events.messageOf('reset').subscribe(function (msg) { return __awaiter$1(_this, void 0, void 0, function () {
 	                    return __generator$1(this, function (_a) {
+	                        // 注销事件监听
+	                        this.evtSubs.unsubscribe();
 	                        // 绑定监控事件
 	                        this.evtSubs.subscribe();
 	                        // 初始化埋点交互遮罩
@@ -5231,6 +5481,7 @@ var ha = (function () {
 	            });
 	        });
 	    };
+	    // 请求服务获取对应页面的已埋的埋点配置
 	    Setting.prototype.getPresetPoints = function () {
 	        return __awaiter$1(this, void 0, void 0, function () {
 	            var rules, parentsQueryStr, version, _a, err, res;
@@ -5290,6 +5541,7 @@ var ha = (function () {
 	    ], Setting);
 	    return Setting;
 	}());
+	//# sourceMappingURL=Setting.js.map
 
 	var DomMasker = /** @class */ (function () {
 	    function DomMasker(createPoint, customCanvas) {
@@ -5359,6 +5611,7 @@ var ha = (function () {
 	    ], DomMasker);
 	    return DomMasker;
 	}());
+	//# sourceMappingURL=DomMasker.js.map
 
 	var customCanvas = function (width, height, color) {
 	    if (color === void 0) { color = 'rgba(77, 131, 202, 0.5)'; }
@@ -5376,6 +5629,7 @@ var ha = (function () {
 	    ctx.textBaseline = 'ideographic';
 	    return canvas;
 	};
+	//# sourceMappingURL=CustomCanvas.js.map
 
 	function getCoords(elem) {
 	    var box = elem.getBoundingClientRect();
@@ -5595,9 +5849,23 @@ var ha = (function () {
 	        for (var _i = 0; _i < arguments.length; _i++) {
 	            args[_i] = arguments[_i];
 	        }
-	        return g(f.apply(void 0, args));
+	        return f(g.apply(void 0, args));
 	    }; });
 	};
+	_.pipe = function () {
+	    var fns = [];
+	    for (var _i = 0; _i < arguments.length; _i++) {
+	        fns[_i] = arguments[_i];
+	    }
+	    return _.compose.apply(_, fns.reverse());
+	};
+	_.pack = function (arity) { return function (arr) { return arr.reduce(function (temp, tar, i) {
+	    var key = Math.floor(i / arity);
+	    temp[key] ? temp[key].push(tar) : temp[key] = [tar];
+	    return temp;
+	}, []); }; };
+	_.first = function (arr) { return arr[0] || null; };
+	_.last = function (arr) { return arr.length ? arr[arr.length - 1] : null; };
 	var _a = window, sessionStorage = _a.sessionStorage, localStorage = _a.localStorage;
 	var _b = [sessionStorage, localStorage].map(function (storage) { return ({
 	    get: function (key) {
@@ -5648,6 +5916,10 @@ var ha = (function () {
 	    clear: function () {
 	        window.name = JSON.stringify({});
 	    }
+	};
+	_.getPagePath = function () {
+	    var _a = window.location, pathname = _a.pathname, hash = _a.hash;
+	    return pathname + this.first(hash.split('?'));
 	};
 	_.inIframe = function () { return window && window.self !== window.top; };
 	_.isType = function (type, staff) { return Object.prototype.toString.call(staff) === "[object " + type + "]"; };
@@ -5806,6 +6078,18 @@ var ha = (function () {
 	        connType: connType
 	    };
 	};
+	_.nativeCodeEventPatch = function (obj, type) {
+	    // 这里提前缓存住原始的原生方法
+	    var orig = obj[type];
+	    return function () {
+	        var rv = orig.apply(this, arguments);
+	        var e = new Event(type.toLowerCase());
+	        Object.assign(e, { arguments: arguments });
+	        window.dispatchEvent(e);
+	        return rv;
+	    };
+	};
+	//# sourceMappingURL=utils.js.map
 
 	var AppConfig = /** @class */ (function () {
 	    function AppConfig() {
@@ -5873,6 +6157,7 @@ var ha = (function () {
 	    ], AppConfig);
 	    return AppConfig;
 	}());
+	//# sourceMappingURL=AppConfig.js.map
 
 	var EventSubscriber = /** @class */ (function () {
 	    function EventSubscriber() {
@@ -5915,6 +6200,7 @@ var ha = (function () {
 	    ], EventSubscriber);
 	    return EventSubscriber;
 	}());
+	//# sourceMappingURL=EventSubscriber.js.map
 
 	var Point = /** @class */ (function () {
 	    function Point(_, conf) {
@@ -5961,6 +6247,7 @@ var ha = (function () {
 	    ], Point);
 	    return Point;
 	}());
+	//# sourceMappingURL=Point.js.map
 
 	var container = new Container();
 	container.bind(TYPES.HXAnalytics).to(HXAnalytics).inSingletonScope();
@@ -5988,11 +6275,14 @@ var ha = (function () {
 	container.bind(TYPES.ReportStrategy).to(ReportStrategy);
 	// 消息队列
 	container.bind(TYPES.MsgsQueue).to(MsgsQueue);
+	// 页面记录跟踪
+	container.bind(TYPES.PageTracer).to(PageTracer);
 	// 埋点配置相关类型
 	container.bind(TYPES.DomMasker).to(DomMasker).inSingletonScope();
 	container.bind(TYPES.CustomCanvas).toFunction(customCanvas);
 	var createPoint = function (origin) { return new Point(_, container.get(TYPES.Conf)).create(origin); };
 	container.bind(TYPES.Point).toFunction(createPoint);
+	//# sourceMappingURL=inversify.config.js.map
 
 	// window.onerror = function (msg, url, row, col, error) {
 	//     console.log('错误 ❌: ', {
@@ -6050,6 +6340,7 @@ var ha = (function () {
 	// 用户身份校验
 	// 页面停留时长 页面切换机制
 	// 单测
+	//# sourceMappingURL=entry-jssdk.js.map
 
 	return ha;
 

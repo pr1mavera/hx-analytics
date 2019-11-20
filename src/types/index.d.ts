@@ -13,9 +13,26 @@ interface Utils {
     [x: string]: any;
 
     /**
-     * compose 原生对象方法柯里化
+     * compose 反向管道
      */
-    compose: (...fn: Function[]) => Function;
+    compose: (...fns: Function[]) => Function;
+
+    /**
+     * pipe 管道
+     */
+    pipe: (...fns: Function[]) => Function;
+
+    /**
+     * 按指定个数包装数组
+     * @example
+     * pack(2)([ 1, 2, 3, 4, 5 ]) -> [ [1, 2], [3, 4], [5] ]
+     * pack(3)([ 1, 2, 3, 4, 5 ]) -> [ [1, 2, 3], [4, 5] ]
+     */
+    pack: (arity: number) => (arr: any[]) => Array<Array<any>>;
+
+    first: (arr: any[]) => any;
+
+    last: (arr: any[]) => any;
 
     /**
      * 本地缓存封装
@@ -32,6 +49,11 @@ interface Utils {
         remove(key: string): void;
         clear(): void;
     }
+
+    /**
+     * 获取页面唯一路径（加上hash）
+     */
+    getPagePath: () => string;
 
     /**
      * 判断应用是否在 iframe 内
@@ -148,6 +170,12 @@ interface Utils {
      */
     deviceInfo: () => { name: string, version: number, browser: string, connType: string };
 
+    /**
+     * 原始事件触发自定义事件构造器
+     * @param {any} orig 原生对象
+     * @param {String} type 期望监控原生对象上发生的事件名称，将作为分发的自定义事件的事件名
+     */
+    nativeCodeEventPatch: (orig: any, type: string) => any;
 }
 interface CustomStorage {
     get: (key?: string) => any;
@@ -165,12 +193,15 @@ interface AppEvent {
     pageHide: () => any;
     hashchange: () => any;
     popstate: () => any;
+    pushState: () => any;
+    replaceState: () => any;
     visibilitychange: () => any;
     online: () => any;
     offline: () => any;
     message: () => any;
     messageOf: (tag: string) => any;
     netStatusChange: () => any;
+    pageChange: () => any;
 }
 
 interface Service {
@@ -264,6 +295,8 @@ type Msg = {
 
 interface MsgsQueue {
     _queue: Msg[];
+    onload(): void;
+    onUnload(): void;
     bindCustomer(cstm: { notify: Function }): void;
     getQueue(): Msg[];
     push(data: Msg | Msg[]): void;
@@ -278,6 +311,13 @@ interface ReportStrategy {
     report2Storage(msgs: Msg[]): Promise<boolean>;
     report2Server(msgs: Msg[], opt: Obj): Promise<boolean> | boolean;
     resend(): void;
+}
+
+interface PageTracer {
+    active(timestamp?: number): void;
+    inactive(timestamp?: number): void;
+    treat(): any[] | null;
+    calc(): [ number, number, number ];
 }
 
 // 模式生命周期

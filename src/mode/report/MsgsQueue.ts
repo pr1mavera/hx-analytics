@@ -10,11 +10,9 @@ export class MsgsQueue implements MsgsQueue {
     customer: { notify: Function } = null;
 
     // 容器注入 | 工具
-    private _: Utils;
-    // 注入应用事件层
-    private events: AppEvent;
+    @inject(TYPES.Utils) private _: Utils;
 
-    private onload() {
+    onload() {
 
         /**
          * 载入时，比较缓存数据，重载消息队列
@@ -27,9 +25,9 @@ export class MsgsQueue implements MsgsQueue {
             this._.windowData.get()
         );
         // 过滤合法消息队列缓存
-        const filterLegalCacheKey = (key: string) => /report_temp_(\d{6}$)/g.test(key);
+        const legalCacheKeyFilter = (key: string) => /report_temp_(\d{6}$)/g.test(key);
         // 过滤出所有合法消息队列缓存索引
-        const msgsKeys: string[] = Object.keys(cacheSet).filter(filterLegalCacheKey);
+        const msgsKeys: string[] = Object.keys(cacheSet).filter(legalCacheKeyFilter);
         // 映射成消息，需要判断是否是 json
         const msgs: Msg[] = msgsKeys.reduce((temp: Msg[], key: string) => {
             const listItem = this._.isJson(cacheSet[key]) ? JSON.parse(cacheSet[key]) : cacheSet[key];
@@ -44,7 +42,7 @@ export class MsgsQueue implements MsgsQueue {
         });
     }
 
-    private onUnload() {
+    onUnload() {
 
         /**
          * 卸载页面时
@@ -69,19 +67,6 @@ export class MsgsQueue implements MsgsQueue {
             this._.LocStorage.set(cache_chunk, msgs);
             this._.windowData.set(cache_chunk, msgs);
         }
-    }
-
-    constructor(
-        @inject(TYPES.Utils) _: Utils,
-        @inject(TYPES.AppEvent) events: AppEvent
-    ) {
-
-        this._ = _;
-        this.events = events;
-        
-        this.onload();
-
-        window.addEventListener('pagehide', this.onUnload.bind(this));
     }
 
     bindCustomer(cstm: { notify: (...rest: any[]) => Promise<boolean> | boolean }) {
