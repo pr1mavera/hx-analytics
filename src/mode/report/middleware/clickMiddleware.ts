@@ -2,9 +2,15 @@ export const clickMiddleware = (ctx: any) => (next: Function) => (...opt: any) =
 
     console.log('clickMiddleware');
 
-    const [ funcId ] = opt;
+    const [ funcId, _opt ] = opt;
 
-    const reqData = next({ type: 2, eventId: 'click', funcId });
+    const reqData = next({
+        ..._opt,
+        type: 2,
+        eventId: 'click',
+        isSysEvt: 'N',
+        funcId
+    });
 
     return reqData;
 };

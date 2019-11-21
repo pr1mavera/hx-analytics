@@ -54,7 +54,7 @@ export class ReportStrategy implements ReportStrategy {
     report2Storage(data: Msg[]) {
         let cache = this._.LocStorage.get(this.storageKey);
         // 合并之前的缓存
-        cache = cache ? <Array<Obj>>cache.concat(data) : data;
+        cache = cache ? <Array<Msg>>cache.concat(data) : data;
         console.log('report to Storage: ', cache);
 
         try {

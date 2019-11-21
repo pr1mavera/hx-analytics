@@ -82,15 +82,19 @@ export const AppEvent: AppEvent = {
         );
     },
 
-    pageChange() {
+    routeChange() {
         return merge(this.hashchange(), this.popstate(), this.pushState(), this.replaceState());
-        // const addEvent = handle => {
-        //     handle
-        // }
-        // return {
-        //     subscribe: (handle) => {
-        //         window.addEventListener('')
-        //     }
-        // }
+    },
+
+    pageVisible() {
+        return this.visibilitychange().pipe(
+            filter(() => document.visibilityState === 'visible')
+        )
+    },
+
+    pageHidden() {
+        return this.visibilitychange().pipe(
+            filter(() => document.visibilityState === 'hidden')
+        )
     }
 }

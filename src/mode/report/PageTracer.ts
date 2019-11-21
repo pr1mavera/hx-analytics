@@ -7,6 +7,9 @@ type ActivePoint = [ string, number ];
 @injectable()
 export class PageTracer implements PageTracer {
 
+    // 边界情况的缓存
+    _cacheKey: string = '';
+
     /**
      * 页面路由访问记录
      * @example
@@ -15,7 +18,22 @@ export class PageTracer implements PageTracer {
      *  [ '/a/test.html#abcdefg', 'www.baidu.com/a/test.html' ]
      * ]
      */
-    private _pageRecord: PageRecord[] = [];
+    private _pageRecords: PageRecord[] = [];
+
+    /**
+     * 生成当前路由访问记录
+     */
+    private createPageRecord(): PageRecord {
+        return [ this._.getPagePath(), window.location.href ];
+    }
+
+    /**
+     * 获取路由访问记录最后一条数据（当前路由）
+     */
+    private getCurrentPageRecord(): PageRecord {
+        const { deepCopy, last, pipe } = this._;
+        return pipe(last, deepCopy)(this._pageRecords);
+    }
 
     /**
      * 单个页面活跃点记录
@@ -34,15 +52,13 @@ export class PageTracer implements PageTracer {
 
     constructor(@inject(TYPES.Utils) _: Utils) {
         this._ = _;
-        this._pageRecord.push(this.getCurrentPageRecord());
-        // 手动初始化第一次页面活跃节点
-        this.active();
+        this.init();
     }
 
-    private getCurrentPageRecord(): PageRecord {
-        return [ this._.getPagePath(), window.location.href ];
-    }
-
+    /**
+     * 记录活跃节点
+     * @param {Number} timestamp 时间戳（可选）
+     */
     active(timestamp?: number) {
         const { first, last } = this._;
         // 记录活跃节点
@@ -52,6 +68,10 @@ export class PageTracer implements PageTracer {
         this._trace.push([ 'active', timestamp || Date.now() ]);
     }
 
+    /**
+     * 记录不活跃节点
+     * @param {Number} timestamp 时间戳（可选）
+     */
     inactive(timestamp?: number) {
         const { first, last } = this._;
         // 记录不活跃节点
@@ -61,31 +81,43 @@ export class PageTracer implements PageTracer {
         this._trace.push([ 'inactive', timestamp || Date.now() ]);
     }
 
+    /**
+     * 检查当前页面是否产生跳转
+     */
+    isRouteChange() {
+        const { first, last, pipe } = this._;
+        // 当前新路由
+        const newPath = this._.getPagePath();
+        // 上一个路由
+        const oldPath = pipe(last, first)(this._pageRecords);
+
+        return newPath !== oldPath;
+    }
+
+    /**
+     * 初始化
+     */
+    init() {
+        // 更新页面访问记录
+        this._pageRecords.push(this.createPageRecord());
+        // 访问记录维护在10个
+        this._pageRecords.length > 10 && this._pageRecords.shift();
+
+        // 手动初始化活跃节点
+        this._trace = [];
+        this.active();
+    }
+
+    /**
+     * 获取当前路由的停留相关的所有数据
+     */
     treat() {
 
-        const { last } = this._;
-        // 当前新路由
-        const [ newPath, newUrl ] = this.getCurrentPageRecord();
-        // 上一个路由
-        const [ oldPath, oldUrl ] = last(this._pageRecord);
-
-        // 路由发生变化但是并没有发生跳转（pathname 相同）
-        if (newPath === oldPath) return null;
-
-        // 当前页面路由存在跳转
         // 手动记录一次不活跃节点
         this.inactive();
-        // 计算进入、离开、停留时长
+        // 计算进入、离开、停留时长、
         const [ enterTime, leaveTime, pageDwellTime ] = this.calc();
-
-        // 更新页面访问记录
-        this._pageRecord.push([ newPath, newUrl ]);
-        // 访问记录维护在10个
-        this._pageRecord.length > 10 && this._pageRecord.shift();
-
-        // 手动初始化活跃节点，起始时间为上一个页面的离开时间
-        this._trace = [];
-        this.active(leaveTime);
+        const [ oldPath, oldUrl ] = this.getCurrentPageRecord();
 
         return [ enterTime, leaveTime, pageDwellTime, oldPath, oldUrl ];
     }

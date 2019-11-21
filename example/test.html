@@ -148,9 +148,15 @@
         })();
         ha.push([ 'init', 'kzgm', 'kfxt', 'oKXX7wKQhDf0sixuV0z-gEB8Y8is' ]);
     </script>
-    <!-- <script>
-        ha.push([ 'init', 'kzgm', 'kfxt', 'oKXX7wKQhDf0sixuV0z-gEB8Y8is' ]);
-    </script> -->
+    <script>
+        localStorage.setItem('vConsole_switch_x', 0);
+        localStorage.setItem('vConsole_switch_y', 0);
+        document.addEventListener("visibilitychange", function() {
+            var iushd = JSON.parse(localStorage.getItem('iushd')) || [];
+            iushd.push(`${iushd.length}-${document.visibilityState}`);
+            localStorage.setItem('iushd', JSON.stringify(iushd));
+        });
+    </script>
 </head>
 <body>
     <div class="list">

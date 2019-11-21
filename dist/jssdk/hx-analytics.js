@@ -4544,16 +4544,14 @@ var ha = (function () {
 	    netStatusChange: function () {
 	        return merge(this.online(), this.offline()).pipe(map(function (e) { return e.type; }));
 	    },
-	    pageChange: function () {
+	    routeChange: function () {
 	        return merge(this.hashchange(), this.popstate(), this.pushState(), this.replaceState());
-	        // const addEvent = handle => {
-	        //     handle
-	        // }
-	        // return {
-	        //     subscribe: (handle) => {
-	        //         window.addEventListener('')
-	        //     }
-	        // }
+	    },
+	    pageVisible: function () {
+	        return this.visibilitychange().pipe(filter(function () { return document.visibilityState === 'visible'; }));
+	    },
+	    pageHidden: function () {
+	        return this.visibilitychange().pipe(filter(function () { return document.visibilityState === 'hidden'; }));
 	    }
 	};
 	//# sourceMappingURL=index.js.map
@@ -4723,8 +4721,8 @@ var ha = (function () {
 	        opt[_i] = arguments[_i];
 	    }
 	    console.log('clickMiddleware');
-	    var funcId = opt[0];
-	    var reqData = next({ type: 2, eventId: 'click', funcId: funcId });
+	    var funcId = opt[0], _opt = opt[1];
+	    var reqData = next(__assign(__assign({}, _opt), { type: 2, eventId: 'click', isSysEvt: 'N', funcId: funcId }));
 	    return reqData;
 	}; }; };
 	//# sourceMappingURL=clickMiddleware.js.map
@@ -4735,8 +4733,12 @@ var ha = (function () {
 	        opt[_i] = arguments[_i];
 	    }
 	    // console.log('clickMiddleware');
-	    var enterTime = opt[0], leaveTime = opt[1], pageDwellTime = opt[2], pageId = opt[3], pageUrl = opt[4];
-	    var reqData = next({ type: 2, eventId: 'pageDwell', enterTime: enterTime, leaveTime: leaveTime, pageDwellTime: pageDwellTime, pageId: pageId, pageUrl: pageUrl });
+	    var enterTime = opt[0], leaveTime = opt[1], pageDwellTime = opt[2], pageId = opt[3], pageUrl = opt[4], _opt = opt[5];
+	    var reqData = next(__assign(__assign({}, _opt), { type: 2, eventId: 'pageDwell', isSysEvt: 'Y', enterTime: enterTime,
+	        leaveTime: leaveTime,
+	        pageDwellTime: pageDwellTime,
+	        pageId: pageId,
+	        pageUrl: pageUrl }));
 	    console.log('pageDwellMiddleware');
 	    return reqData;
 	}; }; };
@@ -4795,13 +4797,63 @@ var ha = (function () {
 	        function () {
 	            var _this = this;
 	            // 统一单页路由变化
-	            return this.events.pageChange().subscribe(function () {
+	            return this.events.routeChange().subscribe(function () {
+	                // 检查当前是否存在跳转
+	                if (!_this.pageTracer.isRouteChange())
+	                    return;
 	                // pageDwell: [ enterTime, leaveTime, pageDwellTime, pageId, pageUrl ]
 	                var pageDwell = _this.pageTracer.treat();
-	                debugger;
-	                if (!pageDwell)
-	                    return;
+	                // 重置当前页 pageTracer
+	                _this.pageTracer.init();
 	                _this.onTrigger(__spreadArrays(['pageDwell'], pageDwell));
+	            });
+	        }
+	    ],
+	    'report-page-visible': [
+	        {},
+	        function () {
+	            var _this = this;
+	            // 页面切至后台状态变化
+	            return this.events.pageVisible().subscribe(function () {
+	                /**
+	                 * 页面停留数据重载
+	                 */
+	                // 添加页面活跃节点
+	                _this.pageTracer.active();
+	                // 清空页面休眠时缓存的上报数据
+	                var key = _this.pageTracer._cacheKey;
+	                key && (_this._.LocStorage.remove(key), _this.pageTracer._cacheKey = '');
+	                /**
+	                 * 消息队列数据重载
+	                 */
+	                _this.mq.onLoad();
+	            });
+	        }
+	    ],
+	    'report-page-hidden': [
+	        {},
+	        function () {
+	            var _this = this;
+	            // 页面切至前台状态变化
+	            return this.events.pageHidden().subscribe(function () {
+	                /**
+	                 * 页面停留数据边界情况处理
+	                 *
+	                 * 防止移动设备直接关闭应用导致数据丢失（将索引保存在页面追踪实例上）
+	                 * 若移动设备切至后台后直接杀掉应用，则缓存中会存在这份停留时长数据，将在下次访问页面时上报
+	                 * 若移动设备切至后台后再次回到应用，则缓存会被清空
+	                 *
+	                 * PS: iOS 暂时存在问题，切至后台不会触发 visibilitychange
+	                 */
+	                var pageDwell = _this.pageTracer.treat();
+	                // 生成一份上报数据，只生成不上报
+	                var reportData = _this.onTrigger(__spreadArrays(['pageDwell'], pageDwell, [{ packgeMsgOnly: true }]));
+	                // 缓存这份上报数据
+	                _this._.LocStorage.set(_this.pageTracer._cacheKey = _this._.createCacheKey(), [reportData]);
+	                /**
+	                 * 消息队列数据边界情况处理
+	                 */
+	                _this.mq.onUnload();
 	            });
 	        }
 	    ],
@@ -4839,7 +4891,7 @@ var ha = (function () {
 	                ]
 	            },
 	            click: {
-	                params: ['funcId', 'preFuncId'],
+	                params: ['eventId', 'funcId', 'preFuncId'],
 	                middlewares: [
 	                    loggerMiddleware,
 	                    clickMiddleware,
@@ -4847,7 +4899,7 @@ var ha = (function () {
 	                ]
 	            },
 	            pageDwell: {
-	                params: ['enterTime', 'leaveTime', 'pageDwellTime'],
+	                params: ['eventId', 'enterTime', 'leaveTime', 'enterTime', 'leaveTime', 'pageDwellTime'],
 	                middlewares: [
 	                    loggerMiddleware,
 	                    pageDwellMiddleware
@@ -4868,8 +4920,9 @@ var ha = (function () {
 	        // 在第一次进入的时候初始化一次性相关配置
 	        if (!this._INITED) {
 	            this._INITED = true;
-	            window.addEventListener('pagehide', this.onExit.bind(this));
-	            this.mq.onload();
+	            // 这里使用原生的事件监控，实测使用Rxjs监控 pagehide 好像不太行，原因不详（好像是因为进入了Rxjs的调度中心成了异步的？？）
+	            window.addEventListener('pagehide', this.onExit.bind(this), true);
+	            this.mq.onLoad();
 	            // 绑定消息队列消费者
 	            this.mq.bindCustomer({
 	                // 模拟消费者，提供 notify 接口
@@ -4885,16 +4938,29 @@ var ha = (function () {
 	            // 根据事件上报配置，在这旮沓挨个注册数据上报中间件
 	            Object.keys(this.reportConfigs).forEach(function (key) {
 	                var config = _this.reportConfigs[key];
-	                if (config.middlewares) {
+	                if (config.middlewares && config.middlewares.length) {
 	                    config.rebuildWithMiddlewares = _this.applyMiddlewares(config.middlewares)(_this);
 	                }
 	            });
 	        }
 	    };
 	    Report.prototype.onExit = function () {
-	        // 消息队列生命周期
+	        /**
+	         * 页面停留数据边界情况处理
+	         */
+	        // pageDwell: [ enterTime, leaveTime, pageDwellTime, pageId, pageUrl ]
+	        var pageDwell = this.pageTracer.treat();
+	        // 重置当前页 pageTracer
+	        this.pageTracer.init();
+	        // 生成一份上报数据
+	        this.onTrigger(__spreadArrays(['pageDwell'], pageDwell));
+	        /**
+	         * 消息队列生命周期
+	         */
 	        this.mq.onUnload();
-	        // 注销事件监听
+	        /**
+	         * 注销事件监听
+	         */
 	        this.evtSubs.unsubscribe();
 	    };
 	    Report.prototype.bindPageTracerPatch = function () {
@@ -4949,10 +5015,11 @@ var ha = (function () {
 	            funcId: extendsData.funcId || '-',
 	            pageId: extendsData.pageId || '-',
 	            sysId: this.conf.get('sysId'),
+	            isSysEvt: extendsData.isSysEvt || '-',
 	            msg: this.formatDatagram(extendsData.type, extendsData)
 	        };
 	        // 推送至消息队列
-	        this.mq.push(reqData);
+	        !extendsData.packgeMsgOnly && this.mq.push(reqData);
 	        return reqData;
 	    };
 	    /**
@@ -5011,24 +5078,41 @@ var ha = (function () {
 
 	var MsgsQueue = /** @class */ (function () {
 	    function MsgsQueue() {
+	        // 队列
 	        this.queue = [];
+	        // 上报定时器
 	        this.timer = null;
+	        // 延迟
 	        this.delay = 2000;
+	        // 消费者，目前只支持绑定一个消费者（只支持单一消费）
 	        this.customer = null;
 	    }
-	    MsgsQueue.prototype.onload = function () {
-	        /**
-	         * 载入时，比较缓存数据，重载消息队列
-	         */
+	    /**
+	     * 比较缓存数据，重载消息队列
+	     *
+	     * 思路：
+	     * 1. 将 localStorage 与 window.name 取出
+	     * 2. 合并两个缓存并去重，过滤出索引为 report_temp_chunk:6 的缓存
+	     * 3. 将得到的合法消息队列缓存，映射合并成消息队列可读的消息
+	     *
+	     * 缓存存在的情况：
+	     * 1. localStorage √ | window.name × ===> 上次访问该页面存在行为数据未处理，上报
+	     * 2. localStorage × | window.name √ ===> 切至跨域网站，上报
+	     * 3. localStorage √ | window.name √ ===> 切至同域网站，上报
+	     *
+	     * 其中情况2，最开始处理方式是忽略掉，因为可能导致与情况1重复，后端入库数据量太大无法去重
+	     * 后来为保证数据上报的及时性，与后端协调查询的时候，由前端处理去重
+	     */
+	    MsgsQueue.prototype.onLoad = function () {
 	        var _this = this;
 	        this.timer = null;
 	        // 合并 window.name & localStorage
 	        var cacheSet = Object.assign({}, this._.LocStorage.get(), this._.windowData.get());
-	        // 过滤合法消息队列缓存
+	        // 过滤器（合法消息队列缓存索引）
 	        var legalCacheKeyFilter = function (key) { return /report_temp_(\d{6}$)/g.test(key); };
 	        // 过滤出所有合法消息队列缓存索引
 	        var msgsKeys = Object.keys(cacheSet).filter(legalCacheKeyFilter);
-	        // 映射成消息，需要判断是否是 json
+	        // 映射成消息，需要判断是否是 json（由于是直接拿到 localStorage 对象进行合并缓存，获取的 value 都是json）
 	        var msgs = msgsKeys.reduce(function (temp, key) {
 	            var listItem = _this._.isJson(cacheSet[key]) ? JSON.parse(cacheSet[key]) : cacheSet[key];
 	            return __spreadArrays(temp, listItem);
@@ -5041,22 +5125,22 @@ var ha = (function () {
 	            _this._.windowData.remove(key);
 	        });
 	    };
+	    /**
+	     * 卸载页面时
+	     * 尝试消费消息队列中的数据
+	     * 若消费失败，将消息缓存进 window.name & localStorage，使用相同的 chunk 关联
+	     * 在下次重载页面时（重新访问页面，或页面重新可见），比较缓存的 chunk ，重载消息队列
+	     */
 	    MsgsQueue.prototype.onUnload = function () {
-	        /**
-	         * 卸载页面时
-	         * 尝试消费消息队列中的数据
-	         * 若消费失败，将消息缓存进 window.name & localStorage，使用相同的 chunk 关联
-	         * 在下次重载页面时，比较缓存的 chunk ，重新发送
-	         */
 	        // 终止进行中的消费任务
 	        this.timer && (clearTimeout(this.timer), this.timer = null);
 	        // 尝试通过 sendBeacon API 将消息队列中的所有数据同步消费
 	        var msgs = this.pull();
-	        // 若满足一下情况，则将数据缓存
-	        if (msgs.length && /*                                       当前队列存在数据，且 */
-	            !this._.isSupportBeacon() || /*                         设备本身不支持 sendBeacon API，或 */
+	        // 若满足以下情况，则将数据缓存
+	        if (!this._.isSupportBeacon() || /*                         设备本身不支持 sendBeacon API，或 */
 	            !this.customer || /*                                    当前未绑定消费者，或 */
-	            !this.customer.notify(msgs, { useBeacon: true }) /*     同步消费失败 */) {
+	            msgs.length && /*                                       当前队列存在数据，且 */
+	                !this.customer.notify(msgs, { useBeacon: true }) /*     同步消费失败 */) {
 	            var cache_chunk = this._.createCacheKey();
 	            this._.LocStorage.set(cache_chunk, msgs);
 	            this._.windowData.set(cache_chunk, msgs);
@@ -5100,6 +5184,7 @@ var ha = (function () {
 	    ], MsgsQueue);
 	    return MsgsQueue;
 	}());
+	//# sourceMappingURL=MsgsQueue.js.map
 
 	var ReportStrategy = /** @class */ (function () {
 	    function ReportStrategy(_, service) {
@@ -5245,6 +5330,8 @@ var ha = (function () {
 
 	var PageTracer = /** @class */ (function () {
 	    function PageTracer(_) {
+	        // 边界情况的缓存
+	        this._cacheKey = '';
 	        /**
 	         * 页面路由访问记录
 	         * @example
@@ -5253,7 +5340,7 @@ var ha = (function () {
 	         *  [ '/a/test.html#abcdefg', 'www.baidu.com/a/test.html' ]
 	         * ]
 	         */
-	        this._pageRecord = [];
+	        this._pageRecords = [];
 	        /**
 	         * 单个页面活跃点记录
 	         * @example
@@ -5266,13 +5353,25 @@ var ha = (function () {
 	         */
 	        this._trace = [];
 	        this._ = _;
-	        this._pageRecord.push(this.getCurrentPageRecord());
-	        // 手动初始化第一次页面活跃节点
-	        this.active();
+	        this.init();
 	    }
-	    PageTracer.prototype.getCurrentPageRecord = function () {
+	    /**
+	     * 生成当前路由访问记录
+	     */
+	    PageTracer.prototype.createPageRecord = function () {
 	        return [this._.getPagePath(), window.location.href];
 	    };
+	    /**
+	     * 获取路由访问记录最后一条数据（当前路由）
+	     */
+	    PageTracer.prototype.getCurrentPageRecord = function () {
+	        var _a = this._, deepCopy = _a.deepCopy, last = _a.last, pipe = _a.pipe;
+	        return pipe(last, deepCopy)(this._pageRecords);
+	    };
+	    /**
+	     * 记录活跃节点
+	     * @param {Number} timestamp 时间戳（可选）
+	     */
 	    PageTracer.prototype.active = function (timestamp) {
 	        var _a = this._, first = _a.first, last = _a.last;
 	        // 记录活跃节点
@@ -5281,6 +5380,10 @@ var ha = (function () {
 	        (!lastTrace || (lastTrace && first(lastTrace) === 'inactive')) &&
 	            this._trace.push(['active', timestamp || Date.now()]);
 	    };
+	    /**
+	     * 记录不活跃节点
+	     * @param {Number} timestamp 时间戳（可选）
+	     */
 	    PageTracer.prototype.inactive = function (timestamp) {
 	        var _a = this._, first = _a.first, last = _a.last;
 	        // 记录不活跃节点
@@ -5289,27 +5392,38 @@ var ha = (function () {
 	        lastTrace && first(lastTrace) === 'active' &&
 	            this._trace.push(['inactive', timestamp || Date.now()]);
 	    };
-	    PageTracer.prototype.treat = function () {
-	        var last = this._.last;
+	    /**
+	     * 检查当前页面是否产生跳转
+	     */
+	    PageTracer.prototype.isRouteChange = function () {
+	        var _a = this._, first = _a.first, last = _a.last, pipe = _a.pipe;
 	        // 当前新路由
-	        var _a = this.getCurrentPageRecord(), newPath = _a[0], newUrl = _a[1];
+	        var newPath = this._.getPagePath();
 	        // 上一个路由
-	        var _b = last(this._pageRecord), oldPath = _b[0], oldUrl = _b[1];
-	        // 路由发生变化但是并没有发生跳转（pathname 相同）
-	        if (newPath === oldPath)
-	            return null;
-	        // 当前页面路由存在跳转
+	        var oldPath = pipe(last, first)(this._pageRecords);
+	        return newPath !== oldPath;
+	    };
+	    /**
+	     * 初始化
+	     */
+	    PageTracer.prototype.init = function () {
+	        // 更新页面访问记录
+	        this._pageRecords.push(this.createPageRecord());
+	        // 访问记录维护在10个
+	        this._pageRecords.length > 10 && this._pageRecords.shift();
+	        // 手动初始化活跃节点
+	        this._trace = [];
+	        this.active();
+	    };
+	    /**
+	     * 获取当前路由的停留相关的所有数据
+	     */
+	    PageTracer.prototype.treat = function () {
 	        // 手动记录一次不活跃节点
 	        this.inactive();
-	        // 计算进入、离开、停留时长
-	        var _c = this.calc(), enterTime = _c[0], leaveTime = _c[1], pageDwellTime = _c[2];
-	        // 更新页面访问记录
-	        this._pageRecord.push([newPath, newUrl]);
-	        // 访问记录维护在10个
-	        this._pageRecord.length > 10 && this._pageRecord.shift();
-	        // 手动初始化活跃节点，起始时间为上一个页面的离开时间
-	        this._trace = [];
-	        this.active(leaveTime);
+	        // 计算进入、离开、停留时长、
+	        var _a = this.calc(), enterTime = _a[0], leaveTime = _a[1], pageDwellTime = _a[2];
+	        var _b = this.getCurrentPageRecord(), oldPath = _b[0], oldUrl = _b[1];
 	        return [enterTime, leaveTime, pageDwellTime, oldPath, oldUrl];
 	    };
 	    /**
@@ -5334,7 +5448,6 @@ var ha = (function () {
 	    ], PageTracer);
 	    return PageTracer;
 	}());
-	//# sourceMappingURL=PageTracer.js.map
 
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 	var EventListener$1 = {

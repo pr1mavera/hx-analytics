@@ -201,7 +201,9 @@ interface AppEvent {
     message: () => any;
     messageOf: (tag: string) => any;
     netStatusChange: () => any;
-    pageChange: () => any;
+    routeChange: () => any;
+    pageVisible: () => any;
+    pageHidden: () => any;
 }
 
 interface Service {
@@ -290,12 +292,13 @@ type Msg = {
     funcId: string,
     pageId: string,
     sysId: string,
+    isSysEvt: string,
     msg: string
 }
 
 interface MsgsQueue {
     _queue: Msg[];
-    onload(): void;
+    onLoad(): void;
     onUnload(): void;
     bindCustomer(cstm: { notify: Function }): void;
     getQueue(): Msg[];
@@ -316,6 +319,8 @@ interface ReportStrategy {
 interface PageTracer {
     active(timestamp?: number): void;
     inactive(timestamp?: number): void;
+    isRouteChange(): boolean;
+    init(): void;
     treat(): any[] | null;
     calc(): [ number, number, number ];
 }

@@ -42,13 +42,65 @@ const EventListener = {
         {},
         function(): Subscription {
             // 统一单页路由变化
-            return this.events.pageChange().subscribe(() => {
+            return this.events.routeChange().subscribe(() => {
+                // 检查当前是否存在跳转
+                if (!this.pageTracer.isRouteChange()) return;
                 // pageDwell: [ enterTime, leaveTime, pageDwellTime, pageId, pageUrl ]
                 const pageDwell = this.pageTracer.treat();
-                debugger
-                if (!pageDwell) return;
+                // 重置当前页 pageTracer
+                this.pageTracer.init();
 
                 this.onTrigger([ 'pageDwell', ...pageDwell ]);
+            });
+        }
+    ],
+    'report-page-visible': [
+        {},
+        function(): Subscription {
+            // 页面切至后台状态变化
+            return this.events.pageVisible().subscribe(() => {
+
+                /**
+                 * 页面停留数据重载
+                 */
+                // 添加页面活跃节点
+                this.pageTracer.active();
+                // 清空页面休眠时缓存的上报数据
+                const key = this.pageTracer._cacheKey;
+                key && (this._.LocStorage.remove(key), this.pageTracer._cacheKey = '');
+
+                /**
+                 * 消息队列数据重载
+                 */
+                this.mq.onLoad();
+            });
+        }
+    ],
+    'report-page-hidden': [
+        {},
+        function(): Subscription {
+            // 页面切至前台状态变化
+            return this.events.pageHidden().subscribe(() => {
+
+                /**
+                 * 页面停留数据边界情况处理
+                 * 
+                 * 防止移动设备直接关闭应用导致数据丢失（将索引保存在页面追踪实例上）
+                 * 若移动设备切至后台后直接杀掉应用，则缓存中会存在这份停留时长数据，将在下次访问页面时上报
+                 * 若移动设备切至后台后再次回到应用，则缓存会被清空
+                 * 
+                 * PS: iOS 暂时存在问题，切至后台不会触发 visibilitychange
+                 */
+                const pageDwell = this.pageTracer.treat();
+                // 生成一份上报数据，只生成不上报
+                const reportData: Msg = this.onTrigger([ 'pageDwell', ...pageDwell, { packgeMsgOnly: true } ]);
+                // 缓存这份上报数据
+                this._.LocStorage.set(this.pageTracer._cacheKey = this._.createCacheKey(), [ reportData ]);
+
+                /**
+                 * 消息队列数据边界情况处理
+                 */
+                this.mq.onUnload();
             });
         }
     ],
@@ -104,7 +156,7 @@ export class Report implements ModeLifeCycle {
             ]
         },
         click: {
-            params: [ 'funcId', 'preFuncId' ],
+            params: [ 'eventId', 'funcId', 'preFuncId' ],
             middlewares: [
                 loggerMiddleware,
                 clickMiddleware,
@@ -112,7 +164,7 @@ export class Report implements ModeLifeCycle {
             ]
         },
         pageDwell: {
-            params: [ 'enterTime', 'leaveTime', 'pageDwellTime' ],
+            params: [ 'eventId', 'enterTime', 'leaveTime', 'enterTime', 'leaveTime', 'pageDwellTime' ],
             middlewares: [
                 loggerMiddleware,
                 pageDwellMiddleware
@@ -140,9 +192,10 @@ export class Report implements ModeLifeCycle {
         if (!this._INITED) {
             this._INITED = true;
 
-            window.addEventListener('pagehide', this.onExit.bind(this));
+            // 这里使用原生的事件监控，实测使用Rxjs监控 pagehide 好像不太行，原因不详（好像是因为进入了Rxjs的调度中心成了异步的？？）
+            window.addEventListener('pagehide', this.onExit.bind(this), true);
 
-            this.mq.onload();
+            this.mq.onLoad();
 
             // 绑定消息队列消费者
             this.mq.bindCustomer({
@@ -154,7 +207,7 @@ export class Report implements ModeLifeCycle {
             // 根据事件上报配置，在这旮沓挨个注册数据上报中间件
             Object.keys(this.reportConfigs).forEach((key: string) => {
                 const config = this.reportConfigs[key];
-                if (config.middlewares) {
+                if (config.middlewares && config.middlewares.length) {
                     config.rebuildWithMiddlewares = this.applyMiddlewares(config.middlewares)(this);
                 }
             });
@@ -162,9 +215,25 @@ export class Report implements ModeLifeCycle {
     }
 
     onExit() {
-        // 消息队列生命周期
+
+        /**
+         * 页面停留数据边界情况处理
+         */
+        // pageDwell: [ enterTime, leaveTime, pageDwellTime, pageId, pageUrl ]
+        const pageDwell = this.pageTracer.treat();
+        // 重置当前页 pageTracer
+        this.pageTracer.init();
+        // 生成一份上报数据
+        this.onTrigger([ 'pageDwell', ...pageDwell ]);
+
+        /**
+         * 消息队列生命周期
+         */
         this.mq.onUnload();
-        // 注销事件监听
+
+        /**
+         * 注销事件监听
+         */
         this.evtSubs.unsubscribe();
     }
 
@@ -230,11 +299,12 @@ export class Report implements ModeLifeCycle {
             funcId: extendsData.funcId || '-',
             pageId: extendsData.pageId || '-',
             sysId: this.conf.get('sysId') as string,
+            isSysEvt: extendsData.isSysEvt || '-',
             msg: this.formatDatagram(extendsData.type, extendsData)
         };
 
         // 推送至消息队列
-        this.mq.push(reqData);
+        !extendsData.packgeMsgOnly && this.mq.push(reqData);
 
         return reqData;
     }
