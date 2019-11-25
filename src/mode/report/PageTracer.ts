@@ -127,7 +127,7 @@ export class PageTracer implements PageTracer {
      */
     calc() {
         const { first, last, pipe, pack } = this._;
-        debugger
+
         const enterTime = pipe(first, last)(this._trace);
         const leaveTime = pipe(last, last)(this._trace);
         const pageDwellTime = pack(2)(this._trace).reduce((temp: number, tar: ActivePoint[]) => {

@@ -2789,7 +2789,6 @@ var ha = (function () {
 	    CustomCanvas: Symbol.for('CustomCanvas'),
 	    Point: Symbol.for('Point')
 	};
-	//# sourceMappingURL=types.js.map
 
 	/*! *****************************************************************************
 	Copyright (c) Microsoft Corporation. All rights reserved.
@@ -2903,31 +2902,6 @@ var ha = (function () {
 	    return r;
 	}
 
-	// const getUserInfoByOpenID = (openID: string) => http.get('user', `/video/user?openId=${openID}`);
-	// window.addEventListener('beforeunload', () => {
-	//     localStorage.setItem('isUserMessageSendSuccT', JSON.stringify(Date.now()));
-	//     getUserInfoByOpenID('oKXX7wKQhDf0sixuV0z-gEB8Y8is').then((res: Obj) => {
-	//         console.log('用户信息: ', res);
-	//         localStorage.setItem('isUserMessageSendSucc', JSON.stringify(res));
-	//     })
-	// })
-	// const visit = _.createVisitId('SPKF');
-	// console.log('访客码： ', visit);
-	// 初始化 -> 校验签名是否合法
-	//     非法 -> mode: none
-	//     合法 -> 判断当前环境 app / iframe
-	//         app -> 将本地缓存未上报的信息上报
-	//              是否 B/A
-	//                  是 -> mode: report
-	//                  否 -> mode: none
-	//         iframe -> 校验 iframe 来源是否有效
-	//             有效 -> mode: catch
-	//             无效 -> mode: none
-	// ha 需要提供的 API : （只负责管理模式及事件推送）
-	// 初始化 init | public
-	// 行为事件主动上报 push | public
-	// 上报统一入口 _report | private
-	// 模式切换 _changeMode | private
 	var HXAnalytics = /** @class */ (function () {
 	    function HXAnalytics(
 	    // 容器注入 | 模式
@@ -2936,9 +2910,19 @@ var ha = (function () {
 	        // this.modeContainer = modeContainer;
 	    }
 	    Object.defineProperty(HXAnalytics.prototype, "mode", {
+	        /**
+	         * 模式获取
+	         *
+	         * @see 只返回对应模式的modeType
+	         */
 	        get: function () {
 	            return this._mode ? this._mode.modeType : null;
 	        },
+	        /**
+	         * 模式修改
+	         *
+	         * @see 对mode赋值时，执行对应模式的生命周期
+	         */
 	        set: function (modeType) {
 	            if (!this.modeContainer[modeType]) {
 	                throw Error('Error in change mode: you are trying to enter an extra mode, please check the version of the jssdk you cited !');
@@ -3014,7 +2998,11 @@ var ha = (function () {
 	            });
 	        });
 	    };
-	    // 提供应用开发人员主动埋点能力
+	    /**
+	     * 提供应用开发人员主动埋点能力
+	     *
+	     * @param {Array} cmds 埋点命令及参数
+	     */
 	    HXAnalytics.prototype.push = function (cmds) {
 	        return __awaiter$1(this, void 0, void 0, function () {
 	            var _this_1 = this;
@@ -3056,13 +3044,11 @@ var ha = (function () {
 	    ], HXAnalytics);
 	    return HXAnalytics;
 	}());
-	//# sourceMappingURL=HXAnalytics.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isFunction(x) {
 	    return typeof x === 'function';
 	}
-	//# sourceMappingURL=isFunction.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var _enable_super_gross_mode_that_will_cause_bad_things = false;
@@ -3079,13 +3065,11 @@ var ha = (function () {
 	        return _enable_super_gross_mode_that_will_cause_bad_things;
 	    },
 	};
-	//# sourceMappingURL=config.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function hostReportError(err) {
 	    setTimeout(function () { throw err; }, 0);
 	}
-	//# sourceMappingURL=hostReportError.js.map
 
 	/** PURE_IMPORTS_START _config,_util_hostReportError PURE_IMPORTS_END */
 	var empty = {
@@ -3101,17 +3085,14 @@ var ha = (function () {
 	    },
 	    complete: function () { }
 	};
-	//# sourceMappingURL=Observer.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var isArray = /*@__PURE__*/ (function () { return Array.isArray || (function (x) { return x && typeof x.length === 'number'; }); })();
-	//# sourceMappingURL=isArray.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isObject(x) {
 	    return x !== null && typeof x === 'object';
 	}
-	//# sourceMappingURL=isObject.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var UnsubscriptionErrorImpl = /*@__PURE__*/ (function () {
@@ -3127,7 +3108,6 @@ var ha = (function () {
 	    return UnsubscriptionErrorImpl;
 	})();
 	var UnsubscriptionError = UnsubscriptionErrorImpl;
-	//# sourceMappingURL=UnsubscriptionError.js.map
 
 	/** PURE_IMPORTS_START _util_isArray,_util_isObject,_util_isFunction,_util_UnsubscriptionError PURE_IMPORTS_END */
 	var Subscription = /*@__PURE__*/ (function () {
@@ -3259,7 +3239,6 @@ var ha = (function () {
 	function flattenUnsubscriptionErrors(errors) {
 	    return errors.reduce(function (errs, err) { return errs.concat((err instanceof UnsubscriptionError) ? err.errors : err); }, []);
 	}
-	//# sourceMappingURL=Subscription.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var rxSubscriber = /*@__PURE__*/ (function () {
@@ -3267,7 +3246,6 @@ var ha = (function () {
 	        ? /*@__PURE__*/ Symbol('rxSubscriber')
 	        : '@@rxSubscriber_' + /*@__PURE__*/ Math.random();
 	})();
-	//# sourceMappingURL=rxSubscriber.js.map
 
 	/** PURE_IMPORTS_START tslib,_util_isFunction,_Observer,_Subscription,_internal_symbol_rxSubscriber,_config,_util_hostReportError PURE_IMPORTS_END */
 	var Subscriber = /*@__PURE__*/ (function (_super) {
@@ -3492,7 +3470,6 @@ var ha = (function () {
 	    };
 	    return SafeSubscriber;
 	}(Subscriber));
-	//# sourceMappingURL=Subscriber.js.map
 
 	/** PURE_IMPORTS_START _Subscriber PURE_IMPORTS_END */
 	function canReportError(observer) {
@@ -3510,7 +3487,6 @@ var ha = (function () {
 	    }
 	    return true;
 	}
-	//# sourceMappingURL=canReportError.js.map
 
 	/** PURE_IMPORTS_START _Subscriber,_symbol_rxSubscriber,_Observer PURE_IMPORTS_END */
 	function toSubscriber(nextOrObserver, error, complete) {
@@ -3527,15 +3503,12 @@ var ha = (function () {
 	    }
 	    return new Subscriber(nextOrObserver, error, complete);
 	}
-	//# sourceMappingURL=toSubscriber.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var observable = /*@__PURE__*/ (function () { return typeof Symbol === 'function' && Symbol.observable || '@@observable'; })();
-	//# sourceMappingURL=observable.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function noop() { }
-	//# sourceMappingURL=noop.js.map
 
 	/** PURE_IMPORTS_START _noop PURE_IMPORTS_END */
 	function pipeFromArray(fns) {
@@ -3549,7 +3522,6 @@ var ha = (function () {
 	        return fns.reduce(function (prev, fn) { return fn(prev); }, input);
 	    };
 	}
-	//# sourceMappingURL=pipe.js.map
 
 	/** PURE_IMPORTS_START _util_canReportError,_util_toSubscriber,_symbol_observable,_util_pipe,_config PURE_IMPORTS_END */
 	var Observable = /*@__PURE__*/ (function () {
@@ -3660,7 +3632,6 @@ var ha = (function () {
 	    }
 	    return promiseCtor;
 	}
-	//# sourceMappingURL=Observable.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscription PURE_IMPORTS_END */
 	var Action = /*@__PURE__*/ (function (_super) {
@@ -3673,7 +3644,6 @@ var ha = (function () {
 	    };
 	    return Action;
 	}(Subscription));
-	//# sourceMappingURL=Action.js.map
 
 	/** PURE_IMPORTS_START tslib,_Action PURE_IMPORTS_END */
 	var AsyncAction = /*@__PURE__*/ (function (_super) {
@@ -3766,7 +3736,6 @@ var ha = (function () {
 	    };
 	    return AsyncAction;
 	}(Action));
-	//# sourceMappingURL=AsyncAction.js.map
 
 	var Scheduler = /*@__PURE__*/ (function () {
 	    function Scheduler(SchedulerAction, now) {
@@ -3785,7 +3754,6 @@ var ha = (function () {
 	    Scheduler.now = function () { return Date.now(); };
 	    return Scheduler;
 	}());
-	//# sourceMappingURL=Scheduler.js.map
 
 	/** PURE_IMPORTS_START tslib,_Scheduler PURE_IMPORTS_END */
 	var AsyncScheduler = /*@__PURE__*/ (function (_super) {
@@ -3841,13 +3809,11 @@ var ha = (function () {
 	    };
 	    return AsyncScheduler;
 	}(Scheduler));
-	//# sourceMappingURL=AsyncScheduler.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isScheduler(value) {
 	    return value && typeof value.schedule === 'function';
 	}
-	//# sourceMappingURL=isScheduler.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var subscribeToArray = function (array) {
@@ -3858,7 +3824,6 @@ var ha = (function () {
 	        subscriber.complete();
 	    };
 	};
-	//# sourceMappingURL=subscribeToArray.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription PURE_IMPORTS_END */
 	function scheduleArray(input, scheduler) {
@@ -3878,7 +3843,6 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
-	//# sourceMappingURL=scheduleArray.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_subscribeToArray,_scheduled_scheduleArray PURE_IMPORTS_END */
 	function fromArray(input, scheduler) {
@@ -3889,17 +3853,14 @@ var ha = (function () {
 	        return scheduleArray(input, scheduler);
 	    }
 	}
-	//# sourceMappingURL=fromArray.js.map
 
 	/** PURE_IMPORTS_START _AsyncAction,_AsyncScheduler PURE_IMPORTS_END */
 	var async = /*@__PURE__*/ new AsyncScheduler(AsyncAction);
-	//# sourceMappingURL=async.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function identity(x) {
 	    return x;
 	}
-	//# sourceMappingURL=identity.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	function map(project, thisArg) {
@@ -3942,7 +3903,6 @@ var ha = (function () {
 	    };
 	    return MapSubscriber;
 	}(Subscriber));
-	//# sourceMappingURL=map.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	var OuterSubscriber = /*@__PURE__*/ (function (_super) {
@@ -3961,7 +3921,6 @@ var ha = (function () {
 	    };
 	    return OuterSubscriber;
 	}(Subscriber));
-	//# sourceMappingURL=OuterSubscriber.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	var InnerSubscriber = /*@__PURE__*/ (function (_super) {
@@ -3987,7 +3946,6 @@ var ha = (function () {
 	    };
 	    return InnerSubscriber;
 	}(Subscriber));
-	//# sourceMappingURL=InnerSubscriber.js.map
 
 	/** PURE_IMPORTS_START _hostReportError PURE_IMPORTS_END */
 	var subscribeToPromise = function (promise) {
@@ -4002,7 +3960,6 @@ var ha = (function () {
 	        return subscriber;
 	    };
 	};
-	//# sourceMappingURL=subscribeToPromise.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function getSymbolIterator() {
@@ -4012,7 +3969,6 @@ var ha = (function () {
 	    return Symbol.iterator;
 	}
 	var iterator = /*@__PURE__*/ getSymbolIterator();
-	//# sourceMappingURL=iterator.js.map
 
 	/** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */
 	var subscribeToIterable = function (iterable) {
@@ -4039,7 +3995,6 @@ var ha = (function () {
 	        return subscriber;
 	    };
 	};
-	//# sourceMappingURL=subscribeToIterable.js.map
 
 	/** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
 	var subscribeToObservable = function (obj) {
@@ -4053,17 +4008,14 @@ var ha = (function () {
 	        }
 	    };
 	};
-	//# sourceMappingURL=subscribeToObservable.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var isArrayLike = (function (x) { return x && typeof x.length === 'number' && typeof x !== 'function'; });
-	//# sourceMappingURL=isArrayLike.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isPromise(value) {
 	    return !!value && typeof value.subscribe !== 'function' && typeof value.then === 'function';
 	}
-	//# sourceMappingURL=isPromise.js.map
 
 	/** PURE_IMPORTS_START _subscribeToArray,_subscribeToPromise,_subscribeToIterable,_subscribeToObservable,_isArrayLike,_isPromise,_isObject,_symbol_iterator,_symbol_observable PURE_IMPORTS_END */
 	var subscribeTo = function (result) {
@@ -4086,7 +4038,6 @@ var ha = (function () {
 	        throw new TypeError(msg);
 	    }
 	};
-	//# sourceMappingURL=subscribeTo.js.map
 
 	/** PURE_IMPORTS_START _InnerSubscriber,_subscribeTo,_Observable PURE_IMPORTS_END */
 	function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, destination) {
@@ -4101,7 +4052,6 @@ var ha = (function () {
 	    }
 	    return subscribeTo(result)(destination);
 	}
-	//# sourceMappingURL=subscribeToResult.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription,_symbol_observable PURE_IMPORTS_END */
 	function scheduleObservable(input, scheduler) {
@@ -4118,7 +4068,6 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
-	//# sourceMappingURL=scheduleObservable.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription PURE_IMPORTS_END */
 	function schedulePromise(input, scheduler) {
@@ -4137,7 +4086,6 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
-	//# sourceMappingURL=schedulePromise.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription,_symbol_iterator PURE_IMPORTS_END */
 	function scheduleIterable(input, scheduler) {
@@ -4181,19 +4129,16 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
-	//# sourceMappingURL=scheduleIterable.js.map
 
 	/** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
 	function isInteropObservable(input) {
 	    return input && typeof input[observable] === 'function';
 	}
-	//# sourceMappingURL=isInteropObservable.js.map
 
 	/** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */
 	function isIterable(input) {
 	    return input && typeof input[iterator] === 'function';
 	}
-	//# sourceMappingURL=isIterable.js.map
 
 	/** PURE_IMPORTS_START _scheduleObservable,_schedulePromise,_scheduleArray,_scheduleIterable,_util_isInteropObservable,_util_isPromise,_util_isArrayLike,_util_isIterable PURE_IMPORTS_END */
 	function scheduled(input, scheduler) {
@@ -4213,7 +4158,6 @@ var ha = (function () {
 	    }
 	    throw new TypeError((input !== null && typeof input || input) + ' is not observable');
 	}
-	//# sourceMappingURL=scheduled.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_subscribeTo,_scheduled_scheduled PURE_IMPORTS_END */
 	function from(input, scheduler) {
@@ -4227,7 +4171,6 @@ var ha = (function () {
 	        return scheduled(input, scheduler);
 	    }
 	}
-	//# sourceMappingURL=from.js.map
 
 	/** PURE_IMPORTS_START tslib,_util_subscribeToResult,_OuterSubscriber,_InnerSubscriber,_map,_observable_from PURE_IMPORTS_END */
 	function mergeMap(project, resultSelector, concurrent) {
@@ -4320,7 +4263,6 @@ var ha = (function () {
 	    };
 	    return MergeMapSubscriber;
 	}(OuterSubscriber));
-	//# sourceMappingURL=mergeMap.js.map
 
 	/** PURE_IMPORTS_START _mergeMap,_util_identity PURE_IMPORTS_END */
 	function mergeAll(concurrent) {
@@ -4329,7 +4271,6 @@ var ha = (function () {
 	    }
 	    return mergeMap(identity, concurrent);
 	}
-	//# sourceMappingURL=mergeAll.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_isArray,_util_isFunction,_operators_map PURE_IMPORTS_END */
 	function fromEvent(target, eventName, options, resultSelector) {
@@ -4388,7 +4329,6 @@ var ha = (function () {
 	function isEventTarget(sourceObj) {
 	    return sourceObj && typeof sourceObj.addEventListener === 'function' && typeof sourceObj.removeEventListener === 'function';
 	}
-	//# sourceMappingURL=fromEvent.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_isScheduler,_operators_mergeAll,_fromArray PURE_IMPORTS_END */
 	function merge() {
@@ -4413,7 +4353,6 @@ var ha = (function () {
 	    }
 	    return mergeAll(concurrent)(fromArray(observables, scheduler));
 	}
-	//# sourceMappingURL=merge.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	function filter(predicate, thisArg) {
@@ -4455,7 +4394,6 @@ var ha = (function () {
 	    };
 	    return FilterSubscriber;
 	}(Subscriber));
-	//# sourceMappingURL=filter.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber,_scheduler_async PURE_IMPORTS_END */
 	function sampleTime(period, scheduler) {
@@ -4501,28 +4439,8 @@ var ha = (function () {
 	    subscriber.notifyNext();
 	    this.schedule(state, period);
 	}
-	//# sourceMappingURL=sampleTime.js.map
 
-	// const DomEvent = (target: HTMLElement, eventName: string, options: EventListenerOptions) => {
-	// }
-	// 单个事件模块实现
-	// 页面生命周期事件
-	// onload
-	// onbeforeunload
-	// onhashchange
-	// onpopstate
-	// onvisibilitychange
-	// ononline
-	// onoffline
-	// onmessage
-	// 用户行为
-	// onclick
-	// onmousemove
-	// 自定义事件
-	// performance 页面启动性能监控报告
-	// tp 页面停留时长上报
-	// 事件注册订阅调度机制
-	// 各模式模块只维护当前的事件及其回调的列表，在对应生命周期中订阅及取消订阅
+	// import './events';
 	var AppEvent = {
 	    click: function (config) { return fromEvent(window, 'click', { capture: config.capture }); },
 	    mousemove: function (config) { return fromEvent(window, 'mousemove', { capture: config.capture }).pipe(sampleTime(config.debounceTime), filter(function (e) { return e.target.tagName !== 'HTML'; })); },
@@ -4554,28 +4472,13 @@ var ha = (function () {
 	        return this.visibilitychange().pipe(filter(function () { return document.visibilityState === 'hidden'; }));
 	    }
 	};
-	//# sourceMappingURL=index.js.map
 
 	/* eslint-disable no-undef */
 	var development = {
-	  // 'public': 'https://112.74.159.153:8085/api/v1'
-	  'public': 'https://video-uat.ihxlife.com:8085/api/v1'
+	    // 'public': 'https://112.74.159.153:8085/api/v1'
+	    'public': 'https://video-uat.ihxlife.com:8085/api/v1'
 	};
-	var conf =  development; // // 改写思路：
-	// // 拷贝 window 默认的 replaceState 函数，重写 history.replaceState 在方法里插入我们的采集行为
-	// // 在重写的 replaceState 方法最后调用，window 默认的 replaceState 方法
-	// var collect = {}
-	// collect.onPushStateCallback = function() {} // 自定义的采集方法
-	// (function(history) {
-	//     var replaceState = history.replaceState;   // 存储原生 replaceState
-	//     history.replaceState = function(state, param) {     // 改写 replaceState
-	//         var url = arguments[2];
-	//         if (typeof collect.onPushStateCallback == "function") {
-	//             collect.onPushStateCallback({state: state, param: param, url: url});   //自定义的采集行为方法
-	//         }
-	//         return replaceState.apply(history, arguments);    // 调用原生的 replaceState
-	//     };
-	// })(window.history);
+	var conf =  development;
 
 	// import './fetch';
 	// import { RequestMethods, RequestOptions } from '../../types';
@@ -4641,7 +4544,6 @@ var ha = (function () {
 	        url: function (host, url) { return splitUrl(host, url); },
 	    };
 	})();
-	//# sourceMappingURL=request.js.map
 
 	var Service = {
 	    ERR_OK: '0',
@@ -4654,7 +4556,6 @@ var ha = (function () {
 	    reportBeaconAPI: function (data) { return window.navigator.sendBeacon(http.splitUrl('public', '/log'), data); },
 	    getPresetPointsAPI: function (data) { return http.get('public', '/config/query/list', data); }
 	};
-	//# sourceMappingURL=index.js.map
 
 	var Browse = /** @class */ (function () {
 	    function Browse() {
@@ -4670,7 +4571,6 @@ var ha = (function () {
 	    ], Browse);
 	    return Browse;
 	}());
-	//# sourceMappingURL=Browse.js.map
 
 	var loggerMiddleware = function (ctx) { return function (next) { return function () {
 	    var opt = [];
@@ -4684,7 +4584,6 @@ var ha = (function () {
 	    console.log('-----------------------------');
 	    return res;
 	}; }; };
-	//# sourceMappingURL=loggerMiddleware.js.map
 
 	var initMiddleware = function (ctx) { return function (next) { return function () {
 	    // console.log('initMiddleware');
@@ -4713,7 +4612,6 @@ var ha = (function () {
 	    console.log('initMiddleware');
 	    return res;
 	}; }; };
-	//# sourceMappingURL=initMiddleware.js.map
 
 	var clickMiddleware = function (ctx) { return function (next) { return function () {
 	    var opt = [];
@@ -4725,7 +4623,6 @@ var ha = (function () {
 	    var reqData = next(__assign(__assign({}, _opt), { type: 2, eventId: 'click', isSysEvt: 'N', funcId: funcId }));
 	    return reqData;
 	}; }; };
-	//# sourceMappingURL=clickMiddleware.js.map
 
 	var pageDwellMiddleware = function (ctx) { return function (next) { return function () {
 	    var opt = [];
@@ -4742,7 +4639,19 @@ var ha = (function () {
 	    console.log('pageDwellMiddleware');
 	    return reqData;
 	}; }; };
-	//# sourceMappingURL=pageDwellMiddleware.js.map
+
+	var pageEnterMiddleware = function (ctx) { return function (next) { return function () {
+	    var opt = [];
+	    for (var _i = 0; _i < arguments.length; _i++) {
+	        opt[_i] = arguments[_i];
+	    }
+	    // console.log('clickMiddleware');
+	    var pageId = opt[0], pageUrl = opt[1], _opt = opt[2];
+	    var reqData = next(__assign(__assign({}, _opt), { type: 2, eventId: 'pageEnter', isSysEvt: 'Y', pageId: pageId,
+	        pageUrl: pageUrl, enterTime: Date.now() }));
+	    console.log('pageEnterMiddleware');
+	    return reqData;
+	}; }; };
 
 	var preFuncIdMiddleware = function (ctx) { return function (next) { return function (opt) {
 	    console.log('preFuncIdMiddleware');
@@ -4755,7 +4664,6 @@ var ha = (function () {
 	    ctx._.windowData.set('lastCustomData', reqData);
 	    return reqData;
 	}; }; };
-	//# sourceMappingURL=preFuncIdMiddleware.js.map
 
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 	var EventListener = {
@@ -4792,7 +4700,7 @@ var ha = (function () {
 	            });
 	        }
 	    ],
-	    'report-page-change': [
+	    'report-route-change': [
 	        {},
 	        function () {
 	            var _this = this;
@@ -4805,7 +4713,10 @@ var ha = (function () {
 	                var pageDwell = _this.pageTracer.treat();
 	                // 重置当前页 pageTracer
 	                _this.pageTracer.init();
+	                // 生产页面停留时长数据
 	                _this.onTrigger(__spreadArrays(['pageDwell'], pageDwell));
+	                // 生产新页面进入数据
+	                _this.onTrigger(['pageEnter', _this._.getPagePath(), window.location.href]);
 	            });
 	        }
 	    ],
@@ -4839,11 +4750,12 @@ var ha = (function () {
 	                /**
 	                 * 页面停留数据边界情况处理
 	                 *
+	                 * 保存一份停留时长数据至缓存
 	                 * 防止移动设备直接关闭应用导致数据丢失（将索引保存在页面追踪实例上）
-	                 * 若移动设备切至后台后直接杀掉应用，则缓存中会存在这份停留时长数据，将在下次访问页面时上报
-	                 * 若移动设备切至后台后再次回到应用，则缓存会被清空
+	                 * 若移动设备切至后台后直接杀掉应用 -> 将在下次访问页面时上报
+	                 * 若移动设备切至后台后再次回到应用 -> 缓存会被清空
 	                 *
-	                 * PS: iOS 暂时存在问题，切至后台不会触发 visibilitychange
+	                 * PS: iOS 暂时存在问题，切至后台不会触发 visibilitychange 哦吼
 	                 */
 	                var pageDwell = _this.pageTracer.treat();
 	                // 生成一份上报数据，只生成不上报
@@ -4880,7 +4792,7 @@ var ha = (function () {
 	         * 注意中间件的顺序：按书写顺序执行，遵循洋葱模型
 	         * 例如：
 	         * [ loggerMiddleware, clickMiddleware, preFuncIdMiddleware ]
-	         * logger -> click -> preFuncId -> onTrigger(next) -> logger -> click -> preFuncId
+	         * 执行顺序：logger -> click -> preFuncId -> onTrigger(next) -> preFuncId -> click -> logger
 	         */
 	        this.reportConfigs = {
 	            init: {
@@ -4904,6 +4816,13 @@ var ha = (function () {
 	                    loggerMiddleware,
 	                    pageDwellMiddleware
 	                ]
+	            },
+	            pageEnter: {
+	                params: ['eventId', 'pageId', 'pageUrl', 'enterTime'],
+	                middlewares: [
+	                    loggerMiddleware,
+	                    pageEnterMiddleware
+	                ]
 	            }
 	        };
 	        this.evtSubs = eventSubscriber.init(this);
@@ -4913,14 +4832,15 @@ var ha = (function () {
 	    Report.prototype.onEnter = function () {
 	        var _this = this;
 	        console.log(this);
-	        // MonkeyPatch
-	        this.bindPageTracerPatch();
 	        // 绑定监控事件
 	        this.evtSubs.subscribe();
 	        // 在第一次进入的时候初始化一次性相关配置
 	        if (!this._INITED) {
 	            this._INITED = true;
-	            // 这里使用原生的事件监控，实测使用Rxjs监控 pagehide 好像不太行，原因不详（好像是因为进入了Rxjs的调度中心成了异步的？？）
+	            // MonkeyPatch
+	            this.bindPageTracerPatch();
+	            // 这里使用原生的事件监控，实测使用Rxjs监控 pagehide 好像不太行
+	            // 原因不详（好像是因为进入了Rxjs的调度中心成了异步的？？）
 	            window.addEventListener('pagehide', this.onExit.bind(this), true);
 	            this.mq.onLoad();
 	            // 绑定消息队列消费者
@@ -4942,6 +4862,7 @@ var ha = (function () {
 	                    config.rebuildWithMiddlewares = _this.applyMiddlewares(config.middlewares)(_this);
 	                }
 	            });
+	            this.onTrigger(['pageEnter', this._.getPagePath(), window.location.href]);
 	        }
 	    };
 	    Report.prototype.onExit = function () {
@@ -4963,6 +4884,9 @@ var ha = (function () {
 	         */
 	        this.evtSubs.unsubscribe();
 	    };
+	    /**
+	     * 监控原生事件调用，分发浏览器事件
+	     */
 	    Report.prototype.bindPageTracerPatch = function () {
 	        window.history.pushState = this._.nativeCodeEventPatch(window.history, 'pushState');
 	        window.history.replaceState = this._.nativeCodeEventPatch(window.history, 'replaceState');
@@ -5074,7 +4998,6 @@ var ha = (function () {
 	    ], Report);
 	    return Report;
 	}());
-	//# sourceMappingURL=Report.js.map
 
 	var MsgsQueue = /** @class */ (function () {
 	    function MsgsQueue() {
@@ -5184,7 +5107,6 @@ var ha = (function () {
 	    ], MsgsQueue);
 	    return MsgsQueue;
 	}());
-	//# sourceMappingURL=MsgsQueue.js.map
 
 	var ReportStrategy = /** @class */ (function () {
 	    function ReportStrategy(_, service) {
@@ -5326,7 +5248,6 @@ var ha = (function () {
 	    ], ReportStrategy);
 	    return ReportStrategy;
 	}());
-	//# sourceMappingURL=ReportStrategy.js.map
 
 	var PageTracer = /** @class */ (function () {
 	    function PageTracer(_) {
@@ -5431,7 +5352,6 @@ var ha = (function () {
 	     */
 	    PageTracer.prototype.calc = function () {
 	        var _a = this._, first = _a.first, last = _a.last, pipe = _a.pipe, pack = _a.pack;
-	        debugger;
 	        var enterTime = pipe(first, last)(this._trace);
 	        var leaveTime = pipe(last, last)(this._trace);
 	        var pageDwellTime = pack(2)(this._trace).reduce(function (temp, tar) {
@@ -5654,7 +5574,6 @@ var ha = (function () {
 	    ], Setting);
 	    return Setting;
 	}());
-	//# sourceMappingURL=Setting.js.map
 
 	var DomMasker = /** @class */ (function () {
 	    function DomMasker(createPoint, customCanvas) {
@@ -5724,7 +5643,6 @@ var ha = (function () {
 	    ], DomMasker);
 	    return DomMasker;
 	}());
-	//# sourceMappingURL=DomMasker.js.map
 
 	var customCanvas = function (width, height, color) {
 	    if (color === void 0) { color = 'rgba(77, 131, 202, 0.5)'; }
@@ -5742,7 +5660,6 @@ var ha = (function () {
 	    ctx.textBaseline = 'ideographic';
 	    return canvas;
 	};
-	//# sourceMappingURL=CustomCanvas.js.map
 
 	function getCoords(elem) {
 	    var box = elem.getBoundingClientRect();
@@ -6202,7 +6119,6 @@ var ha = (function () {
 	        return rv;
 	    };
 	};
-	//# sourceMappingURL=utils.js.map
 
 	var AppConfig = /** @class */ (function () {
 	    function AppConfig() {
@@ -6270,7 +6186,6 @@ var ha = (function () {
 	    ], AppConfig);
 	    return AppConfig;
 	}());
-	//# sourceMappingURL=AppConfig.js.map
 
 	var EventSubscriber = /** @class */ (function () {
 	    function EventSubscriber() {
@@ -6313,7 +6228,6 @@ var ha = (function () {
 	    ], EventSubscriber);
 	    return EventSubscriber;
 	}());
-	//# sourceMappingURL=EventSubscriber.js.map
 
 	var Point = /** @class */ (function () {
 	    function Point(_, conf) {
@@ -6360,7 +6274,6 @@ var ha = (function () {
 	    ], Point);
 	    return Point;
 	}());
-	//# sourceMappingURL=Point.js.map
 
 	var container = new Container();
 	container.bind(TYPES.HXAnalytics).to(HXAnalytics).inSingletonScope();
@@ -6395,7 +6308,6 @@ var ha = (function () {
 	container.bind(TYPES.CustomCanvas).toFunction(customCanvas);
 	var createPoint = function (origin) { return new Point(_, container.get(TYPES.Conf)).create(origin); };
 	container.bind(TYPES.Point).toFunction(createPoint);
-	//# sourceMappingURL=inversify.config.js.map
 
 	// window.onerror = function (msg, url, row, col, error) {
 	//     console.log('错误 ❌: ', {
@@ -6453,7 +6365,6 @@ var ha = (function () {
 	// 用户身份校验
 	// 页面停留时长 页面切换机制
 	// 单测
-	//# sourceMappingURL=entry-jssdk.js.map
 
 	return ha;
 

@@ -7,20 +7,7 @@ const replace = require('rollup-plugin-replace');
 const alias = require('rollup-plugin-alias');
 const { eslint } = require('rollup-plugin-eslint');
 const { resolveFile } = require('./utils');
-
-const tsconfig = {
-    compilerOptions: {
-        target: 'es5',
-        allowJs: true,
-        types: ['reflect-metadata', 'rx'],
-        module: 'ES6',
-        moduleResolution: 'node',
-        noImplicitAny: true,
-        experimentalDecorators: true,
-        emitDecoratorMetadata: true,
-        sourceMap: true
-    }
-};
+const tsconfig = require('./tsconfig');
 
 module.exports = {
     input: resolveFile(`src/entry-${process.env.TARGET}.ts`),
@@ -37,6 +24,7 @@ module.exports = {
     },
     plugins: [
         ts({
+            // tsconfig: './tsconfig.json',
             tsconfigDefaults: tsconfig,
             include: [ resolveFile('src/**/*') ],
             // exclude: [ resolveFile('src/**/*.js') ]

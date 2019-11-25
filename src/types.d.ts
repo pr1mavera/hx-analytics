@@ -171,9 +171,9 @@ interface Utils {
     deviceInfo: () => { name: string, version: number, browser: string, connType: string };
 
     /**
-     * 原始事件触发自定义事件构造器
-     * @param {any} orig 原生对象
-     * @param {String} type 期望监控原生对象上发生的事件名称，将作为分发的自定义事件的事件名
+     * 监控原生事件调用，分发浏览器事件
+     * @param {any} orig 原生对象（触发原生事件的上下文）
+     * @param {String} type 期望监控原生对象上发生的事件名称，将作为分发的自定义事件的事件名（将转换为小写）
      */
     nativeCodeEventPatch: (orig: any, type: string) => any;
 }

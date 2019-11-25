@@ -1,7 +1,7 @@
 import TYPES from '../../jssdk/types';
 import { inject, injectable } from 'inversify';
 import { Subscription } from 'rxjs';
-import { loggerMiddleware, initMiddleware, clickMiddleware, preFuncIdMiddleware, pageDwellMiddleware } from './middleware';
+import * as middlewares from './middleware';
 
 // report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 const EventListener = {
@@ -38,7 +38,7 @@ const EventListener = {
             });
         }
     ],
-    'report-page-change': [
+    'report-route-change': [
         {},
         function(): Subscription {
             // 统一单页路由变化
@@ -49,8 +49,10 @@ const EventListener = {
                 const pageDwell = this.pageTracer.treat();
                 // 重置当前页 pageTracer
                 this.pageTracer.init();
-
+                // 生产页面停留时长数据
                 this.onTrigger([ 'pageDwell', ...pageDwell ]);
+                // 生产新页面进入数据
+                this.onTrigger([ 'pageEnter', this._.getPagePath(), window.location.href ]);
             });
         }
     ],
@@ -85,11 +87,12 @@ const EventListener = {
                 /**
                  * 页面停留数据边界情况处理
                  * 
+                 * 保存一份停留时长数据至缓存
                  * 防止移动设备直接关闭应用导致数据丢失（将索引保存在页面追踪实例上）
-                 * 若移动设备切至后台后直接杀掉应用，则缓存中会存在这份停留时长数据，将在下次访问页面时上报
-                 * 若移动设备切至后台后再次回到应用，则缓存会被清空
+                 * 若移动设备切至后台后直接杀掉应用 -> 将在下次访问页面时上报
+                 * 若移动设备切至后台后再次回到应用 -> 缓存会被清空
                  * 
-                 * PS: iOS 暂时存在问题，切至后台不会触发 visibilitychange
+                 * PS: iOS 暂时存在问题，切至后台不会触发 visibilitychange 哦吼
                  */
                 const pageDwell = this.pageTracer.treat();
                 // 生成一份上报数据，只生成不上报
@@ -145,29 +148,36 @@ export class Report implements ModeLifeCycle {
      * 注意中间件的顺序：按书写顺序执行，遵循洋葱模型
      * 例如：
      * [ loggerMiddleware, clickMiddleware, preFuncIdMiddleware ]
-     * logger -> click -> preFuncId -> onTrigger(next) -> logger -> click -> preFuncId
+     * 执行顺序：logger -> click -> preFuncId -> onTrigger(next) -> preFuncId -> click -> logger
      */
     reportConfigs: Obj = {
         init: {
             params: [ 'appId', 'sysId', 'openId' ],
             middlewares: [
-                loggerMiddleware,
-                initMiddleware
+                middlewares.loggerMiddleware,
+                middlewares.initMiddleware
             ]
         },
         click: {
             params: [ 'eventId', 'funcId', 'preFuncId' ],
             middlewares: [
-                loggerMiddleware,
-                clickMiddleware,
-                preFuncIdMiddleware
+                middlewares.loggerMiddleware,
+                middlewares.clickMiddleware,
+                middlewares.preFuncIdMiddleware
             ]
         },
         pageDwell: {
             params: [ 'eventId', 'enterTime', 'leaveTime', 'enterTime', 'leaveTime', 'pageDwellTime' ],
             middlewares: [
-                loggerMiddleware,
-                pageDwellMiddleware
+                middlewares.loggerMiddleware,
+                middlewares.pageDwellMiddleware
+            ]
+        },
+        pageEnter: {
+            params: [ 'eventId', 'pageId', 'pageUrl', 'enterTime' ],
+            middlewares: [
+                middlewares.loggerMiddleware,
+                middlewares.pageEnterMiddleware
             ]
         }
     }
@@ -183,8 +193,6 @@ export class Report implements ModeLifeCycle {
 
     onEnter() {
         console.log(this);
-        // MonkeyPatch
-        this.bindPageTracerPatch();
         // 绑定监控事件
         this.evtSubs.subscribe();
 
@@ -192,7 +200,11 @@ export class Report implements ModeLifeCycle {
         if (!this._INITED) {
             this._INITED = true;
 
-            // 这里使用原生的事件监控，实测使用Rxjs监控 pagehide 好像不太行，原因不详（好像是因为进入了Rxjs的调度中心成了异步的？？）
+            // MonkeyPatch
+            this.bindPageTracerPatch();
+
+            // 这里使用原生的事件监控，实测使用Rxjs监控 pagehide 好像不太行
+            // 原因不详（好像是因为进入了Rxjs的调度中心成了异步的？？）
             window.addEventListener('pagehide', this.onExit.bind(this), true);
 
             this.mq.onLoad();
@@ -211,6 +223,8 @@ export class Report implements ModeLifeCycle {
                     config.rebuildWithMiddlewares = this.applyMiddlewares(config.middlewares)(this);
                 }
             });
+
+            this.onTrigger([ 'pageEnter', this._.getPagePath(), window.location.href ]);
         }
     }
 
@@ -237,6 +251,9 @@ export class Report implements ModeLifeCycle {
         this.evtSubs.unsubscribe();
     }
 
+    /**
+     * 监控原生事件调用，分发浏览器事件
+     */
     bindPageTracerPatch() {
         window.history.pushState = this._.nativeCodeEventPatch(window.history, 'pushState');
         window.history.replaceState = this._.nativeCodeEventPatch(window.history, 'replaceState');
@@ -292,14 +309,14 @@ export class Report implements ModeLifeCycle {
             eventTime: Date.now(),
             ...data
         };
-        
+
         // 单条上报数据
         let reqData: Msg = {
             type: extendsData.type,
             funcId: extendsData.funcId || '-',
             pageId: extendsData.pageId || '-',
             sysId: this.conf.get('sysId') as string,
-            isSysEvt: extendsData.isSysEvt || '-',
+            isSysEvt: extendsData.isSysEvt || '-', // type 为 2 时，标识是否是系统事件，系统事件不需要按配置信息清洗
             msg: this.formatDatagram(extendsData.type, extendsData)
         };
 
