@@ -2962,6 +2962,7 @@ var ha = (function () {
 	                            this._.inIframe() && alert('jssdk 初始化失败');
 	                            throw Error("jssdk login error: " + JSON.stringify(err));
 	                        }
+	                        // 更新用户基本信息
 	                        user_temp = res;
 	                        _c.label = 2;
 	                    case 2:
@@ -3010,7 +3011,7 @@ var ha = (function () {
 	                cmds.forEach(function (cmd) {
 	                    var directive = cmd[0], params = cmd.slice(1);
 	                    // 当前实例上是否存在该命令
-	                    // 是，执行（实际上基本是需要当前实例进过包装，再执行当前模块上的onTrigger）
+	                    // 是，执行（实际上基本是需要当前实例进过包装，在内部再执行当前模块上的onTrigger）
 	                    // 否，则执行当前模块上的onTrigger
 	                    var _this = _this_1;
 	                    _this[directive] ? _this[directive](params) : _this._mode.onTrigger(cmd);
@@ -4476,7 +4477,7 @@ var ha = (function () {
 	/* eslint-disable no-undef */
 	var development = {
 	    // 'public': 'https://112.74.159.153:8085/api/v1'
-	    'public': 'https://video-uat.ihxlife.com:8085/api/v1'
+	    'public': 'https://video-uat.ihxlife.com:8086/api/v1'
 	};
 	var conf =  development;
 
@@ -4748,14 +4749,14 @@ var ha = (function () {
 	            // 页面切至前台状态变化
 	            return this.events.pageHidden().subscribe(function () {
 	                /**
-	                 * 页面停留数据边界情况处理
+	                 * 页面停留数据处理
 	                 *
 	                 * 保存一份停留时长数据至缓存
 	                 * 防止移动设备直接关闭应用导致数据丢失（将索引保存在页面追踪实例上）
 	                 * 若移动设备切至后台后直接杀掉应用 -> 将在下次访问页面时上报
 	                 * 若移动设备切至后台后再次回到应用 -> 缓存会被清空
 	                 *
-	                 * PS: iOS 暂时存在问题，切至后台不会触发 visibilitychange 哦吼
+	                 * PS: iOS 暂时存在问题，切至后台不会触发 visibilitychange ，哦吼
 	                 */
 	                var pageDwell = _this.pageTracer.treat();
 	                // 生成一份上报数据，只生成不上报
@@ -4763,7 +4764,7 @@ var ha = (function () {
 	                // 缓存这份上报数据
 	                _this._.LocStorage.set(_this.pageTracer._cacheKey = _this._.createCacheKey(), [reportData]);
 	                /**
-	                 * 消息队列数据边界情况处理
+	                 * 消息队列数据处理
 	                 */
 	                _this.mq.onUnload();
 	            });
@@ -4786,8 +4787,7 @@ var ha = (function () {
 	        // 是否进入过该模式
 	        this._INITED = false;
 	        /**
-	         * 定义的监控事件集合
-	         * 默认为默认事件监控及相关中间件
+	         * 监控事件上报中间件集合
 	         * 后续考虑将自定义事件作为系统配置信息请求过来，在该模块初始化时合并到一起，再统一使用中间件重写
 	         * 注意中间件的顺序：按书写顺序执行，遵循洋葱模型
 	         * 例如：
@@ -4837,9 +4837,7 @@ var ha = (function () {
 	        // 在第一次进入的时候初始化一次性相关配置
 	        if (!this._INITED) {
 	            this._INITED = true;
-	            // MonkeyPatch
-	            this.bindPageTracerPatch();
-	            // 这里使用原生的事件监控，实测使用Rxjs监控 pagehide 好像不太行
+	            // 这里使用原生的事件监控，实测使用Rxjs监控 pagehide 好像叭太行
 	            // 原因不详（好像是因为进入了Rxjs的调度中心成了异步的？？）
 	            window.addEventListener('pagehide', this.onExit.bind(this), true);
 	            this.mq.onLoad();
@@ -4883,13 +4881,6 @@ var ha = (function () {
 	         * 注销事件监听
 	         */
 	        this.evtSubs.unsubscribe();
-	    };
-	    /**
-	     * 监控原生事件调用，分发浏览器事件
-	     */
-	    Report.prototype.bindPageTracerPatch = function () {
-	        window.history.pushState = this._.nativeCodeEventPatch(window.history, 'pushState');
-	        window.history.replaceState = this._.nativeCodeEventPatch(window.history, 'replaceState');
 	    };
 	    Report.prototype.applyMiddlewares = function (middlewares) {
 	        return function (ctx) {
@@ -5082,12 +5073,13 @@ var ha = (function () {
 	        var _this = this;
 	        this.queue = this.queue.concat(data);
 	        // 节流
-	        // 若绑定了消费者，则尝试通知消费者消费数据，且当前不存在上报任务
+	        // 若绑定了消费者，且当前不存在异步上报任务，则尝试通知消费者消费数据
 	        if (this.customer && !this.timer) {
 	            // 通知消费者消费数据
 	            this.timer = setTimeout(function () {
 	                var msgs = _this.pull();
 	                msgs.length && _this.customer.notify(msgs);
+	                // 重置异步上报任务
 	                _this.timer = null;
 	            }, this.delay);
 	        }
@@ -5275,6 +5267,8 @@ var ha = (function () {
 	        this._trace = [];
 	        this._ = _;
 	        this.init();
+	        // MonkeyPatch
+	        this.bindPageTracerPatch();
 	    }
 	    /**
 	     * 生成当前路由访问记录
@@ -5288,6 +5282,13 @@ var ha = (function () {
 	    PageTracer.prototype.getCurrentPageRecord = function () {
 	        var _a = this._, deepCopy = _a.deepCopy, last = _a.last, pipe = _a.pipe;
 	        return pipe(last, deepCopy)(this._pageRecords);
+	    };
+	    /**
+	     * 监控原生事件调用，分发浏览器事件
+	     */
+	    PageTracer.prototype.bindPageTracerPatch = function () {
+	        window.history.pushState = this._.nativeCodeEventPatch(window.history, 'pushState');
+	        window.history.replaceState = this._.nativeCodeEventPatch(window.history, 'replaceState');
 	    };
 	    /**
 	     * 记录活跃节点
@@ -5868,7 +5869,9 @@ var ha = (function () {
 	prototype.draw = noop$1;
 	window.whatsElement = whatsElementPure;
 
-	var _ = function () { };
+	var ERR_OK = '0';
+	// import { Service } from '../jssdk/service';
+	var _ = {};
 	_.compose = function () {
 	    var fns = [];
 	    for (var _i = 0; _i < arguments.length; _i++) {
@@ -5949,12 +5952,12 @@ var ha = (function () {
 	};
 	_.getPagePath = function () {
 	    var _a = window.location, pathname = _a.pathname, hash = _a.hash;
-	    return pathname + this.first(hash.split('?'));
+	    return pathname + _.first(hash.split('?'));
 	};
 	_.inIframe = function () { return window && window.self !== window.top; };
 	_.isType = function (type, staff) { return Object.prototype.toString.call(staff) === "[object " + type + "]"; };
 	_.isJson = function (str) {
-	    if (!this.isType('String', str))
+	    if (!_.isType('String', str))
 	        return false;
 	    try {
 	        JSON.parse(str);
@@ -5974,7 +5977,7 @@ var ha = (function () {
 	    return querystrList.map(function (querystr) { return querystr.split('='); })
 	        .reduce(function (temp, queryItem) {
 	        var _a;
-	        return (__assign(__assign({}, temp), (_a = {}, _a[queryItem[0]] = queryItem[1], _a)));
+	        return (__assign(__assign({}, temp), (_a = {}, _a[_.first(queryItem)] = queryItem[1], _a)));
 	    }, {});
 	};
 	_.createVisitId = function (appId) {
@@ -5982,13 +5985,11 @@ var ha = (function () {
 	        // 应用id
 	        + appId
 	        // 当前访问时间（到秒）
-	        + this.formatDate('yyyy-MM-dd-hh-mm-ss').split(/-/g).join('')
+	        + _.formatDate('yyyy-MM-dd-hh-mm-ss').split(/-/g).join('')
 	        // 6位随机数
-	        + this.randomInRange(100000, 999999);
+	        + _.randomInRange(100000, 999999);
 	};
-	_.createCacheKey = function () {
-	    return "report_temp_" + this.randomInRange(100000, 999999);
-	};
+	_.createCacheKey = function () { return "report_temp_" + _.randomInRange(100000, 999999); };
 	_.formatDate = function (format, date) {
 	    if (date === void 0) { date = new Date(); }
 	    var map = {
@@ -6055,7 +6056,7 @@ var ha = (function () {
 	                    return [4 /*yield*/, asyncFn.apply(void 0, rest)];
 	                case 1:
 	                    _a = _c.sent(), _b = _a.result, code = _b.code, message = _b.message, data = _a.data;
-	                    if (code === Service.ERR_OK) {
+	                    if (code === ERR_OK) {
 	                        return [2 /*return*/, [null, formatter ? formatter(data) : data]];
 	                    }
 	                    else {
@@ -6280,7 +6281,7 @@ var ha = (function () {
 	// 应用事件层
 	container.bind(TYPES.AppEvent).toConstantValue(AppEvent);
 	// 全局工具
-	container.bind(TYPES.Utils).toFunction(_);
+	container.bind(TYPES.Utils).toConstantValue(_);
 	// API
 	container.bind(TYPES.Service).toConstantValue(Service);
 	// 应用配置相关信息

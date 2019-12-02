@@ -85,14 +85,14 @@ const EventListener = {
             return this.events.pageHidden().subscribe(() => {
 
                 /**
-                 * 页面停留数据边界情况处理
+                 * 页面停留数据处理
                  * 
                  * 保存一份停留时长数据至缓存
                  * 防止移动设备直接关闭应用导致数据丢失（将索引保存在页面追踪实例上）
                  * 若移动设备切至后台后直接杀掉应用 -> 将在下次访问页面时上报
                  * 若移动设备切至后台后再次回到应用 -> 缓存会被清空
                  * 
-                 * PS: iOS 暂时存在问题，切至后台不会触发 visibilitychange 哦吼
+                 * PS: iOS 暂时存在问题，切至后台不会触发 visibilitychange ，哦吼
                  */
                 const pageDwell = this.pageTracer.treat();
                 // 生成一份上报数据，只生成不上报
@@ -101,7 +101,7 @@ const EventListener = {
                 this._.LocStorage.set(this.pageTracer._cacheKey = this._.createCacheKey(), [ reportData ]);
 
                 /**
-                 * 消息队列数据边界情况处理
+                 * 消息队列数据处理
                  */
                 this.mq.onUnload();
             });
@@ -142,8 +142,7 @@ export class Report implements ModeLifeCycle {
     @inject(TYPES.PageTracer) private pageTracer: PageTracer;
 
     /**
-     * 定义的监控事件集合
-     * 默认为默认事件监控及相关中间件
+     * 监控事件上报中间件集合
      * 后续考虑将自定义事件作为系统配置信息请求过来，在该模块初始化时合并到一起，再统一使用中间件重写
      * 注意中间件的顺序：按书写顺序执行，遵循洋葱模型
      * 例如：
@@ -200,10 +199,7 @@ export class Report implements ModeLifeCycle {
         if (!this._INITED) {
             this._INITED = true;
 
-            // MonkeyPatch
-            this.bindPageTracerPatch();
-
-            // 这里使用原生的事件监控，实测使用Rxjs监控 pagehide 好像不太行
+            // 这里使用原生的事件监控，实测使用Rxjs监控 pagehide 好像叭太行
             // 原因不详（好像是因为进入了Rxjs的调度中心成了异步的？？）
             window.addEventListener('pagehide', this.onExit.bind(this), true);
 
@@ -249,14 +245,6 @@ export class Report implements ModeLifeCycle {
          * 注销事件监听
          */
         this.evtSubs.unsubscribe();
-    }
-
-    /**
-     * 监控原生事件调用，分发浏览器事件
-     */
-    bindPageTracerPatch() {
-        window.history.pushState = this._.nativeCodeEventPatch(window.history, 'pushState');
-        window.history.replaceState = this._.nativeCodeEventPatch(window.history, 'replaceState');
     }
 
     applyMiddlewares(middlewares: Function[]) {

@@ -7,7 +7,7 @@ export class MsgsQueue implements MsgsQueue {
     // 队列
     queue: Array<Msg> = [];
     // 上报定时器
-    timer: NodeJS.Timeout | null = null;
+    timer: any = null;
     // 延迟
     delay: number = 2000;
     // 消费者，目前只支持绑定一个消费者（只支持单一消费）
@@ -99,13 +99,14 @@ export class MsgsQueue implements MsgsQueue {
         this.queue = this.queue.concat(data);
 
         // 节流
-        // 若绑定了消费者，则尝试通知消费者消费数据，且当前不存在上报任务
+        // 若绑定了消费者，且当前不存在异步上报任务，则尝试通知消费者消费数据
         if (this.customer && !this.timer) {
 
             // 通知消费者消费数据
             this.timer = setTimeout(() => {
                 const msgs = this.pull();
                 msgs.length && this.customer.notify(msgs);
+                // 重置异步上报任务
                 this.timer = null;
             }, this.delay);
         }

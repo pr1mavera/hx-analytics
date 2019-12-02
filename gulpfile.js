@@ -3,16 +3,14 @@ const typedoc = require('gulp-typedoc')
 const browserSync = require('browser-sync').create()
 
 const runTypeDoc = () => gulp
-    .src(['src/utils/utils.ts'])
+    .src(['src/utils/utils.ts', 'src/typings/index.d.ts'])
     .pipe(typedoc({
         name: 'hx-analytics-utils',
         out: './docs',
-        module: 'esm',
-        target: 'es2015',
+        module: 'ES6',
+        target: 'es6',
         includeDeclarations: true,
-        // 这个文件里都是 export * from '...' 就没必要导出文档了
-        // exclude: 'src/index.ts',
-        tsconfig: 'tsconfig.json',
+        tsconfig: 'tsconfig.json'
     }))
 
 const reload = (done) => {
@@ -34,4 +32,5 @@ const watch = () => gulp.watch(
     gulp.series(runTypeDoc, reload)
 )
 
-gulp.task('default', gulp.series(runTypeDoc, runBrowserSync, watch))
+// gulp.task('default', gulp.series(runTypeDoc, runBrowserSync))
+gulp.task('default', runTypeDoc)

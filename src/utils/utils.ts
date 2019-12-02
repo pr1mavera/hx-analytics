@@ -1,7 +1,8 @@
 import whatsElement from 'whats-element/src/whatsElementPure';
-import { Service } from '../jssdk/service';
+const ERR_OK = '0';
+// import { Service } from '../jssdk/service';
 
-export const _ = <Utils>function () { }
+export const _: Utils = <Utils>{}
 
 _.compose = (...fns) => fns.reduce((f: Function, g: Function) => (...args: any[]) => f(g(...args)));
 
@@ -70,17 +71,17 @@ _.windowData = {
     }
 };
 
-_.getPagePath = function() {
+_.getPagePath = () => {
     const { pathname, hash } = window.location;
-    return pathname + this.first(hash.split('?'));
+    return pathname + _.first(hash.split('?'));
 };
 
 _.inIframe = () => window && window.self !== window.top;
 
 _.isType = (type, staff) => Object.prototype.toString.call(staff) === `[object ${type}]`;
 
-_.isJson = function(str) {
-    if (!this.isType('String', str)) return false;
+_.isJson = str => {
+    if (!_.isType('String', str)) return false;
     try {
         JSON.parse(str);
         return true;
@@ -100,23 +101,21 @@ _.splitQuery = str => {
     const querystrList = str.split('&');
     return querystrList.map((querystr: string) => querystr.split('='))
                         .reduce((temp: Obj, queryItem: Array<string>) => ({
-                            ...temp, [queryItem[0]]: queryItem[1]
+                            ...temp, [_.first(queryItem)]: queryItem[1]
                         }), {});
 };
 
-_.createVisitId = function (appId) {
+_.createVisitId = appId => {
     return ''
         // 应用id
         + appId
         // 当前访问时间（到秒）
-        + this.formatDate('yyyy-MM-dd-hh-mm-ss').split(/-/g).join('')
+        + _.formatDate('yyyy-MM-dd-hh-mm-ss').split(/-/g).join('')
         // 6位随机数
-        + this.randomInRange(100000, 999999);
+        + _.randomInRange(100000, 999999);
 };
 
-_.createCacheKey = function() {
-    return `report_temp_${this.randomInRange(100000, 999999)}`;
-};
+_.createCacheKey = () => `report_temp_${_.randomInRange(100000, 999999)}`;
 
 _.formatDate = (format, date = new Date()) => {
     const map: {
@@ -175,7 +174,7 @@ _.getElemClientRect = e => {
 _.errorCaptured = async (asyncFn, formatter, ...rest) => {
     try {
         const { result: { code, message }, data } = await asyncFn(...rest);
-        if (code === Service.ERR_OK) {
+        if (code === ERR_OK) {
             return [ null, formatter ? formatter(data) : data ];
         } else {
             return [ message, data ];

@@ -226,7 +226,7 @@ interface Service {
      */
     reportBeaconAPI: (data: FormData) => boolean,
 
-    getPresetPointsAPI: (data?: Obj) => Promise<any>,
+    getPresetPointsAPI: (data: Obj) => Promise<any>,
 }
 
 interface EventSubscriber<T extends { [x: string]: any, modeType: string }, S extends { unsubscribe(): void }> {
@@ -360,6 +360,5 @@ type SafeRequest = {
 }
 
 interface HXAnalytics {
-    init(user: UserInfo): Promise<any>;
     push(data: Obj): void;
 }

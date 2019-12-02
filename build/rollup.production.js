@@ -1,5 +1,5 @@
 const { uglify } = require('rollup-plugin-uglify');
-const config = require('./rollup.config');
+const config = require('../rollup.config');
 const { resolveFile } = require('./utils');
 
 // amd –-- 异步模块定义，用于像RequireJS这样的模块加载器

@@ -6,7 +6,7 @@ export class HXAnalytics implements HXAnalytics {
     [x: string]: any;
 
     /**
-     * 模式容器
+     * 当前模式
      */
     private _mode: ModeLifeCycle;
 
@@ -48,6 +48,9 @@ export class HXAnalytics implements HXAnalytics {
     // 容器注入 | 消息通知
     // @inject(TYPES.Message) private message: Message;
 
+    /**
+     * 模式容器
+     */
     private modeContainer: {
         [x: string]: ModeLifeCycle
     };
@@ -66,7 +69,7 @@ export class HXAnalytics implements HXAnalytics {
     }
 
     // 应用初始化入口
-    async init([ appId, sysId, openId ]: [ string, string, string ]) {
+    private async init([ appId, sysId, openId ]: [ string, string, string ]) {
 
         // 初始化用户基本信息
         let user_temp = this._.windowData.get('user');
@@ -88,6 +91,7 @@ export class HXAnalytics implements HXAnalytics {
                 this._.inIframe() && alert('jssdk 初始化失败');
                 throw Error(`jssdk login error: ${JSON.stringify(err)}`);
             };
+            // 更新用户基本信息
             user_temp = res;
         }
 
@@ -144,7 +148,7 @@ export class HXAnalytics implements HXAnalytics {
         cmds.forEach((cmd: any[]) => {
             const [ directive, ...params ] = cmd;
             // 当前实例上是否存在该命令
-            // 是，执行（实际上基本是需要当前实例进过包装，再执行当前模块上的onTrigger）
+            // 是，执行（实际上基本是需要当前实例进过包装，在内部再执行当前模块上的onTrigger）
             // 否，则执行当前模块上的onTrigger
             const _this: HXAnalytics = this;
             _this[directive] ? _this[directive](params) : _this._mode.onTrigger(cmd);

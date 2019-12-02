@@ -1,6 +1,6 @@
 const serve = require('rollup-plugin-serve');
 const livereload = require('rollup-plugin-livereload');
-const config = require('./rollup.config');
+const config = require('../rollup.config');
 const { dev } = require('../config/base');
 const { resolveFile } = require('./utils');
 

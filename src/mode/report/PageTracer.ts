@@ -49,10 +49,21 @@ export class PageTracer implements PageTracer {
 
     // 容器注入 | 工具
     private _: Utils;
+    
+    /**
+     * 监控原生事件调用，分发浏览器事件
+     */
+    private bindPageTracerPatch() {
+        window.history.pushState = this._.nativeCodeEventPatch(window.history, 'pushState');
+        window.history.replaceState = this._.nativeCodeEventPatch(window.history, 'replaceState');
+    }
 
     constructor(@inject(TYPES.Utils) _: Utils) {
         this._ = _;
         this.init();
+
+        // MonkeyPatch
+        this.bindPageTracerPatch();
     }
 
     /**

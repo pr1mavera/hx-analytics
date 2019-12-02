@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import { Subscription } from 'rxjs';
-import TYPES from "./types";
+import TYPES from './types';
 import {
     HXAnalytics
 } from './HXAnalytics';
@@ -15,6 +15,7 @@ import { Report, MsgsQueue, ReportStrategy, PageTracer } from '../mode/report';
 // 配置模式
 import { Setting, customCanvas, DomMasker } from '../mode/setting';
 
+// import { Utils } from '../typings/utils';
 import { _, AppConfig, EventSubscriber, Point, } from '../utils';
 
 const container = new Container();
@@ -24,7 +25,7 @@ container.bind<HXAnalytics>(TYPES.HXAnalytics).to(HXAnalytics).inSingletonScope(
 // 应用事件层
 container.bind<AppEvent>(TYPES.AppEvent).toConstantValue(AppEvent);
 // 全局工具
-container.bind<Utils>(TYPES.Utils).toFunction(_);
+container.bind<Utils>(TYPES.Utils).toConstantValue(_);
 // API
 container.bind<Service>(TYPES.Service).toConstantValue(Service);
 // 应用配置相关信息

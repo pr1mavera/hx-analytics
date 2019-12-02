@@ -6,8 +6,8 @@ const commonjs = require('rollup-plugin-commonjs');
 const replace = require('rollup-plugin-replace');
 const alias = require('rollup-plugin-alias');
 const { eslint } = require('rollup-plugin-eslint');
-const { resolveFile } = require('./utils');
-const tsconfig = require('./tsconfig');
+const { resolveFile } = require('./build/utils');
+// const tsconfig = require('./tsconfig');
 
 module.exports = {
     input: resolveFile(`src/entry-${process.env.TARGET}.ts`),
@@ -24,9 +24,13 @@ module.exports = {
     },
     plugins: [
         ts({
-            // tsconfig: './tsconfig.json',
-            tsconfigDefaults: tsconfig,
-            include: [ resolveFile('src/**/*') ],
+            tsconfig: './tsconfig.json',
+            tsconfigDefaults: {
+                compilerOptions: {
+                    target: process.env.NODE_ENV == 'development' ? 'es6' : 'es5'
+                }
+            },
+            // include: [ resolveFile('src/**/*') ],
             // exclude: [ resolveFile('src/**/*.js') ]
         }),
         resolve({
@@ -35,6 +39,7 @@ module.exports = {
             main: true, // Default: true
             browser: true // Default: false
         }),
+        // resolve({ mainFields: ['jsnext', 'preferBuiltins', 'browser'] }),
         commonjs({extensions: ['.js', '.ts']}),
         json(),
         babel({
@@ -42,7 +47,9 @@ module.exports = {
             exclude: 'node_modules/**',
             runtimeHelpers: true,
             presets: [
-                ['@babel/preset-env', { modules: false }]
+                [
+                    '@babel/preset-env', { modules: false }
+                ]
             ],
             plugins: [
                 ['@babel/plugin-transform-classes', {
