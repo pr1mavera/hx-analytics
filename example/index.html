@@ -7,7 +7,7 @@
     <title>~你不要过来啊~</title>
 </head>
 <body>
-    <script>
+    <!-- <script>
         var ha = ha || [];
         (function () {
             var ha = document.createElement('script');
@@ -22,7 +22,7 @@
     </script>
     <script>
         ha.push([ 'init', 'kzgm', 'kfxt', 'oKXX7wKQhDf0sixuV0z-gEB8Y8is' ]);
-    </script>
+    </script> -->
     <!-- <script>
         window.addEventListener('message', e => {
             const event = e || window.event;
@@ -40,10 +40,22 @@
             window.name = window.location.href
         }
     </script> -->
-    <button id="button">点我拿window.name</button>
+    <!-- <button id="button">点我拿window.name</button> -->
     <script>
-        document.getElementById('button').addEventListener('click', e => {
-            alert(window.name)
+        // document.getElementById('button').addEventListener('click', e => {
+        //     alert(window.name)
+        // });
+        var hiddenTimer = 0;
+        var visiTimer = 0;
+        document.addEventListener("visibilitychange", function(e) {
+            if (document.visibilityState === 'hidden') {
+                // 网页被挂起
+                document.write('页面挂起' + ++hiddenTimer + "\<br\>")
+            }
+            else {
+                // 网页被呼起
+                document.write('网页被呼起' + ++visiTimer + "\<br\>")
+            }
         });
     </script>
 </body>

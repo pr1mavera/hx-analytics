@@ -161,7 +161,7 @@ _.getElemPid = function (sysId, pageId, e) {
 
 _.getElemByPid = pid => {
     const [ id, , , pageId ] = pid.split('!');
-    if (pageId !== location.pathname) return null;
+    if (pageId !== _.getPagePath()) return null;
     return document.getElementById(id) || document.getElementsByName(id)[0] || document.querySelector(id);
 };
 

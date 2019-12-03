@@ -59,7 +59,7 @@ const EventListener = {
     'report-page-visible': [
         {},
         function(): Subscription {
-            // 页面切至后台状态变化
+            // 页面切至前台状态变化
             return this.events.pageVisible().subscribe(() => {
 
                 /**
@@ -81,7 +81,7 @@ const EventListener = {
     'report-page-hidden': [
         {},
         function(): Subscription {
-            // 页面切至前台状态变化
+            // 页面切至后台状态变化
             return this.events.pageHidden().subscribe(() => {
 
                 /**
@@ -265,7 +265,7 @@ export class Report implements ModeLifeCycle {
 
             // 参数不合法
             if (reportOptList.length < 2 || typeof reportOptList[0] != 'string') {
-                console.warn('Warning in reportTrigger: illegal parames', reportOptList[0]);
+                console.warn('[hx-analytics] Warning in reportTrigger: illegal parames', reportOptList[0]);
                 return void 0;
             }
 
@@ -275,7 +275,7 @@ export class Report implements ModeLifeCycle {
 
             // 找不到对应的上报配置
             if (!sendConfig) {
-                console.warn('Warning in reportTrigger: illegal directive', directive);
+                console.warn('[hx-analytics] Warning in reportTrigger: illegal directive', directive);
                 return void 0;
             }
 

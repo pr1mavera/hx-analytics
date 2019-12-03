@@ -143,7 +143,7 @@ export class Setting implements ModeLifeCycle {
                 appName: conf.appName,
                 sysId: conf.sysId,
                 sysName: conf.sysName,
-                pageId: location.pathname
+                pageId: this._.getPagePath()
             }
         });
 
@@ -170,7 +170,7 @@ export class Setting implements ModeLifeCycle {
     // 请求服务获取对应页面的已埋的埋点配置
     async getPresetPoints() {
         const rules = {
-            pageId: location.pathname,
+            pageId: this._.getPagePath(),
             appName: this.conf.get('appName'),
             sysName: this.conf.get('sysName'),
             pageSize: -1
@@ -187,7 +187,7 @@ export class Setting implements ModeLifeCycle {
         const [ err, res ] = await this._.errorCaptured(this.service.getPresetPointsAPI, null, rules);
 
         if (err) {
-            console.warn(`Warn in getPresetPointsAPI: `, err);
+            console.warn(`[hx-analytics] Warn in getPresetPointsAPI: `, err);
             return [];
         }
 

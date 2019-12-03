@@ -64,7 +64,7 @@ export class ReportStrategy implements ReportStrategy {
         } catch (error) {
             const eStr = JSON.stringify(error);
             error = null;
-            console.warn(`Warn in report2Storage: ${eStr}`);
+            console.warn(`[hx-analytics] Warn in report2Storage: ${eStr}`);
             return false;
         }
     }
@@ -82,12 +82,12 @@ export class ReportStrategy implements ReportStrategy {
             const [ err ] = res;
             if (err) {
                 console.warn(
-                    'Warn in report2Server: ',
+                    '[hx-analytics] Warn in report2Server: ',
                     err
                 );
                 // 是否将未成功上报的数据缓存进本地，若指定为 'ignoreErr' 则不缓存
                 if (!ignoreErr) {
-                    console.warn('this report data will be cached into LocalStorage, and will be resend on next time you visit this website ! ');
+                    console.warn('[hx-analytics] this report data will be cached into LocalStorage, and will be resend on next time you visit this website ! ');
                     return this.report2Storage(data);
                 }
                 // 传递消费结果

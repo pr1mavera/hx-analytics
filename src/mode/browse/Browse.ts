@@ -6,6 +6,6 @@ export class Browse implements ModeLifeCycle {
     onEnter() {}
     onExit() {}
     onTrigger(data: Obj) {
-        console.warn('No data will upload with browse mode!');
+        console.warn('[hx-analytics] No data will upload with browse mode!');
     }
 }
