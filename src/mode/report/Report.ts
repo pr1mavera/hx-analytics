@@ -216,7 +216,7 @@ export class Report implements ModeLifeCycle {
             Object.keys(this.reportConfigs).forEach((key: string) => {
                 const config = this.reportConfigs[key];
                 if (config.middlewares && config.middlewares.length) {
-                    config.rebuildWithMiddlewares = this.applyMiddlewares(config.middlewares)(this);
+                    config.triggerWithMiddlewares = this.applyMiddlewares(config.middlewares)(this);
                 }
             });
 
@@ -280,10 +280,10 @@ export class Report implements ModeLifeCycle {
             }
 
             // TODO: 参数合并中间件，系统配置的自定义事件可能会使用得到
-            const { params, rebuildWithMiddlewares } = sendConfig;
+            const { params, triggerWithMiddlewares } = sendConfig;
             // 若存在数据上报重构函数，使用重构的上报函数，否则直接调用 this._onTrigger
-            return rebuildWithMiddlewares ?
-                rebuildWithMiddlewares(...rest) :
+            return triggerWithMiddlewares ?
+                triggerWithMiddlewares(...rest) :
                 this._onTrigger(rest[0]);
         }
     }

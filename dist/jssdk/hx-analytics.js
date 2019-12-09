@@ -4511,7 +4511,7 @@ var ha = (function () {
 	        var headers = options.headers, body = options.body, rest = __rest(options, ["headers", "body"]);
 	        // // 存在 body ，则警告并忽略
 	        // body && console.warn(
-	        //     'Warn in http request: You are trying to set a request body in args:options, and it will be ignore. Please set it in args:data !  \n',
+	        //     '[hx-analytics] Warn in http request: You are trying to set a request body in args:options, and it will be ignore. Please set it in args:data !  \n',
 	        //     `url: ${url} \n`,
 	        //     `body: ${JSON.stringify(body)}`,
 	        // );
@@ -4565,7 +4565,7 @@ var ha = (function () {
 	    Browse.prototype.onEnter = function () { };
 	    Browse.prototype.onExit = function () { };
 	    Browse.prototype.onTrigger = function (data) {
-	        console.warn('No data will upload with browse mode!');
+	        console.warn('[hx-analytics] No data will upload with browse mode!');
 	    };
 	    Browse = __decorate([
 	        injectable()
@@ -4725,7 +4725,7 @@ var ha = (function () {
 	        {},
 	        function () {
 	            var _this = this;
-	            // 页面切至后台状态变化
+	            // 页面切至前台状态变化
 	            return this.events.pageVisible().subscribe(function () {
 	                /**
 	                 * 页面停留数据重载
@@ -4746,7 +4746,7 @@ var ha = (function () {
 	        {},
 	        function () {
 	            var _this = this;
-	            // 页面切至前台状态变化
+	            // 页面切至后台状态变化
 	            return this.events.pageHidden().subscribe(function () {
 	                /**
 	                 * 页面停留数据处理
@@ -4900,7 +4900,7 @@ var ha = (function () {
 	            return function (reportOptList) {
 	                // 参数不合法
 	                if (reportOptList.length < 2 || typeof reportOptList[0] != 'string') {
-	                    console.warn('Warning in reportTrigger: illegal parames', reportOptList[0]);
+	                    console.warn('[hx-analytics] Warning in reportTrigger: illegal parames', reportOptList[0]);
 	                    return void 0;
 	                }
 	                var directive = reportOptList[0], rest = reportOptList.slice(1);
@@ -4908,7 +4908,7 @@ var ha = (function () {
 	                var sendConfig = _this.reportConfigs[directive];
 	                // 找不到对应的上报配置
 	                if (!sendConfig) {
-	                    console.warn('Warning in reportTrigger: illegal directive', directive);
+	                    console.warn('[hx-analytics] Warning in reportTrigger: illegal directive', directive);
 	                    return void 0;
 	                }
 	                // TODO: 参数合并中间件，系统配置的自定义事件可能会使用得到
@@ -5158,7 +5158,7 @@ var ha = (function () {
 	        catch (error) {
 	            var eStr = JSON.stringify(error);
 	            error = null;
-	            console.warn("Warn in report2Storage: " + eStr);
+	            console.warn("[hx-analytics] Warn in report2Storage: " + eStr);
 	            return false;
 	        }
 	    };
@@ -5175,10 +5175,10 @@ var ha = (function () {
 	        var handleRes = function (res) {
 	            var err = res[0];
 	            if (err) {
-	                console.warn('Warn in report2Server: ', err);
+	                console.warn('[hx-analytics] Warn in report2Server: ', err);
 	                // 是否将未成功上报的数据缓存进本地，若指定为 'ignoreErr' 则不缓存
 	                if (!ignoreErr) {
-	                    console.warn('this report data will be cached into LocalStorage, and will be resend on next time you visit this website ! ');
+	                    console.warn('[hx-analytics] this report data will be cached into LocalStorage, and will be resend on next time you visit this website ! ');
 	                    return _this.report2Storage(data);
 	                }
 	                // 传递消费结果
@@ -5487,7 +5487,7 @@ var ha = (function () {
 	                appName: conf.appName,
 	                sysId: conf.sysId,
 	                sysName: conf.sysName,
-	                pageId: location.pathname
+	                pageId: this._.getPagePath()
 	            }
 	        });
 	        console.log('SettingLifeCycle onTrigger：', data);
@@ -5523,7 +5523,7 @@ var ha = (function () {
 	                switch (_b.label) {
 	                    case 0:
 	                        rules = {
-	                            pageId: location.pathname,
+	                            pageId: this._.getPagePath(),
 	                            appName: this.conf.get('appName'),
 	                            sysName: this.conf.get('sysName'),
 	                            pageSize: -1
@@ -5538,7 +5538,7 @@ var ha = (function () {
 	                    case 1:
 	                        _a = _b.sent(), err = _a[0], res = _a[1];
 	                        if (err) {
-	                            console.warn("Warn in getPresetPointsAPI: ", err);
+	                            console.warn("[hx-analytics] Warn in getPresetPointsAPI: ", err);
 	                            return [2 /*return*/, []];
 	                        }
 	                        return [2 /*return*/, res];
@@ -6033,7 +6033,7 @@ var ha = (function () {
 	};
 	_.getElemByPid = function (pid) {
 	    var _a = pid.split('!'), id = _a[0], pageId = _a[3];
-	    if (pageId !== location.pathname)
+	    if (pageId !== _.getPagePath())
 	        return null;
 	    return document.getElementById(id) || document.getElementsByName(id)[0] || document.querySelector(id);
 	};
@@ -6250,7 +6250,7 @@ var ha = (function () {
 	        var elem = this._.getElemByPid(this.pid);
 	        if (!elem) {
 	            // 未能通过 pid 找到对应 dom节点（）
-	            console.warn("Warn in Point.create: Can't find element with pid: ", this.pid, '\n', "please check out the element's fingerprint or location.pathname!");
+	            console.warn("[hx-analytics] Warn in Point.create: Can't find element with pid: ", this.pid, '\n', "please check out the element's fingerprint or location.pathname!");
 	            this.tag = 'unknow';
 	            this.rect = [0, 0, 0, 0];
 	        }
@@ -6264,7 +6264,7 @@ var ha = (function () {
 	    };
 	    Point.prototype.createByEvent = function (origin) {
 	        var sysId = this.conf.get('sysId');
-	        this.pid = this._.getElemPid(sysId, location.pathname, origin);
+	        this.pid = this._.getElemPid(sysId, this._.getPagePath(), origin);
 	        this.tag = '<' + origin.tagName.toLowerCase() + '>';
 	        // [ x, y, w, h ]
 	        this.rect = this._.getElemClientRect(origin);
