@@ -113,27 +113,6 @@
             transform: translateX(-50%);
         }
     </style>
-    <!-- <script src="http://10.3.36.38:3001/jssdk/hx-analytics-jssdk.iife.min.js"></script> -->
-    <!-- <script src="https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js"></script> -->
-    <!-- <script src="http://localhost:3001/jssdk/hx-analytics.js"></script>
-    <script>
-        ha.init({
-            appId: 'kzgm',
-            sysId: 'kfxt',
-            openId: 'oKXX7wKQhDf0sixuV0z-gEB8Y8is'
-        })
-    </script> -->
-    <!-- <script>
-        var ha = ha || [];
-        (function () {
-            var ha = document.createElement('script');
-            ha.type = 'text/javascript';
-            ha.async = true;
-            ha.src = 'http://localhost:3001/jssdk/hx-analytics.js';
-            var s = document.getElementsByTagName('script')[0];
-            s.parentNode.insertBefore(ha, s);
-        })();
-    </script> -->
     <script>
         var ha = ha || [];
         (function () {
@@ -142,14 +121,14 @@
             ha.async = true;
             // ha.src = 'https://sales.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js';
             // ha.src = 'https://sales-dev.ihxlife.com/video/hx-analytics/jssdk/hx-analytics.js';
-            // ha.src = 'http://localhost:3001/jssdk/hx-analytics.js';
-            ha.src = 'http://localhost:3001/jssdk/hx-analytics.iife.min.js';
+            ha.src = 'http://localhost:3001/jssdk/hx-analytics.js';
+            // ha.src = 'http://localhost:3001/jssdk/hx-analytics.iife.min.js';
             var s = document.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(ha, s);
         })();
         ha.push([ 'init', 'kzgm', 'kfxt', 'oKXX7wKQhDf0sixuV0z-gEB8Y8is' ]);
     </script>
-    <script>
+    <!-- <script>
         localStorage.setItem('vConsole_switch_x', 0);
         localStorage.setItem('vConsole_switch_y', 0);
         document.addEventListener("visibilitychange", function() {
@@ -157,7 +136,7 @@
             iushd.push(`${iushd.length}-${document.visibilityState}`);
             localStorage.setItem('iushd', JSON.stringify(iushd));
         });
-    </script>
+    </script> -->
 </head>
 <body>
     <div class="list">
