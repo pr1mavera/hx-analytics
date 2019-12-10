@@ -14,9 +14,9 @@ _.pack = (arity) => arr => arr.reduce((temp: Array<Array<any>>, tar: any, i: num
     return temp;
 }, []);
 
-_.first = arr => arr[0] || null;
+_.first = arr => (arr && _.isType('Array', arr) && arr[0]) || null;
 
-_.last = arr => arr.length ? arr[arr.length - 1] : null;
+_.last = arr => (arr && _.isType('Array', arr) && arr.length) ? arr[arr.length - 1] : null;
 
 const { sessionStorage, localStorage } = <Window>window;
 const [ SessStorage, LocStorage ] = [ sessionStorage, localStorage ].map(
@@ -74,6 +74,9 @@ _.windowData = {
 _.getPagePath = () => {
     const { pathname, hash } = window.location;
     return pathname + _.first(hash.split('?'));
+    // const res = pathname + _.first(hash.split('?'));
+    // debugger;
+    // return res;
 };
 
 _.inIframe = () => window && window.self !== window.top;

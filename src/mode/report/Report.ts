@@ -6,7 +6,9 @@ import * as middlewares from './middleware';
 // report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 const EventListener = {
     'report-click': [
-        { capture: false },
+        // 此处需要在捕获阶段抓取点击事件
+        // 因为如果是在冒泡阶段抓取，则此时原生点击已经执行，单页面场景页面已经跳转，将导致事件上报不准确
+        { capture: true },
         function(config: Obj): Subscription {
             return this.events.click(config).subscribe((e: Event) => {
                 // 包装事件数据，触发事件消费 onTrigger
@@ -176,7 +178,8 @@ export class Report implements ModeLifeCycle {
             params: [ 'eventId', 'pageId', 'pageUrl', 'enterTime' ],
             middlewares: [
                 middlewares.loggerMiddleware,
-                middlewares.pageEnterMiddleware
+                middlewares.pageEnterMiddleware,
+                middlewares.preFuncIdMiddleware,
             ]
         }
     }

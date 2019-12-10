@@ -2789,6 +2789,7 @@ var ha = (function () {
 	    CustomCanvas: Symbol.for('CustomCanvas'),
 	    Point: Symbol.for('Point')
 	};
+	//# sourceMappingURL=types.js.map
 
 	/*! *****************************************************************************
 	Copyright (c) Microsoft Corporation. All rights reserved.
@@ -3045,11 +3046,13 @@ var ha = (function () {
 	    ], HXAnalytics);
 	    return HXAnalytics;
 	}());
+	//# sourceMappingURL=HXAnalytics.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isFunction(x) {
 	    return typeof x === 'function';
 	}
+	//# sourceMappingURL=isFunction.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var _enable_super_gross_mode_that_will_cause_bad_things = false;
@@ -3066,11 +3069,13 @@ var ha = (function () {
 	        return _enable_super_gross_mode_that_will_cause_bad_things;
 	    },
 	};
+	//# sourceMappingURL=config.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function hostReportError(err) {
 	    setTimeout(function () { throw err; }, 0);
 	}
+	//# sourceMappingURL=hostReportError.js.map
 
 	/** PURE_IMPORTS_START _config,_util_hostReportError PURE_IMPORTS_END */
 	var empty = {
@@ -3086,14 +3091,17 @@ var ha = (function () {
 	    },
 	    complete: function () { }
 	};
+	//# sourceMappingURL=Observer.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var isArray = /*@__PURE__*/ (function () { return Array.isArray || (function (x) { return x && typeof x.length === 'number'; }); })();
+	//# sourceMappingURL=isArray.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isObject(x) {
 	    return x !== null && typeof x === 'object';
 	}
+	//# sourceMappingURL=isObject.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var UnsubscriptionErrorImpl = /*@__PURE__*/ (function () {
@@ -3109,6 +3117,7 @@ var ha = (function () {
 	    return UnsubscriptionErrorImpl;
 	})();
 	var UnsubscriptionError = UnsubscriptionErrorImpl;
+	//# sourceMappingURL=UnsubscriptionError.js.map
 
 	/** PURE_IMPORTS_START _util_isArray,_util_isObject,_util_isFunction,_util_UnsubscriptionError PURE_IMPORTS_END */
 	var Subscription = /*@__PURE__*/ (function () {
@@ -3240,6 +3249,7 @@ var ha = (function () {
 	function flattenUnsubscriptionErrors(errors) {
 	    return errors.reduce(function (errs, err) { return errs.concat((err instanceof UnsubscriptionError) ? err.errors : err); }, []);
 	}
+	//# sourceMappingURL=Subscription.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var rxSubscriber = /*@__PURE__*/ (function () {
@@ -3247,6 +3257,7 @@ var ha = (function () {
 	        ? /*@__PURE__*/ Symbol('rxSubscriber')
 	        : '@@rxSubscriber_' + /*@__PURE__*/ Math.random();
 	})();
+	//# sourceMappingURL=rxSubscriber.js.map
 
 	/** PURE_IMPORTS_START tslib,_util_isFunction,_Observer,_Subscription,_internal_symbol_rxSubscriber,_config,_util_hostReportError PURE_IMPORTS_END */
 	var Subscriber = /*@__PURE__*/ (function (_super) {
@@ -3471,6 +3482,7 @@ var ha = (function () {
 	    };
 	    return SafeSubscriber;
 	}(Subscriber));
+	//# sourceMappingURL=Subscriber.js.map
 
 	/** PURE_IMPORTS_START _Subscriber PURE_IMPORTS_END */
 	function canReportError(observer) {
@@ -3488,6 +3500,7 @@ var ha = (function () {
 	    }
 	    return true;
 	}
+	//# sourceMappingURL=canReportError.js.map
 
 	/** PURE_IMPORTS_START _Subscriber,_symbol_rxSubscriber,_Observer PURE_IMPORTS_END */
 	function toSubscriber(nextOrObserver, error, complete) {
@@ -3504,12 +3517,15 @@ var ha = (function () {
 	    }
 	    return new Subscriber(nextOrObserver, error, complete);
 	}
+	//# sourceMappingURL=toSubscriber.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var observable = /*@__PURE__*/ (function () { return typeof Symbol === 'function' && Symbol.observable || '@@observable'; })();
+	//# sourceMappingURL=observable.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function noop() { }
+	//# sourceMappingURL=noop.js.map
 
 	/** PURE_IMPORTS_START _noop PURE_IMPORTS_END */
 	function pipeFromArray(fns) {
@@ -3523,6 +3539,7 @@ var ha = (function () {
 	        return fns.reduce(function (prev, fn) { return fn(prev); }, input);
 	    };
 	}
+	//# sourceMappingURL=pipe.js.map
 
 	/** PURE_IMPORTS_START _util_canReportError,_util_toSubscriber,_symbol_observable,_util_pipe,_config PURE_IMPORTS_END */
 	var Observable = /*@__PURE__*/ (function () {
@@ -3633,6 +3650,7 @@ var ha = (function () {
 	    }
 	    return promiseCtor;
 	}
+	//# sourceMappingURL=Observable.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscription PURE_IMPORTS_END */
 	var Action = /*@__PURE__*/ (function (_super) {
@@ -3645,6 +3663,7 @@ var ha = (function () {
 	    };
 	    return Action;
 	}(Subscription));
+	//# sourceMappingURL=Action.js.map
 
 	/** PURE_IMPORTS_START tslib,_Action PURE_IMPORTS_END */
 	var AsyncAction = /*@__PURE__*/ (function (_super) {
@@ -3737,6 +3756,7 @@ var ha = (function () {
 	    };
 	    return AsyncAction;
 	}(Action));
+	//# sourceMappingURL=AsyncAction.js.map
 
 	var Scheduler = /*@__PURE__*/ (function () {
 	    function Scheduler(SchedulerAction, now) {
@@ -3755,6 +3775,7 @@ var ha = (function () {
 	    Scheduler.now = function () { return Date.now(); };
 	    return Scheduler;
 	}());
+	//# sourceMappingURL=Scheduler.js.map
 
 	/** PURE_IMPORTS_START tslib,_Scheduler PURE_IMPORTS_END */
 	var AsyncScheduler = /*@__PURE__*/ (function (_super) {
@@ -3810,11 +3831,13 @@ var ha = (function () {
 	    };
 	    return AsyncScheduler;
 	}(Scheduler));
+	//# sourceMappingURL=AsyncScheduler.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isScheduler(value) {
 	    return value && typeof value.schedule === 'function';
 	}
+	//# sourceMappingURL=isScheduler.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var subscribeToArray = function (array) {
@@ -3825,6 +3848,7 @@ var ha = (function () {
 	        subscriber.complete();
 	    };
 	};
+	//# sourceMappingURL=subscribeToArray.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription PURE_IMPORTS_END */
 	function scheduleArray(input, scheduler) {
@@ -3844,6 +3868,7 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
+	//# sourceMappingURL=scheduleArray.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_subscribeToArray,_scheduled_scheduleArray PURE_IMPORTS_END */
 	function fromArray(input, scheduler) {
@@ -3854,14 +3879,17 @@ var ha = (function () {
 	        return scheduleArray(input, scheduler);
 	    }
 	}
+	//# sourceMappingURL=fromArray.js.map
 
 	/** PURE_IMPORTS_START _AsyncAction,_AsyncScheduler PURE_IMPORTS_END */
 	var async = /*@__PURE__*/ new AsyncScheduler(AsyncAction);
+	//# sourceMappingURL=async.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function identity(x) {
 	    return x;
 	}
+	//# sourceMappingURL=identity.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	function map(project, thisArg) {
@@ -3904,6 +3932,7 @@ var ha = (function () {
 	    };
 	    return MapSubscriber;
 	}(Subscriber));
+	//# sourceMappingURL=map.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	var OuterSubscriber = /*@__PURE__*/ (function (_super) {
@@ -3922,6 +3951,7 @@ var ha = (function () {
 	    };
 	    return OuterSubscriber;
 	}(Subscriber));
+	//# sourceMappingURL=OuterSubscriber.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	var InnerSubscriber = /*@__PURE__*/ (function (_super) {
@@ -3947,6 +3977,7 @@ var ha = (function () {
 	    };
 	    return InnerSubscriber;
 	}(Subscriber));
+	//# sourceMappingURL=InnerSubscriber.js.map
 
 	/** PURE_IMPORTS_START _hostReportError PURE_IMPORTS_END */
 	var subscribeToPromise = function (promise) {
@@ -3961,6 +3992,7 @@ var ha = (function () {
 	        return subscriber;
 	    };
 	};
+	//# sourceMappingURL=subscribeToPromise.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function getSymbolIterator() {
@@ -3970,6 +4002,7 @@ var ha = (function () {
 	    return Symbol.iterator;
 	}
 	var iterator = /*@__PURE__*/ getSymbolIterator();
+	//# sourceMappingURL=iterator.js.map
 
 	/** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */
 	var subscribeToIterable = function (iterable) {
@@ -3996,6 +4029,7 @@ var ha = (function () {
 	        return subscriber;
 	    };
 	};
+	//# sourceMappingURL=subscribeToIterable.js.map
 
 	/** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
 	var subscribeToObservable = function (obj) {
@@ -4009,14 +4043,17 @@ var ha = (function () {
 	        }
 	    };
 	};
+	//# sourceMappingURL=subscribeToObservable.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	var isArrayLike = (function (x) { return x && typeof x.length === 'number' && typeof x !== 'function'; });
+	//# sourceMappingURL=isArrayLike.js.map
 
 	/** PURE_IMPORTS_START  PURE_IMPORTS_END */
 	function isPromise(value) {
 	    return !!value && typeof value.subscribe !== 'function' && typeof value.then === 'function';
 	}
+	//# sourceMappingURL=isPromise.js.map
 
 	/** PURE_IMPORTS_START _subscribeToArray,_subscribeToPromise,_subscribeToIterable,_subscribeToObservable,_isArrayLike,_isPromise,_isObject,_symbol_iterator,_symbol_observable PURE_IMPORTS_END */
 	var subscribeTo = function (result) {
@@ -4039,6 +4076,7 @@ var ha = (function () {
 	        throw new TypeError(msg);
 	    }
 	};
+	//# sourceMappingURL=subscribeTo.js.map
 
 	/** PURE_IMPORTS_START _InnerSubscriber,_subscribeTo,_Observable PURE_IMPORTS_END */
 	function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, destination) {
@@ -4053,6 +4091,7 @@ var ha = (function () {
 	    }
 	    return subscribeTo(result)(destination);
 	}
+	//# sourceMappingURL=subscribeToResult.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription,_symbol_observable PURE_IMPORTS_END */
 	function scheduleObservable(input, scheduler) {
@@ -4069,6 +4108,7 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
+	//# sourceMappingURL=scheduleObservable.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription PURE_IMPORTS_END */
 	function schedulePromise(input, scheduler) {
@@ -4087,6 +4127,7 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
+	//# sourceMappingURL=schedulePromise.js.map
 
 	/** PURE_IMPORTS_START _Observable,_Subscription,_symbol_iterator PURE_IMPORTS_END */
 	function scheduleIterable(input, scheduler) {
@@ -4130,16 +4171,19 @@ var ha = (function () {
 	        return sub;
 	    });
 	}
+	//# sourceMappingURL=scheduleIterable.js.map
 
 	/** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
 	function isInteropObservable(input) {
 	    return input && typeof input[observable] === 'function';
 	}
+	//# sourceMappingURL=isInteropObservable.js.map
 
 	/** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */
 	function isIterable(input) {
 	    return input && typeof input[iterator] === 'function';
 	}
+	//# sourceMappingURL=isIterable.js.map
 
 	/** PURE_IMPORTS_START _scheduleObservable,_schedulePromise,_scheduleArray,_scheduleIterable,_util_isInteropObservable,_util_isPromise,_util_isArrayLike,_util_isIterable PURE_IMPORTS_END */
 	function scheduled(input, scheduler) {
@@ -4159,6 +4203,7 @@ var ha = (function () {
 	    }
 	    throw new TypeError((input !== null && typeof input || input) + ' is not observable');
 	}
+	//# sourceMappingURL=scheduled.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_subscribeTo,_scheduled_scheduled PURE_IMPORTS_END */
 	function from(input, scheduler) {
@@ -4172,6 +4217,7 @@ var ha = (function () {
 	        return scheduled(input, scheduler);
 	    }
 	}
+	//# sourceMappingURL=from.js.map
 
 	/** PURE_IMPORTS_START tslib,_util_subscribeToResult,_OuterSubscriber,_InnerSubscriber,_map,_observable_from PURE_IMPORTS_END */
 	function mergeMap(project, resultSelector, concurrent) {
@@ -4264,6 +4310,7 @@ var ha = (function () {
 	    };
 	    return MergeMapSubscriber;
 	}(OuterSubscriber));
+	//# sourceMappingURL=mergeMap.js.map
 
 	/** PURE_IMPORTS_START _mergeMap,_util_identity PURE_IMPORTS_END */
 	function mergeAll(concurrent) {
@@ -4272,6 +4319,7 @@ var ha = (function () {
 	    }
 	    return mergeMap(identity, concurrent);
 	}
+	//# sourceMappingURL=mergeAll.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_isArray,_util_isFunction,_operators_map PURE_IMPORTS_END */
 	function fromEvent(target, eventName, options, resultSelector) {
@@ -4330,6 +4378,7 @@ var ha = (function () {
 	function isEventTarget(sourceObj) {
 	    return sourceObj && typeof sourceObj.addEventListener === 'function' && typeof sourceObj.removeEventListener === 'function';
 	}
+	//# sourceMappingURL=fromEvent.js.map
 
 	/** PURE_IMPORTS_START _Observable,_util_isScheduler,_operators_mergeAll,_fromArray PURE_IMPORTS_END */
 	function merge() {
@@ -4354,6 +4403,7 @@ var ha = (function () {
 	    }
 	    return mergeAll(concurrent)(fromArray(observables, scheduler));
 	}
+	//# sourceMappingURL=merge.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
 	function filter(predicate, thisArg) {
@@ -4395,6 +4445,7 @@ var ha = (function () {
 	    };
 	    return FilterSubscriber;
 	}(Subscriber));
+	//# sourceMappingURL=filter.js.map
 
 	/** PURE_IMPORTS_START tslib,_Subscriber,_scheduler_async PURE_IMPORTS_END */
 	function sampleTime(period, scheduler) {
@@ -4440,6 +4491,7 @@ var ha = (function () {
 	    subscriber.notifyNext();
 	    this.schedule(state, period);
 	}
+	//# sourceMappingURL=sampleTime.js.map
 
 	// import './events';
 	var AppEvent = {
@@ -4473,6 +4525,7 @@ var ha = (function () {
 	        return this.visibilitychange().pipe(filter(function () { return document.visibilityState === 'hidden'; }));
 	    }
 	};
+	//# sourceMappingURL=index.js.map
 
 	/* eslint-disable no-undef */
 	var development = {
@@ -4480,6 +4533,7 @@ var ha = (function () {
 	    'public': 'https://video-uat.ihxlife.com:8086/api/v1'
 	};
 	var conf =  development;
+	//# sourceMappingURL=index.js.map
 
 	// import './fetch';
 	// import { RequestMethods, RequestOptions } from '../../types';
@@ -4545,6 +4599,7 @@ var ha = (function () {
 	        url: function (host, url) { return splitUrl(host, url); },
 	    };
 	})();
+	//# sourceMappingURL=request.js.map
 
 	var Service = {
 	    ERR_OK: '0',
@@ -4557,6 +4612,7 @@ var ha = (function () {
 	    reportBeaconAPI: function (data) { return window.navigator.sendBeacon(http.splitUrl('public', '/log'), data); },
 	    getPresetPointsAPI: function (data) { return http.get('public', '/config/query/list', data); }
 	};
+	//# sourceMappingURL=index.js.map
 
 	var Browse = /** @class */ (function () {
 	    function Browse() {
@@ -4572,6 +4628,7 @@ var ha = (function () {
 	    ], Browse);
 	    return Browse;
 	}());
+	//# sourceMappingURL=Browse.js.map
 
 	var loggerMiddleware = function (ctx) { return function (next) { return function () {
 	    var opt = [];
@@ -4585,6 +4642,7 @@ var ha = (function () {
 	    console.log('-----------------------------');
 	    return res;
 	}; }; };
+	//# sourceMappingURL=loggerMiddleware.js.map
 
 	var initMiddleware = function (ctx) { return function (next) { return function () {
 	    // console.log('initMiddleware');
@@ -4613,6 +4671,7 @@ var ha = (function () {
 	    console.log('initMiddleware');
 	    return res;
 	}; }; };
+	//# sourceMappingURL=initMiddleware.js.map
 
 	var clickMiddleware = function (ctx) { return function (next) { return function () {
 	    var opt = [];
@@ -4624,6 +4683,7 @@ var ha = (function () {
 	    var reqData = next(__assign(__assign({}, _opt), { type: 2, eventId: 'click', isSysEvt: 'N', funcId: funcId }));
 	    return reqData;
 	}; }; };
+	//# sourceMappingURL=clickMiddleware.js.map
 
 	var pageDwellMiddleware = function (ctx) { return function (next) { return function () {
 	    var opt = [];
@@ -4640,6 +4700,7 @@ var ha = (function () {
 	    console.log('pageDwellMiddleware');
 	    return reqData;
 	}; }; };
+	//# sourceMappingURL=pageDwellMiddleware.js.map
 
 	var pageEnterMiddleware = function (ctx) { return function (next) { return function () {
 	    var opt = [];
@@ -4653,6 +4714,7 @@ var ha = (function () {
 	    console.log('pageEnterMiddleware');
 	    return reqData;
 	}; }; };
+	//# sourceMappingURL=pageEnterMiddleware.js.map
 
 	var preFuncIdMiddleware = function (ctx) { return function (next) { return function (opt) {
 	    console.log('preFuncIdMiddleware');
@@ -4665,11 +4727,14 @@ var ha = (function () {
 	    ctx._.windowData.set('lastCustomData', reqData);
 	    return reqData;
 	}; }; };
+	//# sourceMappingURL=preFuncIdMiddleware.js.map
 
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 	var EventListener = {
 	    'report-click': [
-	        { capture: false },
+	        // 此处需要在捕获阶段抓取点击事件
+	        // 因为如果是在冒泡阶段抓取，则此时原生点击已经执行，单页面场景页面已经跳转，将导致事件上报不准确
+	        { capture: true },
 	        function (config) {
 	            var _this = this;
 	            return this.events.click(config).subscribe(function (e) {
@@ -4821,7 +4886,8 @@ var ha = (function () {
 	                params: ['eventId', 'pageId', 'pageUrl', 'enterTime'],
 	                middlewares: [
 	                    loggerMiddleware,
-	                    pageEnterMiddleware
+	                    pageEnterMiddleware,
+	                    preFuncIdMiddleware,
 	                ]
 	            }
 	        };
@@ -5099,6 +5165,7 @@ var ha = (function () {
 	    ], MsgsQueue);
 	    return MsgsQueue;
 	}());
+	//# sourceMappingURL=MsgsQueue.js.map
 
 	var ReportStrategy = /** @class */ (function () {
 	    function ReportStrategy(_, service) {
@@ -5240,6 +5307,7 @@ var ha = (function () {
 	    ], ReportStrategy);
 	    return ReportStrategy;
 	}());
+	//# sourceMappingURL=ReportStrategy.js.map
 
 	var PageTracer = /** @class */ (function () {
 	    function PageTracer(_) {
@@ -5369,6 +5437,7 @@ var ha = (function () {
 	    ], PageTracer);
 	    return PageTracer;
 	}());
+	//# sourceMappingURL=PageTracer.js.map
 
 	// report 模式下所有的事件监听器注册方法，包装事件数据，触发事件消费 onTrigger
 	var EventListener$1 = {
@@ -5575,6 +5644,7 @@ var ha = (function () {
 	    ], Setting);
 	    return Setting;
 	}());
+	//# sourceMappingURL=Setting.js.map
 
 	var DomMasker = /** @class */ (function () {
 	    function DomMasker(createPoint, customCanvas) {
@@ -5644,6 +5714,7 @@ var ha = (function () {
 	    ], DomMasker);
 	    return DomMasker;
 	}());
+	//# sourceMappingURL=DomMasker.js.map
 
 	var customCanvas = function (width, height, color) {
 	    if (color === void 0) { color = 'rgba(77, 131, 202, 0.5)'; }
@@ -5661,6 +5732,7 @@ var ha = (function () {
 	    ctx.textBaseline = 'ideographic';
 	    return canvas;
 	};
+	//# sourceMappingURL=CustomCanvas.js.map
 
 	function getCoords(elem) {
 	    var box = elem.getBoundingClientRect();
@@ -5897,8 +5969,8 @@ var ha = (function () {
 	    temp[key] ? temp[key].push(tar) : temp[key] = [tar];
 	    return temp;
 	}, []); }; };
-	_.first = function (arr) { return arr[0] || null; };
-	_.last = function (arr) { return arr.length ? arr[arr.length - 1] : null; };
+	_.first = function (arr) { return (arr && _.isType('Array', arr) && arr[0]) || null; };
+	_.last = function (arr) { return (arr && _.isType('Array', arr) && arr.length) ? arr[arr.length - 1] : null; };
 	var _a = window, sessionStorage = _a.sessionStorage, localStorage = _a.localStorage;
 	var _b = [sessionStorage, localStorage].map(function (storage) { return ({
 	    get: function (key) {
@@ -5953,6 +6025,9 @@ var ha = (function () {
 	_.getPagePath = function () {
 	    var _a = window.location, pathname = _a.pathname, hash = _a.hash;
 	    return pathname + _.first(hash.split('?'));
+	    // const res = pathname + _.first(hash.split('?'));
+	    // debugger;
+	    // return res;
 	};
 	_.inIframe = function () { return window && window.self !== window.top; };
 	_.isType = function (type, staff) { return Object.prototype.toString.call(staff) === "[object " + type + "]"; };
@@ -6120,6 +6195,7 @@ var ha = (function () {
 	        return rv;
 	    };
 	};
+	//# sourceMappingURL=Utils.js.map
 
 	var AppConfig = /** @class */ (function () {
 	    function AppConfig() {
@@ -6187,6 +6263,7 @@ var ha = (function () {
 	    ], AppConfig);
 	    return AppConfig;
 	}());
+	//# sourceMappingURL=AppConfig.js.map
 
 	var EventSubscriber = /** @class */ (function () {
 	    function EventSubscriber() {
@@ -6229,6 +6306,7 @@ var ha = (function () {
 	    ], EventSubscriber);
 	    return EventSubscriber;
 	}());
+	//# sourceMappingURL=EventSubscriber.js.map
 
 	var Point = /** @class */ (function () {
 	    function Point(_, conf) {
@@ -6275,6 +6353,7 @@ var ha = (function () {
 	    ], Point);
 	    return Point;
 	}());
+	//# sourceMappingURL=Point.js.map
 
 	var container = new Container();
 	container.bind(TYPES.HXAnalytics).to(HXAnalytics).inSingletonScope();
@@ -6309,6 +6388,7 @@ var ha = (function () {
 	container.bind(TYPES.CustomCanvas).toFunction(customCanvas);
 	var createPoint = function (origin) { return new Point(_, container.get(TYPES.Conf)).create(origin); };
 	container.bind(TYPES.Point).toFunction(createPoint);
+	//# sourceMappingURL=inversify.config.js.map
 
 	// window.onerror = function (msg, url, row, col, error) {
 	//     console.log('错误 ❌: ', {
@@ -6366,6 +6446,7 @@ var ha = (function () {
 	// 用户身份校验
 	// 页面停留时长 页面切换机制
 	// 单测
+	//# sourceMappingURL=entry-jssdk.js.map
 
 	return ha;
 
