@@ -24,7 +24,7 @@ export class PageTracer implements PageTracer {
      * 生成当前路由访问记录
      */
     private createPageRecord(): PageRecord {
-        return [ this._.getPagePath(), window.location.href ];
+        return [ this._.getPageId(), window.location.href ];
     }
 
     /**
@@ -98,7 +98,7 @@ export class PageTracer implements PageTracer {
     isRouteChange() {
         const { first, last, pipe } = this._;
         // 当前新路由
-        const newPath = this._.getPagePath();
+        const newPath = this._.getPageId();
         // 上一个路由
         const oldPath = pipe(last, first)(this._pageRecords);
 

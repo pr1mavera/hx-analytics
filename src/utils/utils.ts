@@ -71,12 +71,26 @@ _.windowData = {
     }
 };
 
-_.getPagePath = () => {
+/**
+ * 获取页面唯一标识
+ * 
+ * 策略：
+ * 1. 获取 pathname, hash
+ * 2. 将 hash 后面的可能携带的 query 去掉，并且与 pathname 拼接，得到 pagePath
+ * 3. 将 pagePath 的 '#' 替换成 '_'
+ * 
+ * 这里需要将 '#' 替换成 '_' 的原因：
+ * 因为配置埋点的过程中，需要查询当前页面埋点，而该接口为get接口，查询所附带的参数是作为query拼接的
+ * 访问接口的时候会将 '#' 以及后面的参数忽略掉，导致查询不到结果
+ * 因此这里的做法是将 '#' 替换成 '_'
+ */
+_.getPageId = () => {
     const { pathname, hash } = window.location;
-    return pathname + _.first(hash.split('?'));
-    // const res = pathname + _.first(hash.split('?'));
-    // debugger;
-    // return res;
+    // return pathname + _.first(hash.split('?'));
+    const pagePath = pathname + _.first(hash.split('?'));
+    // 替换
+    const pageId = pagePath.replace(/#/g, '_');
+    return pageId;
 };
 
 _.inIframe = () => window && window.self !== window.top;
@@ -164,7 +178,7 @@ _.getElemPid = function (sysId, pageId, e) {
 
 _.getElemByPid = pid => {
     const [ id, , , pageId ] = pid.split('!');
-    if (pageId !== _.getPagePath()) return null;
+    if (pageId !== _.getPageId()) return null;
     return document.getElementById(id) || document.getElementsByName(id)[0] || document.querySelector(id);
 };
 

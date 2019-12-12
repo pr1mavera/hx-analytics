@@ -69,7 +69,7 @@ export class HXAnalytics implements HXAnalytics {
     }
 
     // 应用初始化入口
-    private async init([ appId, sysId, openId ]: [ string, string, string ]) {
+    private async init([ appId, sysId, openId ]: string[]) {
 
         // 初始化用户基本信息
         let user_temp = this._.windowData.get('user');
@@ -99,10 +99,12 @@ export class HXAnalytics implements HXAnalytics {
         const newUser = {
             ...user_temp,
             openId: openId,
+            batchId: this._.createVisitId(user_temp.appId),
             sysConfig: user_temp.sysConfig
         };
         this.conf.merge(newUser);
         this._.windowData.set('user', newUser);
+        this._.windowData.set('batchId', newUser.batchId);
 
         // this.service.setHeader();
 

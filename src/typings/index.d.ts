@@ -53,7 +53,7 @@ interface Utils {
     /**
      * 获取页面唯一路径（加上hash）
      */
-    getPagePath: () => string;
+    getPageId: () => string;
 
     /**
      * 判断应用是否在 iframe 内

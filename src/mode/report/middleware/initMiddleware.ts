@@ -4,11 +4,7 @@ export const initMiddleware = (ctx: any) => (next: Function) => (...opt: any) =>
 
     const conf = ctx.conf.get();
     // 初始化访问流水号
-    let batchId = ctx._.windowData.get('batchId');
-    if (!batchId) {
-        batchId = ctx._.createVisitId(conf.appId);
-        ctx._.windowData.set('batchId', batchId);
-    }
+    const batchId = ctx._.windowData.get('batchId');
 
     // 初始化设备信息
     const { name, version, browser, connType } = ctx._.deviceInfo();

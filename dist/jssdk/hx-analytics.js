@@ -2967,9 +2967,10 @@ var ha = (function () {
 	                        user_temp = res;
 	                        _c.label = 2;
 	                    case 2:
-	                        newUser = __assign(__assign({}, user_temp), { openId: openId, sysConfig: user_temp.sysConfig });
+	                        newUser = __assign(__assign({}, user_temp), { openId: openId, batchId: this._.createVisitId(user_temp.appId), sysConfig: user_temp.sysConfig });
 	                        this.conf.merge(newUser);
 	                        this._.windowData.set('user', newUser);
+	                        this._.windowData.set('batchId', newUser.batchId);
 	                        // this.service.setHeader();
 	                        // 初始化当前模式
 	                        if (this._.inIframe()) {
@@ -4653,10 +4654,6 @@ var ha = (function () {
 	    var conf = ctx.conf.get();
 	    // 初始化访问流水号
 	    var batchId = ctx._.windowData.get('batchId');
-	    if (!batchId) {
-	        batchId = ctx._.createVisitId(conf.appId);
-	        ctx._.windowData.set('batchId', batchId);
-	    }
 	    // 初始化设备信息
 	    var _a = ctx._.deviceInfo(), name = _a.name, version = _a.version, browser = _a.browser, connType = _a.connType;
 	    // 保存签名，登录等信息至容器
@@ -4782,7 +4779,7 @@ var ha = (function () {
 	                // 生产页面停留时长数据
 	                _this.onTrigger(__spreadArrays(['pageDwell'], pageDwell));
 	                // 生产新页面进入数据
-	                _this.onTrigger(['pageEnter', _this._.getPagePath(), window.location.href]);
+	                _this.onTrigger(['pageEnter', _this._.getPageId(), window.location.href]);
 	            });
 	        }
 	    ],
@@ -4926,7 +4923,7 @@ var ha = (function () {
 	                    config.triggerWithMiddlewares = _this.applyMiddlewares(config.middlewares)(_this);
 	                }
 	            });
-	            this.onTrigger(['pageEnter', this._.getPagePath(), window.location.href]);
+	            this.onTrigger(['pageEnter', this._.getPageId(), window.location.href]);
 	        }
 	    };
 	    Report.prototype.onExit = function () {
@@ -4989,7 +4986,7 @@ var ha = (function () {
 	    });
 	    // 数据上报触发入口
 	    Report.prototype._onTrigger = function (data) {
-	        var extendsData = __assign({ pageId: this._.getPagePath(), pageUrl: window.location.href, eventTime: Date.now() }, data);
+	        var extendsData = __assign({ pageId: this._.getPageId(), pageUrl: window.location.href, eventTime: Date.now() }, data);
 	        // 单条上报数据
 	        var reqData = {
 	            type: extendsData.type,
@@ -5055,6 +5052,7 @@ var ha = (function () {
 	    ], Report);
 	    return Report;
 	}());
+	//# sourceMappingURL=Report.js.map
 
 	var MsgsQueue = /** @class */ (function () {
 	    function MsgsQueue() {
@@ -5342,7 +5340,7 @@ var ha = (function () {
 	     * 生成当前路由访问记录
 	     */
 	    PageTracer.prototype.createPageRecord = function () {
-	        return [this._.getPagePath(), window.location.href];
+	        return [this._.getPageId(), window.location.href];
 	    };
 	    /**
 	     * 获取路由访问记录最后一条数据（当前路由）
@@ -5388,7 +5386,7 @@ var ha = (function () {
 	    PageTracer.prototype.isRouteChange = function () {
 	        var _a = this._, first = _a.first, last = _a.last, pipe = _a.pipe;
 	        // 当前新路由
-	        var newPath = this._.getPagePath();
+	        var newPath = this._.getPageId();
 	        // 上一个路由
 	        var oldPath = pipe(last, first)(this._pageRecords);
 	        return newPath !== oldPath;
@@ -5556,7 +5554,7 @@ var ha = (function () {
 	                appName: conf.appName,
 	                sysId: conf.sysId,
 	                sysName: conf.sysName,
-	                pageId: this._.getPagePath()
+	                pageId: this._.getPageId()
 	            }
 	        });
 	        console.log('SettingLifeCycle onTrigger：', data);
@@ -5592,7 +5590,7 @@ var ha = (function () {
 	                switch (_b.label) {
 	                    case 0:
 	                        rules = {
-	                            pageId: this._.getPagePath(),
+	                            pageId: this._.getPageId(),
 	                            appName: this.conf.get('appName'),
 	                            sysName: this.conf.get('sysName'),
 	                            pageSize: -1
@@ -6022,12 +6020,26 @@ var ha = (function () {
 	        window.name = JSON.stringify({});
 	    }
 	};
-	_.getPagePath = function () {
+	/**
+	 * 获取页面唯一标识
+	 *
+	 * 策略：
+	 * 1. 获取 pathname, hash
+	 * 2. 将 hash 后面的可能携带的 query 去掉，并且与 pathname 拼接，得到 pagePath
+	 * 3. 将 pagePath 的 '#' 替换成 '_'
+	 *
+	 * 这里需要将 '#' 替换成 '_' 的原因：
+	 * 因为配置埋点的过程中，需要查询当前页面埋点，而该接口为get接口，查询所附带的参数是作为query拼接的
+	 * 访问接口的时候会将 '#' 以及后面的参数忽略掉，导致查询不到结果
+	 * 因此这里的做法是将 '#' 替换成 '_'
+	 */
+	_.getPageId = function () {
 	    var _a = window.location, pathname = _a.pathname, hash = _a.hash;
-	    return pathname + _.first(hash.split('?'));
-	    // const res = pathname + _.first(hash.split('?'));
-	    // debugger;
-	    // return res;
+	    // return pathname + _.first(hash.split('?'));
+	    var pagePath = pathname + _.first(hash.split('?'));
+	    // 替换
+	    var pageId = pagePath.replace(/#/g, '_');
+	    return pageId;
 	};
 	_.inIframe = function () { return window && window.self !== window.top; };
 	_.isType = function (type, staff) { return Object.prototype.toString.call(staff) === "[object " + type + "]"; };
@@ -6108,7 +6120,7 @@ var ha = (function () {
 	};
 	_.getElemByPid = function (pid) {
 	    var _a = pid.split('!'), id = _a[0], pageId = _a[3];
-	    if (pageId !== _.getPagePath())
+	    if (pageId !== _.getPageId())
 	        return null;
 	    return document.getElementById(id) || document.getElementsByName(id)[0] || document.querySelector(id);
 	};
@@ -6195,7 +6207,6 @@ var ha = (function () {
 	        return rv;
 	    };
 	};
-	//# sourceMappingURL=Utils.js.map
 
 	var AppConfig = /** @class */ (function () {
 	    function AppConfig() {
@@ -6342,7 +6353,7 @@ var ha = (function () {
 	    };
 	    Point.prototype.createByEvent = function (origin) {
 	        var sysId = this.conf.get('sysId');
-	        this.pid = this._.getElemPid(sysId, this._.getPagePath(), origin);
+	        this.pid = this._.getElemPid(sysId, this._.getPageId(), origin);
 	        this.tag = '<' + origin.tagName.toLowerCase() + '>';
 	        // [ x, y, w, h ]
 	        this.rect = this._.getElemClientRect(origin);

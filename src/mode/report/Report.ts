@@ -54,7 +54,7 @@ const EventListener = {
                 // 生产页面停留时长数据
                 this.onTrigger([ 'pageDwell', ...pageDwell ]);
                 // 生产新页面进入数据
-                this.onTrigger([ 'pageEnter', this._.getPagePath(), window.location.href ]);
+                this.onTrigger([ 'pageEnter', this._.getPageId(), window.location.href ]);
             });
         }
     ],
@@ -223,7 +223,7 @@ export class Report implements ModeLifeCycle {
                 }
             });
 
-            this.onTrigger([ 'pageEnter', this._.getPagePath(), window.location.href ]);
+            this.onTrigger([ 'pageEnter', this._.getPageId(), window.location.href ]);
         }
     }
 
@@ -295,7 +295,7 @@ export class Report implements ModeLifeCycle {
     _onTrigger(data: Obj) {
 
         let extendsData: Obj = {
-            pageId: this._.getPagePath(),
+            pageId: this._.getPageId(),
             pageUrl: window.location.href,
             eventTime: Date.now(),
             ...data

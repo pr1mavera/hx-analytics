@@ -143,7 +143,7 @@ export class Setting implements ModeLifeCycle {
                 appName: conf.appName,
                 sysId: conf.sysId,
                 sysName: conf.sysName,
-                pageId: this._.getPagePath()
+                pageId: this._.getPageId()
             }
         });
 
@@ -170,7 +170,7 @@ export class Setting implements ModeLifeCycle {
     // 请求服务获取对应页面的已埋的埋点配置
     async getPresetPoints() {
         const rules = {
-            pageId: this._.getPagePath(),
+            pageId: this._.getPageId(),
             appName: this.conf.get('appName'),
             sysName: this.conf.get('sysName'),
             pageSize: -1

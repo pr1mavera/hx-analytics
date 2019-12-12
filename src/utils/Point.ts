@@ -48,7 +48,7 @@ export class Point implements Point {
     }
     private createByEvent(origin: EventTarget) {
         const sysId = this.conf.get('sysId');
-        this.pid = this._.getElemPid(sysId, this._.getPagePath(), <HTMLElement>origin);
+        this.pid = this._.getElemPid(sysId, this._.getPageId(), <HTMLElement>origin);
         this.tag = '<' + (<HTMLElement>origin).tagName.toLowerCase() + '>';
         // [ x, y, w, h ]
         this.rect = this._.getElemClientRect(<Element>origin);
