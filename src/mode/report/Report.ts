@@ -305,6 +305,7 @@ export class Report implements ModeLifeCycle {
         let reqData: Msg = {
             type: extendsData.type,
             funcId: extendsData.funcId || '-',
+            preFuncId: extendsData.preFuncId || '-',
             pageId: extendsData.pageId || '-',
             sysId: this.conf.get('sysId') as string,
             isSysEvt: extendsData.isSysEvt || '-', // type 为 2 时，标识是否是系统事件，系统事件不需要按配置信息清洗

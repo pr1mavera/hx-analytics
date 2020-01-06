@@ -290,6 +290,7 @@ type ClientInfo = {
 type Msg = {
     type: number,
     funcId: string,
+    preFuncId: string,
     pageId: string,
     sysId: string,
     isSysEvt: string,
