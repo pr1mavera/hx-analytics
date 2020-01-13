@@ -16,7 +16,14 @@ import TYPES from './jssdk/types';
 
 // const _ = container.get<Utils>(TYPES.Utils);
 
-var haTemp: any = JSON.parse(JSON.stringify(ha)) || [];
+
+var haTemp: any
+
+try {
+    haTemp = ha;
+} catch (e) {
+    haTemp = []
+}
 
 const hxAnalytics = container.get<HXAnalytics>(TYPES.HXAnalytics);
 

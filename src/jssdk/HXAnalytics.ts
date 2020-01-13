@@ -146,7 +146,7 @@ export class HXAnalytics implements HXAnalytics {
      * 
      * @param {Array} cmds 埋点命令及参数
      */
-    async push(cmds: Array<any>[]) {
+    async push(cmds: Array<any>[] = []) {
         cmds.forEach((cmd: any[]) => {
             const [ directive, ...params ] = cmd;
             // 当前实例上是否存在该命令
