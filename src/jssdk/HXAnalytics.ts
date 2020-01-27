@@ -17,7 +17,8 @@ export class HXAnalytics implements HXAnalytics {
      */
     set mode(modeType: string) {
         if (!this.modeContainer[modeType]) {
-            throw Error('Error in change mode: you are trying to enter an extra mode, please check the version of the jssdk you cited !');
+            throw Error('[hx-analytics] - Error in change mode: you are trying to enter an extra mode' +
+                        'please check the version of the jssdk you cited !');
         };
         if (this.mode === modeType) return;
         // last mode exit
@@ -67,6 +68,31 @@ export class HXAnalytics implements HXAnalytics {
         this.modeContainer = { browse, report, setting };
         // this.modeContainer = modeContainer;
     }
+
+    // private async init([ appId, sysId, openId ]: string[]) {
+    //     const data = [];
+
+    //     const { pipe, hashInRange } = this._;
+    //     const updatePageIdNull: (id: string) => string = id => /(null)$/.test(id) ? id.replace(RegExp.$1, '') : id;
+    //     const updatePublicPath = (id: string) => id.replace('/video', '');
+    //     const res = data.map(item => {
+    //         const temp = {
+    //             ...item,
+    //             funcId: pipe(
+    //                 updatePageIdNull,
+    //                 updatePublicPath
+    //             )(item.funcId),
+    //             pageId: pipe(
+    //                 updatePageIdNull,
+    //                 updatePublicPath
+    //             )(item.pageId)
+    //         };
+    //         temp.id = hashInRange(16, temp.funcId);
+    //         return temp;
+    //     });
+
+    //     console.log(JSON.stringify(res));
+    // }
 
     // 应用初始化入口
     private async init([ appId, sysId, openId ]: string[]) {

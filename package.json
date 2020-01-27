@@ -66,6 +66,7 @@
     "ramda": "^0.26.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^6.5.3",
+    "ts-md5": "^1.2.7",
     "ts-toolbelt": "^4.8.16",
     "vuepress": "^1.2.0",
     "vuepress-theme-reco": "^1.1.1",

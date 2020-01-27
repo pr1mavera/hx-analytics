@@ -10,16 +10,37 @@ const EventListener = {
             return this.events.click(config).subscribe((e: Event) => {
                 e.stopPropagation();
                 // 包装事件数据，触发事件消费 onTrigger;
+
+                // 尝试匹配之前已埋过得点
                 const repeatPoint = this.domMasker.points.filter(
                     (point: Point) => point.pid === this.domMasker.activePoint.pid
-                );
-                this.onTrigger({
+                )[0];
+                // this.onTrigger({
+                //     tag: 'selectPoint',
+                //     // 若命中的埋点是已配置过的埋点，需要将配置信息一并返回给iframe父层，即返回预埋列表的点
+                //     point: repeatPoint.length ? repeatPoint[0] : this.domMasker.activePoint,
+                //     // 是否是重复设置的埋点
+                //     isRepeat: repeatPoint.length !== 0
+                // } as Obj);
+
+                /**
+                 * 2020.01.15 - 埋点哈希化
+                 * 新增埋点的 [hash:16] 的字段，作为新的 functId
+                 * 配置端配置埋点时的配置修改：
+                 * functId: 之前的 functId 的 [hash:16] 值
+                 * pid: 之前的 functId 本来的值
+                 */
+                const data = {
                     tag: 'selectPoint',
                     // 若命中的埋点是已配置过的埋点，需要将配置信息一并返回给iframe父层，即返回预埋列表的点
-                    point: repeatPoint.length ? repeatPoint[0] : this.domMasker.activePoint,
+                    point: repeatPoint || this.domMasker.activePoint,
                     // 是否是重复设置的埋点
-                    isRepeat: repeatPoint.length !== 0
-                } as Obj);
+                    isRepeat: !!repeatPoint
+                } as Obj;
+                // 重新
+                data.funcId = this._.hashInRange(16, data.point.pid);
+                
+                this.onTrigger(data);
             });
         }
     ],
@@ -143,7 +164,7 @@ export class Setting implements ModeLifeCycle {
                 appName: conf.appName,
                 sysId: conf.sysId,
                 sysName: conf.sysName,
-                pageId: this._.getPageId()
+                pageId: this._.normalizePageId(this.conf.get('publicPath') as string)
             }
         });
 
@@ -170,7 +191,7 @@ export class Setting implements ModeLifeCycle {
     // 请求服务获取对应页面的已埋的埋点配置
     async getPresetPoints() {
         const rules = {
-            pageId: this._.getPageId(),
+            pageId: this._.normalizePageId(this.conf.get('publicPath') as string),
             appName: this.conf.get('appName'),
             sysName: this.conf.get('sysName'),
             pageSize: -1
@@ -187,7 +208,7 @@ export class Setting implements ModeLifeCycle {
         const [ err, res ] = await this._.errorCaptured(this.service.getPresetPointsAPI, null, rules);
 
         if (err) {
-            console.warn(`[hx-analytics] Warn in getPresetPointsAPI: `, err);
+            console.warn(`[hx-analytics] - Warn in getPresetPointsAPI: `, err);
             return [];
         }
 

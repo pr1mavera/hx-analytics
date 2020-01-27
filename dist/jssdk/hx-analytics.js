@@ -3,6 +3,14 @@ var ha = (function () {
 
 	var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
+	function unwrapExports (x) {
+		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+	}
+
+	function createCommonjsModule(fn, module) {
+		return module = { exports: {} }, fn(module, module.exports), module.exports;
+	}
+
 	/*! *****************************************************************************
 	Copyright (C) Microsoft. All rights reserved.
 	Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -2926,7 +2934,8 @@ var ha = (function () {
 	         */
 	        set: function (modeType) {
 	            if (!this.modeContainer[modeType]) {
-	                throw Error('Error in change mode: you are trying to enter an extra mode, please check the version of the jssdk you cited !');
+	                throw Error('[hx-analytics] - Error in change mode: you are trying to enter an extra mode' +
+	                    'please check the version of the jssdk you cited !');
 	            }
 	            if (this.mode === modeType)
 	                return;
@@ -2940,6 +2949,28 @@ var ha = (function () {
 	        enumerable: true,
 	        configurable: true
 	    });
+	    // private async init([ appId, sysId, openId ]: string[]) {
+	    //     const data = [];
+	    //     const { pipe, hashInRange } = this._;
+	    //     const updatePageIdNull: (id: string) => string = id => /(null)$/.test(id) ? id.replace(RegExp.$1, '') : id;
+	    //     const updatePublicPath = (id: string) => id.replace('/video', '');
+	    //     const res = data.map(item => {
+	    //         const temp = {
+	    //             ...item,
+	    //             funcId: pipe(
+	    //                 updatePageIdNull,
+	    //                 updatePublicPath
+	    //             )(item.funcId),
+	    //             pageId: pipe(
+	    //                 updatePageIdNull,
+	    //                 updatePublicPath
+	    //             )(item.pageId)
+	    //         };
+	    //         temp.id = hashInRange(16, temp.funcId);
+	    //         return temp;
+	    //     });
+	    //     console.log(JSON.stringify(res));
+	    // }
 	    // 应用初始化入口
 	    HXAnalytics.prototype.init = function (_a) {
 	        var appId = _a[0], sysId = _a[1], openId = _a[2];
@@ -4620,11 +4651,43 @@ var ha = (function () {
 	    function Browse() {
 	        this.modeType = 'browse';
 	    }
-	    Browse.prototype.onEnter = function () { };
-	    Browse.prototype.onExit = function () { };
-	    Browse.prototype.onTrigger = function (data) {
-	        console.warn('[hx-analytics] No data will upload with browse mode!');
+	    Browse.prototype.onEnter = function () {
+	        var _this = this;
+	        this.subs = this.events.messageOf('requireConfig').subscribe(function () {
+	            _this.onTrigger({ tag: 'selectPage' });
+	        });
 	    };
+	    Browse.prototype.onExit = function () {
+	        this.subs.unsubscribe();
+	    };
+	    Browse.prototype.onTrigger = function (data) {
+	        var conf = this.conf.get();
+	        // 包装额外数据
+	        Object.assign(data, {
+	            ext: {
+	                appId: conf.appId,
+	                appName: conf.appName,
+	                sysId: conf.sysId,
+	                sysName: conf.sysName,
+	                pageId: this._.normalizePageId(this.conf.get('publicPath'))
+	            }
+	        });
+	        console.log('BrowseLifeCycle onTrigger：', data);
+	        // 通知父层
+	        window.parent && window.parent.postMessage(JSON.stringify(data), '*');
+	    };
+	    __decorate([
+	        inject(TYPES.AppEvent),
+	        __metadata("design:type", Object)
+	    ], Browse.prototype, "events", void 0);
+	    __decorate([
+	        inject(TYPES.Conf),
+	        __metadata("design:type", Object)
+	    ], Browse.prototype, "conf", void 0);
+	    __decorate([
+	        inject(TYPES.Utils),
+	        __metadata("design:type", Function)
+	    ], Browse.prototype, "_", void 0);
 	    Browse = __decorate([
 	        injectable()
 	    ], Browse);
@@ -4739,7 +4802,13 @@ var ha = (function () {
 	                // 包装事件数据，触发事件消费 onTrigger
 	                // this.onTrigger([ 'click', e.target ]);
 	                var point = _this.createPoint(e.target);
-	                _this.onTrigger(['click', point.pid]);
+	                // this.onTrigger([ 'click', point.pid ]);
+	                /**
+	                 * 2020.01.15 - 埋点哈希化
+	                 * 更改 funcId 字段为 [hash:16] 之后的值
+	                 * 注：行为上报模式只在此处做了修改
+	                 */
+	                _this.onTrigger(['click', _this._.hashInRange(16, point.pid)]);
 	            });
 	        }
 	    ],
@@ -4780,7 +4849,11 @@ var ha = (function () {
 	                // 生产页面停留时长数据
 	                _this.onTrigger(__spreadArrays(['pageDwell'], pageDwell));
 	                // 生产新页面进入数据
-	                _this.onTrigger(['pageEnter', _this._.getPageId(), window.location.href]);
+	                _this.onTrigger([
+	                    'pageEnter',
+	                    _this._.normalizePageId(_this.conf.get('publicPath')),
+	                    window.location.href
+	                ]);
 	            });
 	        }
 	    ],
@@ -4924,7 +4997,11 @@ var ha = (function () {
 	                    config.triggerWithMiddlewares = _this.applyMiddlewares(config.middlewares)(_this);
 	                }
 	            });
-	            this.onTrigger(['pageEnter', this._.getPageId(), window.location.href]);
+	            this.onTrigger([
+	                'pageEnter',
+	                this._.normalizePageId(this.conf.get('publicPath')),
+	                window.location.href
+	            ]);
 	        }
 	    };
 	    Report.prototype.onExit = function () {
@@ -4987,7 +5064,7 @@ var ha = (function () {
 	    });
 	    // 数据上报触发入口
 	    Report.prototype._onTrigger = function (data) {
-	        var extendsData = __assign({ pageId: this._.getPageId(), pageUrl: window.location.href, eventTime: Date.now() }, data);
+	        var extendsData = __assign({ pageId: this._.normalizePageId(this.conf.get('publicPath')), pageUrl: window.location.href, eventTime: Date.now() }, data);
 	        // 单条上报数据
 	        var reqData = {
 	            type: extendsData.type,
@@ -5310,15 +5387,15 @@ var ha = (function () {
 	//# sourceMappingURL=ReportStrategy.js.map
 
 	var PageTracer = /** @class */ (function () {
-	    function PageTracer(_) {
+	    function PageTracer(_, conf) {
 	        // 边界情况的缓存
 	        this._cacheKey = '';
 	        /**
 	         * 页面路由访问记录
 	         * @example
 	         * [
-	         *  [ '/a/index.html#1234', 'www.baidu.com/a/index.html' ],
-	         *  [ '/a/test.html#abcdefg', 'www.baidu.com/a/test.html' ]
+	         *  [ '/a/index.html#1234', 'www.baidu.com/a/index.html#1234' ],
+	         *  [ '/a/test.html#abcdefg', 'www.baidu.com/a/test.html#abcdefg' ]
 	         * ]
 	         */
 	        this._pageRecords = [];
@@ -5334,6 +5411,7 @@ var ha = (function () {
 	         */
 	        this._trace = [];
 	        this._ = _;
+	        this.conf = conf;
 	        this.init();
 	        // MonkeyPatch
 	        this.bindPageTracerPatch();
@@ -5342,7 +5420,10 @@ var ha = (function () {
 	     * 生成当前路由访问记录
 	     */
 	    PageTracer.prototype.createPageRecord = function () {
-	        return [this._.getPageId(), window.location.href];
+	        return [
+	            this._.normalizePageId(this.conf.get('publicPath')),
+	            window.location.href
+	        ];
 	    };
 	    /**
 	     * 获取路由访问记录最后一条数据（当前路由）
@@ -5388,13 +5469,16 @@ var ha = (function () {
 	    PageTracer.prototype.isRouteChange = function () {
 	        var _a = this._, first = _a.first, last = _a.last, pipe = _a.pipe;
 	        // 当前新路由
-	        var newPath = this._.getPageId();
+	        var newPath = this._.normalizePageId(this.conf.get('publicPath'));
 	        // 上一个路由
 	        var oldPath = pipe(last, first)(this._pageRecords);
 	        return newPath !== oldPath;
 	    };
 	    /**
 	     * 初始化
+	     *
+	     * 1. 新增页面访问记录
+	     * 2. 初始化页面活跃时间节点
 	     */
 	    PageTracer.prototype.init = function () {
 	        // 更新页面访问记录
@@ -5432,8 +5516,8 @@ var ha = (function () {
 	    };
 	    PageTracer = __decorate([
 	        injectable(),
-	        __param(0, inject(TYPES.Utils)),
-	        __metadata("design:paramtypes", [Function])
+	        __param(0, inject(TYPES.Utils)), __param(1, inject(TYPES.Conf)),
+	        __metadata("design:paramtypes", [Function, Object])
 	    ], PageTracer);
 	    return PageTracer;
 	}());
@@ -5448,14 +5532,32 @@ var ha = (function () {
 	            return this.events.click(config).subscribe(function (e) {
 	                e.stopPropagation();
 	                // 包装事件数据，触发事件消费 onTrigger;
-	                var repeatPoint = _this.domMasker.points.filter(function (point) { return point.pid === _this.domMasker.activePoint.pid; });
-	                _this.onTrigger({
+	                // 尝试匹配之前已埋过得点
+	                var repeatPoint = _this.domMasker.points.filter(function (point) { return point.pid === _this.domMasker.activePoint.pid; })[0];
+	                // this.onTrigger({
+	                //     tag: 'selectPoint',
+	                //     // 若命中的埋点是已配置过的埋点，需要将配置信息一并返回给iframe父层，即返回预埋列表的点
+	                //     point: repeatPoint.length ? repeatPoint[0] : this.domMasker.activePoint,
+	                //     // 是否是重复设置的埋点
+	                //     isRepeat: repeatPoint.length !== 0
+	                // } as Obj);
+	                /**
+	                 * 2020.01.15 - 埋点哈希化
+	                 * 新增埋点的 [hash:16] 的字段，作为新的 functId
+	                 * 配置端配置埋点时的配置修改：
+	                 * functId: 之前的 functId 的 [hash:16] 值
+	                 * pid: 之前的 functId 本来的值
+	                 */
+	                var data = {
 	                    tag: 'selectPoint',
 	                    // 若命中的埋点是已配置过的埋点，需要将配置信息一并返回给iframe父层，即返回预埋列表的点
-	                    point: repeatPoint.length ? repeatPoint[0] : _this.domMasker.activePoint,
+	                    point: repeatPoint || _this.domMasker.activePoint,
 	                    // 是否是重复设置的埋点
-	                    isRepeat: repeatPoint.length !== 0
-	                });
+	                    isRepeat: !!repeatPoint
+	                };
+	                // 重新
+	                data.funcId = _this._.hashInRange(16, data.point.pid);
+	                _this.onTrigger(data);
 	            });
 	        }
 	    ],
@@ -5556,7 +5658,7 @@ var ha = (function () {
 	                appName: conf.appName,
 	                sysId: conf.sysId,
 	                sysName: conf.sysName,
-	                pageId: this._.getPageId()
+	                pageId: this._.normalizePageId(this.conf.get('publicPath'))
 	            }
 	        });
 	        console.log('SettingLifeCycle onTrigger：', data);
@@ -5592,7 +5694,7 @@ var ha = (function () {
 	                switch (_b.label) {
 	                    case 0:
 	                        rules = {
-	                            pageId: this._.getPageId(),
+	                            pageId: this._.normalizePageId(this.conf.get('publicPath')),
 	                            appName: this.conf.get('appName'),
 	                            sysName: this.conf.get('sysName'),
 	                            pageSize: -1
@@ -5607,7 +5709,7 @@ var ha = (function () {
 	                    case 1:
 	                        _a = _b.sent(), err = _a[0], res = _a[1];
 	                        if (err) {
-	                            console.warn("[hx-analytics] Warn in getPresetPointsAPI: ", err);
+	                            console.warn("[hx-analytics] - Warn in getPresetPointsAPI: ", err);
 	                            return [2 /*return*/, []];
 	                        }
 	                        return [2 /*return*/, res];
@@ -5644,7 +5746,6 @@ var ha = (function () {
 	    ], Setting);
 	    return Setting;
 	}());
-	//# sourceMappingURL=Setting.js.map
 
 	var DomMasker = /** @class */ (function () {
 	    function DomMasker(createPoint, customCanvas) {
@@ -5941,9 +6042,417 @@ var ha = (function () {
 	prototype.draw = noop$1;
 	window.whatsElement = whatsElementPure;
 
+	var md5 = createCommonjsModule(function (module, exports) {
+	/*
+
+	TypeScript Md5
+	==============
+
+	Based on work by
+	* Joseph Myers: http://www.myersdaily.org/joseph/javascript/md5-text.html
+	* André Cruz: https://github.com/satazor/SparkMD5
+	* Raymond Hill: https://github.com/gorhill/yamd5.js
+
+	Effectively a TypeScrypt re-write of Raymond Hill JS Library
+
+	The MIT License (MIT)
+
+	Copyright (C) 2014 Raymond Hill
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in
+	all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	THE SOFTWARE.
+
+
+
+	            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+	                    Version 2, December 2004
+
+	 Copyright (C) 2015 André Cruz <amdfcruz@gmail.com>
+
+	 Everyone is permitted to copy and distribute verbatim or modified
+	 copies of this license document, and changing it is allowed as long
+	 as the name is changed.
+
+	            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+	   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+
+	  0. You just DO WHAT THE FUCK YOU WANT TO.
+
+
+	*/
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var Md5 = /** @class */ (function () {
+	    function Md5() {
+	        this._state = new Int32Array(4);
+	        this._buffer = new ArrayBuffer(68);
+	        this._buffer8 = new Uint8Array(this._buffer, 0, 68);
+	        this._buffer32 = new Uint32Array(this._buffer, 0, 17);
+	        this.start();
+	    }
+	    // One time hashing functions
+	    Md5.hashStr = function (str, raw) {
+	        if (raw === void 0) { raw = false; }
+	        return this.onePassHasher
+	            .start()
+	            .appendStr(str)
+	            .end(raw);
+	    };
+	    Md5.hashAsciiStr = function (str, raw) {
+	        if (raw === void 0) { raw = false; }
+	        return this.onePassHasher
+	            .start()
+	            .appendAsciiStr(str)
+	            .end(raw);
+	    };
+	    Md5._hex = function (x) {
+	        var hc = Md5.hexChars;
+	        var ho = Md5.hexOut;
+	        var n;
+	        var offset;
+	        var j;
+	        var i;
+	        for (i = 0; i < 4; i += 1) {
+	            offset = i * 8;
+	            n = x[i];
+	            for (j = 0; j < 8; j += 2) {
+	                ho[offset + 1 + j] = hc.charAt(n & 0x0F);
+	                n >>>= 4;
+	                ho[offset + 0 + j] = hc.charAt(n & 0x0F);
+	                n >>>= 4;
+	            }
+	        }
+	        return ho.join('');
+	    };
+	    Md5._md5cycle = function (x, k) {
+	        var a = x[0];
+	        var b = x[1];
+	        var c = x[2];
+	        var d = x[3];
+	        // ff()
+	        a += (b & c | ~b & d) + k[0] - 680876936 | 0;
+	        a = (a << 7 | a >>> 25) + b | 0;
+	        d += (a & b | ~a & c) + k[1] - 389564586 | 0;
+	        d = (d << 12 | d >>> 20) + a | 0;
+	        c += (d & a | ~d & b) + k[2] + 606105819 | 0;
+	        c = (c << 17 | c >>> 15) + d | 0;
+	        b += (c & d | ~c & a) + k[3] - 1044525330 | 0;
+	        b = (b << 22 | b >>> 10) + c | 0;
+	        a += (b & c | ~b & d) + k[4] - 176418897 | 0;
+	        a = (a << 7 | a >>> 25) + b | 0;
+	        d += (a & b | ~a & c) + k[5] + 1200080426 | 0;
+	        d = (d << 12 | d >>> 20) + a | 0;
+	        c += (d & a | ~d & b) + k[6] - 1473231341 | 0;
+	        c = (c << 17 | c >>> 15) + d | 0;
+	        b += (c & d | ~c & a) + k[7] - 45705983 | 0;
+	        b = (b << 22 | b >>> 10) + c | 0;
+	        a += (b & c | ~b & d) + k[8] + 1770035416 | 0;
+	        a = (a << 7 | a >>> 25) + b | 0;
+	        d += (a & b | ~a & c) + k[9] - 1958414417 | 0;
+	        d = (d << 12 | d >>> 20) + a | 0;
+	        c += (d & a | ~d & b) + k[10] - 42063 | 0;
+	        c = (c << 17 | c >>> 15) + d | 0;
+	        b += (c & d | ~c & a) + k[11] - 1990404162 | 0;
+	        b = (b << 22 | b >>> 10) + c | 0;
+	        a += (b & c | ~b & d) + k[12] + 1804603682 | 0;
+	        a = (a << 7 | a >>> 25) + b | 0;
+	        d += (a & b | ~a & c) + k[13] - 40341101 | 0;
+	        d = (d << 12 | d >>> 20) + a | 0;
+	        c += (d & a | ~d & b) + k[14] - 1502002290 | 0;
+	        c = (c << 17 | c >>> 15) + d | 0;
+	        b += (c & d | ~c & a) + k[15] + 1236535329 | 0;
+	        b = (b << 22 | b >>> 10) + c | 0;
+	        // gg()
+	        a += (b & d | c & ~d) + k[1] - 165796510 | 0;
+	        a = (a << 5 | a >>> 27) + b | 0;
+	        d += (a & c | b & ~c) + k[6] - 1069501632 | 0;
+	        d = (d << 9 | d >>> 23) + a | 0;
+	        c += (d & b | a & ~b) + k[11] + 643717713 | 0;
+	        c = (c << 14 | c >>> 18) + d | 0;
+	        b += (c & a | d & ~a) + k[0] - 373897302 | 0;
+	        b = (b << 20 | b >>> 12) + c | 0;
+	        a += (b & d | c & ~d) + k[5] - 701558691 | 0;
+	        a = (a << 5 | a >>> 27) + b | 0;
+	        d += (a & c | b & ~c) + k[10] + 38016083 | 0;
+	        d = (d << 9 | d >>> 23) + a | 0;
+	        c += (d & b | a & ~b) + k[15] - 660478335 | 0;
+	        c = (c << 14 | c >>> 18) + d | 0;
+	        b += (c & a | d & ~a) + k[4] - 405537848 | 0;
+	        b = (b << 20 | b >>> 12) + c | 0;
+	        a += (b & d | c & ~d) + k[9] + 568446438 | 0;
+	        a = (a << 5 | a >>> 27) + b | 0;
+	        d += (a & c | b & ~c) + k[14] - 1019803690 | 0;
+	        d = (d << 9 | d >>> 23) + a | 0;
+	        c += (d & b | a & ~b) + k[3] - 187363961 | 0;
+	        c = (c << 14 | c >>> 18) + d | 0;
+	        b += (c & a | d & ~a) + k[8] + 1163531501 | 0;
+	        b = (b << 20 | b >>> 12) + c | 0;
+	        a += (b & d | c & ~d) + k[13] - 1444681467 | 0;
+	        a = (a << 5 | a >>> 27) + b | 0;
+	        d += (a & c | b & ~c) + k[2] - 51403784 | 0;
+	        d = (d << 9 | d >>> 23) + a | 0;
+	        c += (d & b | a & ~b) + k[7] + 1735328473 | 0;
+	        c = (c << 14 | c >>> 18) + d | 0;
+	        b += (c & a | d & ~a) + k[12] - 1926607734 | 0;
+	        b = (b << 20 | b >>> 12) + c | 0;
+	        // hh()
+	        a += (b ^ c ^ d) + k[5] - 378558 | 0;
+	        a = (a << 4 | a >>> 28) + b | 0;
+	        d += (a ^ b ^ c) + k[8] - 2022574463 | 0;
+	        d = (d << 11 | d >>> 21) + a | 0;
+	        c += (d ^ a ^ b) + k[11] + 1839030562 | 0;
+	        c = (c << 16 | c >>> 16) + d | 0;
+	        b += (c ^ d ^ a) + k[14] - 35309556 | 0;
+	        b = (b << 23 | b >>> 9) + c | 0;
+	        a += (b ^ c ^ d) + k[1] - 1530992060 | 0;
+	        a = (a << 4 | a >>> 28) + b | 0;
+	        d += (a ^ b ^ c) + k[4] + 1272893353 | 0;
+	        d = (d << 11 | d >>> 21) + a | 0;
+	        c += (d ^ a ^ b) + k[7] - 155497632 | 0;
+	        c = (c << 16 | c >>> 16) + d | 0;
+	        b += (c ^ d ^ a) + k[10] - 1094730640 | 0;
+	        b = (b << 23 | b >>> 9) + c | 0;
+	        a += (b ^ c ^ d) + k[13] + 681279174 | 0;
+	        a = (a << 4 | a >>> 28) + b | 0;
+	        d += (a ^ b ^ c) + k[0] - 358537222 | 0;
+	        d = (d << 11 | d >>> 21) + a | 0;
+	        c += (d ^ a ^ b) + k[3] - 722521979 | 0;
+	        c = (c << 16 | c >>> 16) + d | 0;
+	        b += (c ^ d ^ a) + k[6] + 76029189 | 0;
+	        b = (b << 23 | b >>> 9) + c | 0;
+	        a += (b ^ c ^ d) + k[9] - 640364487 | 0;
+	        a = (a << 4 | a >>> 28) + b | 0;
+	        d += (a ^ b ^ c) + k[12] - 421815835 | 0;
+	        d = (d << 11 | d >>> 21) + a | 0;
+	        c += (d ^ a ^ b) + k[15] + 530742520 | 0;
+	        c = (c << 16 | c >>> 16) + d | 0;
+	        b += (c ^ d ^ a) + k[2] - 995338651 | 0;
+	        b = (b << 23 | b >>> 9) + c | 0;
+	        // ii()
+	        a += (c ^ (b | ~d)) + k[0] - 198630844 | 0;
+	        a = (a << 6 | a >>> 26) + b | 0;
+	        d += (b ^ (a | ~c)) + k[7] + 1126891415 | 0;
+	        d = (d << 10 | d >>> 22) + a | 0;
+	        c += (a ^ (d | ~b)) + k[14] - 1416354905 | 0;
+	        c = (c << 15 | c >>> 17) + d | 0;
+	        b += (d ^ (c | ~a)) + k[5] - 57434055 | 0;
+	        b = (b << 21 | b >>> 11) + c | 0;
+	        a += (c ^ (b | ~d)) + k[12] + 1700485571 | 0;
+	        a = (a << 6 | a >>> 26) + b | 0;
+	        d += (b ^ (a | ~c)) + k[3] - 1894986606 | 0;
+	        d = (d << 10 | d >>> 22) + a | 0;
+	        c += (a ^ (d | ~b)) + k[10] - 1051523 | 0;
+	        c = (c << 15 | c >>> 17) + d | 0;
+	        b += (d ^ (c | ~a)) + k[1] - 2054922799 | 0;
+	        b = (b << 21 | b >>> 11) + c | 0;
+	        a += (c ^ (b | ~d)) + k[8] + 1873313359 | 0;
+	        a = (a << 6 | a >>> 26) + b | 0;
+	        d += (b ^ (a | ~c)) + k[15] - 30611744 | 0;
+	        d = (d << 10 | d >>> 22) + a | 0;
+	        c += (a ^ (d | ~b)) + k[6] - 1560198380 | 0;
+	        c = (c << 15 | c >>> 17) + d | 0;
+	        b += (d ^ (c | ~a)) + k[13] + 1309151649 | 0;
+	        b = (b << 21 | b >>> 11) + c | 0;
+	        a += (c ^ (b | ~d)) + k[4] - 145523070 | 0;
+	        a = (a << 6 | a >>> 26) + b | 0;
+	        d += (b ^ (a | ~c)) + k[11] - 1120210379 | 0;
+	        d = (d << 10 | d >>> 22) + a | 0;
+	        c += (a ^ (d | ~b)) + k[2] + 718787259 | 0;
+	        c = (c << 15 | c >>> 17) + d | 0;
+	        b += (d ^ (c | ~a)) + k[9] - 343485551 | 0;
+	        b = (b << 21 | b >>> 11) + c | 0;
+	        x[0] = a + x[0] | 0;
+	        x[1] = b + x[1] | 0;
+	        x[2] = c + x[2] | 0;
+	        x[3] = d + x[3] | 0;
+	    };
+	    Md5.prototype.start = function () {
+	        this._dataLength = 0;
+	        this._bufferLength = 0;
+	        this._state.set(Md5.stateIdentity);
+	        return this;
+	    };
+	    // Char to code point to to array conversion:
+	    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charCodeAt
+	    // #Example.3A_Fixing_charCodeAt_to_handle_non-Basic-Multilingual-Plane_characters_if_their_presence_earlier_in_the_string_is_unknown
+	    Md5.prototype.appendStr = function (str) {
+	        var buf8 = this._buffer8;
+	        var buf32 = this._buffer32;
+	        var bufLen = this._bufferLength;
+	        var code;
+	        var i;
+	        for (i = 0; i < str.length; i += 1) {
+	            code = str.charCodeAt(i);
+	            if (code < 128) {
+	                buf8[bufLen++] = code;
+	            }
+	            else if (code < 0x800) {
+	                buf8[bufLen++] = (code >>> 6) + 0xC0;
+	                buf8[bufLen++] = code & 0x3F | 0x80;
+	            }
+	            else if (code < 0xD800 || code > 0xDBFF) {
+	                buf8[bufLen++] = (code >>> 12) + 0xE0;
+	                buf8[bufLen++] = (code >>> 6 & 0x3F) | 0x80;
+	                buf8[bufLen++] = (code & 0x3F) | 0x80;
+	            }
+	            else {
+	                code = ((code - 0xD800) * 0x400) + (str.charCodeAt(++i) - 0xDC00) + 0x10000;
+	                if (code > 0x10FFFF) {
+	                    throw new Error('Unicode standard supports code points up to U+10FFFF');
+	                }
+	                buf8[bufLen++] = (code >>> 18) + 0xF0;
+	                buf8[bufLen++] = (code >>> 12 & 0x3F) | 0x80;
+	                buf8[bufLen++] = (code >>> 6 & 0x3F) | 0x80;
+	                buf8[bufLen++] = (code & 0x3F) | 0x80;
+	            }
+	            if (bufLen >= 64) {
+	                this._dataLength += 64;
+	                Md5._md5cycle(this._state, buf32);
+	                bufLen -= 64;
+	                buf32[0] = buf32[16];
+	            }
+	        }
+	        this._bufferLength = bufLen;
+	        return this;
+	    };
+	    Md5.prototype.appendAsciiStr = function (str) {
+	        var buf8 = this._buffer8;
+	        var buf32 = this._buffer32;
+	        var bufLen = this._bufferLength;
+	        var i;
+	        var j = 0;
+	        for (;;) {
+	            i = Math.min(str.length - j, 64 - bufLen);
+	            while (i--) {
+	                buf8[bufLen++] = str.charCodeAt(j++);
+	            }
+	            if (bufLen < 64) {
+	                break;
+	            }
+	            this._dataLength += 64;
+	            Md5._md5cycle(this._state, buf32);
+	            bufLen = 0;
+	        }
+	        this._bufferLength = bufLen;
+	        return this;
+	    };
+	    Md5.prototype.appendByteArray = function (input) {
+	        var buf8 = this._buffer8;
+	        var buf32 = this._buffer32;
+	        var bufLen = this._bufferLength;
+	        var i;
+	        var j = 0;
+	        for (;;) {
+	            i = Math.min(input.length - j, 64 - bufLen);
+	            while (i--) {
+	                buf8[bufLen++] = input[j++];
+	            }
+	            if (bufLen < 64) {
+	                break;
+	            }
+	            this._dataLength += 64;
+	            Md5._md5cycle(this._state, buf32);
+	            bufLen = 0;
+	        }
+	        this._bufferLength = bufLen;
+	        return this;
+	    };
+	    Md5.prototype.getState = function () {
+	        var self = this;
+	        var s = self._state;
+	        return {
+	            buffer: String.fromCharCode.apply(null, self._buffer8),
+	            buflen: self._bufferLength,
+	            length: self._dataLength,
+	            state: [s[0], s[1], s[2], s[3]]
+	        };
+	    };
+	    Md5.prototype.setState = function (state) {
+	        var buf = state.buffer;
+	        var x = state.state;
+	        var s = this._state;
+	        var i;
+	        this._dataLength = state.length;
+	        this._bufferLength = state.buflen;
+	        s[0] = x[0];
+	        s[1] = x[1];
+	        s[2] = x[2];
+	        s[3] = x[3];
+	        for (i = 0; i < buf.length; i += 1) {
+	            this._buffer8[i] = buf.charCodeAt(i);
+	        }
+	    };
+	    Md5.prototype.end = function (raw) {
+	        if (raw === void 0) { raw = false; }
+	        var bufLen = this._bufferLength;
+	        var buf8 = this._buffer8;
+	        var buf32 = this._buffer32;
+	        var i = (bufLen >> 2) + 1;
+	        var dataBitsLen;
+	        this._dataLength += bufLen;
+	        buf8[bufLen] = 0x80;
+	        buf8[bufLen + 1] = buf8[bufLen + 2] = buf8[bufLen + 3] = 0;
+	        buf32.set(Md5.buffer32Identity.subarray(i), i);
+	        if (bufLen > 55) {
+	            Md5._md5cycle(this._state, buf32);
+	            buf32.set(Md5.buffer32Identity);
+	        }
+	        // Do the final computation based on the tail and length
+	        // Beware that the final length may not fit in 32 bits so we take care of that
+	        dataBitsLen = this._dataLength * 8;
+	        if (dataBitsLen <= 0xFFFFFFFF) {
+	            buf32[14] = dataBitsLen;
+	        }
+	        else {
+	            var matches = dataBitsLen.toString(16).match(/(.*?)(.{0,8})$/);
+	            if (matches === null) {
+	                return;
+	            }
+	            var lo = parseInt(matches[2], 16);
+	            var hi = parseInt(matches[1], 16) || 0;
+	            buf32[14] = lo;
+	            buf32[15] = hi;
+	        }
+	        Md5._md5cycle(this._state, buf32);
+	        return raw ? this._state : Md5._hex(this._state);
+	    };
+	    // Private Static Variables
+	    Md5.stateIdentity = new Int32Array([1732584193, -271733879, -1732584194, 271733878]);
+	    Md5.buffer32Identity = new Int32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+	    Md5.hexChars = '0123456789abcdef';
+	    Md5.hexOut = [];
+	    // Permanent instance is to use for one-call hashing
+	    Md5.onePassHasher = new Md5();
+	    return Md5;
+	}());
+	exports.Md5 = Md5;
+	if (Md5.hashStr('hello') !== '5d41402abc4b2a76b9719d911017c592') {
+	    console.error('Md5 self test failed.');
+	}
+	//# sourceMappingURL=md5.js.map
+	});
+
+	unwrapExports(md5);
+	var md5_1 = md5.Md5;
+
 	var ERR_OK = '0';
 	// import { Service } from '../jssdk/service';
 	var _ = {};
+	_.hashInRange = function (range, str) { return md5_1.hashStr(str).slice(0, range); };
 	_.compose = function () {
 	    var fns = [];
 	    for (var _i = 0; _i < arguments.length; _i++) {
@@ -6038,10 +6547,25 @@ var ha = (function () {
 	_.getPageId = function () {
 	    var _a = window.location, pathname = _a.pathname, hash = _a.hash;
 	    // return pathname + _.first(hash.split('?'));
-	    var pagePath = pathname + _.first(hash.split('?'));
+	    var pagePath = pathname + (_.first(hash.split('?')) || '');
 	    // 替换
 	    var pageId = pagePath.replace(/#/g, '_');
 	    return pageId;
+	};
+	/**
+	 * 获取页面唯一路径，并根据提供的 publicPath 切割路径，得到生成与测试环境统一的 pathId
+	 *
+	 * publicPath 格式规则：
+	 * 1. 不能为 falsy 值 或 空字符串
+	 * 2. 以'/'开头，以字符结尾，中间可穿插'/'，如: '/video'，'/video/zhike'
+	 */
+	_.normalizePageId = function (publicPath) {
+	    var pageId = _.getPageId();
+	    var isPublicPathLegally = publicPath && /^\/(\w|\/)+\w$/.test(publicPath);
+	    // 若传入的 publicPath 不合法，默认直接返回宿主环境收集到的 pageId
+	    if (!isPublicPathLegally)
+	        return pageId;
+	    return pageId.replace(new RegExp("^(" + publicPath + ")"), '');
 	};
 	_.inIframe = function () { return window && window.self !== window.top; };
 	_.isType = function (type, staff) { return Object.prototype.toString.call(staff) === "[object " + type + "]"; };
@@ -6120,9 +6644,10 @@ var ha = (function () {
 	        return null;
 	    }
 	};
-	_.getElemByPid = function (pid) {
+	_.getElemByPid = function (curPageId, pid) {
 	    var _a = pid.split('!'), id = _a[0], pageId = _a[3];
-	    if (pageId !== _.getPageId())
+	    // 校验是否是同一个页面，若不是则直接返回未找到
+	    if (pageId !== curPageId)
 	        return null;
 	    return document.getElementById(id) || document.getElementsByName(id)[0] || document.querySelector(id);
 	};
@@ -6338,11 +6863,12 @@ var ha = (function () {
 	    };
 	    Point.prototype.createByPointBase = function (origin) {
 	        var pid = origin.pid, rest = __rest(origin, ["pid"]);
-	        this.pid = origin.pid;
-	        var elem = this._.getElemByPid(this.pid);
+	        // 此处需要实时的获取当前页面的 pageId（标准化之后的），用于用于校验 pid 是否存在于当前页面
+	        var curPageId = this._.normalizePageId(this.conf.get('publicPath'));
+	        var elem = this._.getElemByPid(curPageId, this.pid = origin.pid);
 	        if (!elem) {
 	            // 未能通过 pid 找到对应 dom节点（）
-	            console.warn("[hx-analytics] Warn in Point.create: Can't find element with pid: ", this.pid, '\n', "please check out the element's fingerprint or location.pathname!");
+	            console.warn("[hx-analytics] - Warn in Point.create: Can't find element with pid: ", this.pid, '\n', "please check out the element's fingerprint or location.pathname!");
 	            this.tag = 'unknow';
 	            this.rect = [0, 0, 0, 0];
 	        }
@@ -6356,7 +6882,8 @@ var ha = (function () {
 	    };
 	    Point.prototype.createByEvent = function (origin) {
 	        var sysId = this.conf.get('sysId');
-	        this.pid = this._.getElemPid(sysId, this._.getPageId(), origin);
+	        var curPageId = this._.normalizePageId(this.conf.get('publicPath'));
+	        this.pid = this._.getElemPid(sysId, curPageId, origin);
 	        this.tag = '<' + origin.tagName.toLowerCase() + '>';
 	        // [ x, y, w, h ]
 	        this.rect = this._.getElemClientRect(origin);
@@ -6466,6 +6993,7 @@ var ha = (function () {
 	// 用户身份校验
 	// 页面停留时长 页面切换机制
 	// 单测
+	//# sourceMappingURL=entry-jssdk.js.map
 
 	return ha;
 

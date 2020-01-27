@@ -26,12 +26,13 @@ export class Point implements Point {
     }
     private createByPointBase(origin: PointBase) {
         const { pid, ...rest } = origin;
-        this.pid = origin.pid;
-        const elem = this._.getElemByPid(this.pid);
+        // 此处需要实时的获取当前页面的 pageId（标准化之后的），用于用于校验 pid 是否存在于当前页面
+        const curPageId = this._.normalizePageId(this.conf.get('publicPath') as string);
+        const elem = this._.getElemByPid(curPageId, this.pid = origin.pid);
         if (!elem) {
             // 未能通过 pid 找到对应 dom节点（）
             console.warn(
-                `[hx-analytics] Warn in Point.create: Can't find element with pid: `,
+                `[hx-analytics] - Warn in Point.create: Can't find element with pid: `,
                 this.pid,
                 '\n',
                 `please check out the element's fingerprint or location.pathname!`
@@ -48,7 +49,8 @@ export class Point implements Point {
     }
     private createByEvent(origin: EventTarget) {
         const sysId = this.conf.get('sysId');
-        this.pid = this._.getElemPid(sysId, this._.getPageId(), <HTMLElement>origin);
+        const curPageId = this._.normalizePageId(this.conf.get('publicPath') as string);
+        this.pid = this._.getElemPid(sysId, curPageId, <HTMLElement>origin);
         this.tag = '<' + (<HTMLElement>origin).tagName.toLowerCase() + '>';
         // [ x, y, w, h ]
         this.rect = this._.getElemClientRect(<Element>origin);

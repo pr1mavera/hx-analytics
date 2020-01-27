@@ -12,6 +12,8 @@ interface Utils {
 
     [x: string]: any;
 
+    hashInRange: (range: number, str: string) => string;
+
     /**
      * compose 反向管道
      */
@@ -54,6 +56,11 @@ interface Utils {
      * 获取页面唯一路径（加上hash）
      */
     getPageId: () => string;
+
+    /**
+     * 获取页面唯一路径，并根据提供的 publicPath 切割路径，得到生成与测试环境统一的 pathId
+     */
+    normalizePageId: (publicPath: string) => string;
 
     /**
      * 判断应用是否在 iframe 内
@@ -130,9 +137,10 @@ interface Utils {
 
     /**
      * 根据元素唯一标识获取元素
+     * @param {String} curPageId 当前页面 pageId ，用于校验 pid 是否存在于当前页面
      * @param {String} pid 元素唯一标识
      */
-    getElemByPid: (pid: string) => HTMLElement;
+    getElemByPid: (curPageId: string, pid: string) => HTMLElement;
 
     /**
      * 根据元素相对视窗的位置信息

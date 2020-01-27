@@ -10,12 +10,17 @@ export class PageTracer implements PageTracer {
     // 边界情况的缓存
     _cacheKey: string = '';
 
+    // 容器注入 | 工具
+    private _: Utils;
+    // 容器注入 | 应用配置相关信息
+    private conf: AppConfig;
+
     /**
      * 页面路由访问记录
      * @example
      * [
-     *  [ '/a/index.html#1234', 'www.baidu.com/a/index.html' ],
-     *  [ '/a/test.html#abcdefg', 'www.baidu.com/a/test.html' ]
+     *  [ '/a/index.html#1234', 'www.baidu.com/a/index.html#1234' ],
+     *  [ '/a/test.html#abcdefg', 'www.baidu.com/a/test.html#abcdefg' ]
      * ]
      */
     private _pageRecords: PageRecord[] = [];
@@ -24,7 +29,10 @@ export class PageTracer implements PageTracer {
      * 生成当前路由访问记录
      */
     private createPageRecord(): PageRecord {
-        return [ this._.getPageId(), window.location.href ];
+        return [
+            this._.normalizePageId(this.conf.get('publicPath') as string),
+            window.location.href
+        ];
     }
 
     /**
@@ -46,9 +54,6 @@ export class PageTracer implements PageTracer {
      * ]
      */
     private _trace: ActivePoint[] = [];
-
-    // 容器注入 | 工具
-    private _: Utils;
     
     /**
      * 监控原生事件调用，分发浏览器事件
@@ -58,8 +63,9 @@ export class PageTracer implements PageTracer {
         window.history.replaceState = this._.nativeCodeEventPatch(window.history, 'replaceState');
     }
 
-    constructor(@inject(TYPES.Utils) _: Utils) {
+    constructor(@inject(TYPES.Utils) _: Utils, @inject(TYPES.Conf) conf: AppConfig) {
         this._ = _;
+        this.conf = conf;
         this.init();
 
         // MonkeyPatch
@@ -98,7 +104,7 @@ export class PageTracer implements PageTracer {
     isRouteChange() {
         const { first, last, pipe } = this._;
         // 当前新路由
-        const newPath = this._.getPageId();
+        const newPath = this._.normalizePageId(this.conf.get('publicPath') as string);
         // 上一个路由
         const oldPath = pipe(last, first)(this._pageRecords);
 
@@ -107,6 +113,9 @@ export class PageTracer implements PageTracer {
 
     /**
      * 初始化
+     * 
+     * 1. 新增页面访问记录
+     * 2. 初始化页面活跃时间节点
      */
     init() {
         // 更新页面访问记录

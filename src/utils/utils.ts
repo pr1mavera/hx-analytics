@@ -1,8 +1,12 @@
 import whatsElement from 'whats-element/src/whatsElementPure';
+import { Md5 } from 'ts-md5/dist/md5'
+
 const ERR_OK = '0';
 // import { Service } from '../jssdk/service';
 
 export const _: Utils = <Utils>{}
+
+_.hashInRange = (range, str) => Md5.hashStr(str).slice(0, range) as string;
 
 _.compose = (...fns) => fns.reduce((f: Function, g: Function) => (...args: any[]) => f(g(...args)));
 
@@ -87,11 +91,29 @@ _.windowData = {
 _.getPageId = () => {
     const { pathname, hash } = window.location;
     // return pathname + _.first(hash.split('?'));
-    const pagePath = pathname + _.first(hash.split('?'));
+    const pagePath = pathname + (_.first(hash.split('?')) || '');
     // 替换
     const pageId = pagePath.replace(/#/g, '_');
     return pageId;
 };
+
+/**
+ * 获取页面唯一路径，并根据提供的 publicPath 切割路径，得到生成与测试环境统一的 pathId
+ * 
+ * publicPath 格式规则：
+ * 1. 不能为 falsy 值 或 空字符串
+ * 2. 以'/'开头，以字符结尾，中间可穿插'/'，如: '/video'，'/video/zhike'
+ */
+_.normalizePageId = publicPath => {
+
+    const pageId = _.getPageId();
+    const isPublicPathLegally = publicPath && /^\/(\w|\/)+\w$/.test(publicPath);
+
+    // 若传入的 publicPath 不合法，默认直接返回宿主环境收集到的 pageId
+    if (!isPublicPathLegally) return pageId;
+
+    return pageId.replace(new RegExp(`^(${publicPath})`), '');
+}
 
 _.inIframe = () => window && window.self !== window.top;
 
@@ -176,9 +198,10 @@ _.getElemPid = function (sysId, pageId, e) {
     }
 };
 
-_.getElemByPid = pid => {
+_.getElemByPid = (curPageId, pid) => {
     const [ id, , , pageId ] = pid.split('!');
-    if (pageId !== _.getPageId()) return null;
+    // 校验是否是同一个页面，若不是则直接返回未找到
+    if (pageId !== curPageId) return null;
     return document.getElementById(id) || document.getElementsByName(id)[0] || document.querySelector(id);
 };
 

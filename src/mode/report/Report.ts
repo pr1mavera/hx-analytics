@@ -14,7 +14,13 @@ const EventListener = {
                 // 包装事件数据，触发事件消费 onTrigger
                 // this.onTrigger([ 'click', e.target ]);
                 let point = this.createPoint(e.target);
-                this.onTrigger([ 'click', point.pid ]);
+                // this.onTrigger([ 'click', point.pid ]);
+                /**
+                 * 2020.01.15 - 埋点哈希化
+                 * 更改 funcId 字段为 [hash:16] 之后的值
+                 * 注：行为上报模式只在此处做了修改
+                 */
+                this.onTrigger([ 'click', this._.hashInRange(16, point.pid) ]);
             });
         }
     ],
@@ -54,7 +60,11 @@ const EventListener = {
                 // 生产页面停留时长数据
                 this.onTrigger([ 'pageDwell', ...pageDwell ]);
                 // 生产新页面进入数据
-                this.onTrigger([ 'pageEnter', this._.getPageId(), window.location.href ]);
+                this.onTrigger([
+                    'pageEnter',
+                    this._.normalizePageId(this.conf.get('publicPath') as string),
+                    window.location.href
+                ]);
             });
         }
     ],
@@ -223,7 +233,11 @@ export class Report implements ModeLifeCycle {
                 }
             });
 
-            this.onTrigger([ 'pageEnter', this._.getPageId(), window.location.href ]);
+            this.onTrigger([
+                'pageEnter',
+                this._.normalizePageId(this.conf.get('publicPath') as string),
+                window.location.href
+            ]);
         }
     }
 
@@ -295,7 +309,7 @@ export class Report implements ModeLifeCycle {
     _onTrigger(data: Obj) {
 
         let extendsData: Obj = {
-            pageId: this._.getPageId(),
+            pageId: this._.normalizePageId(this.conf.get('publicPath') as string),
             pageUrl: window.location.href,
             eventTime: Date.now(),
             ...data

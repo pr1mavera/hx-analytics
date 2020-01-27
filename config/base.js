@@ -4,7 +4,7 @@ module.exports = {
     dev: {
         host: 'localhost',
         // host: '192.168.8.101',
-        // host: '10.3.36.38',
+        // host: '10.3.25.140',
         port: 3001
     }
 };
